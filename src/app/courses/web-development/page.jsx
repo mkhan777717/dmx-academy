@@ -8,10 +8,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { allPhases, resourcesList, glossary } from "@/data/courses/webdevData";
-import { HtmlCssSandbox, FlexboxLab, JsDomDebugger } from "@/components/courses/WebDevWidgets";
+import { HtmlCssSandbox, FlexboxLab, JsDomDebugger, PracticePlayground } from "@/components/courses/WebDevWidgets";
 
 export default function WebDevCoursePage() {
-  const [activeTab, setActiveTab] = useState("curriculum"); // "curriculum" | "glossary" | "resources"
+  const [activeTab, setActiveTab] = useState("curriculum"); // "curriculum" | "practice" | "glossary" | "resources"
   
   // Track indexes for active module and lesson
   const [activeModuleIdx, setActiveModuleIdx] = useState(0);
@@ -550,13 +550,20 @@ export default function WebDevCoursePage() {
         </div>
 
         {/* Tab Selection */}
-        <div className="flex px-4 py-2 gap-1 text-xs font-semibold" style={{ borderBottom: "1px solid var(--border-primary)" }}>
+        <div className="flex px-2 py-2 gap-0.5 text-[11px] font-semibold" style={{ borderBottom: "1px solid var(--border-primary)" }}>
           <button
             onClick={() => { setActiveTab("curriculum"); setSearchQuery(""); }}
             className="flex-1 py-2 rounded-lg text-center transition-colors"
             style={activeTab === "curriculum" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
           >
             Syllabus
+          </button>
+          <button
+            onClick={() => { setActiveTab("practice"); setSearchQuery(""); }}
+            className="flex-1 py-2 rounded-lg text-center transition-colors"
+            style={activeTab === "practice" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
+          >
+            Practice
           </button>
           <button
             onClick={() => { setActiveTab("glossary"); setSearchQuery(""); }}
@@ -927,6 +934,17 @@ export default function WebDevCoursePage() {
                       <ArrowRight size={14} />
                     </button>
                   </div>
+                </motion.div>
+              ) : activeTab === "practice" ? (
+                <motion.div
+                  key="practice"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="pt-2"
+                >
+                  <PracticePlayground />
                 </motion.div>
               ) : activeTab === "glossary" ? (
                 // FULL GLOSSARY TAB
