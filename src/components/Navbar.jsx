@@ -9,6 +9,7 @@ const navItems = [
   { name: "Tracks", href: "/#tracks" },
   { name: "Curriculum", href: "/#process" },
   { name: "Gen AI Course", href: "/courses/generative-ai" },
+  { name: "Web Dev Course", href: "/courses/web-development" },
   { name: "Pricing", href: "/#pricing" },
 ];
 

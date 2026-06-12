@@ -76,7 +76,13 @@ export default function Pricing() {
       <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
 
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7 }}
+          className="text-center max-w-3xl mx-auto space-y-4 mb-16"
+        >
           <span
             className="text-xs font-bold font-display uppercase tracking-widest"
             style={{ color: "var(--text-accent)" }}
@@ -140,7 +146,7 @@ export default function Pricing() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Pricing Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
@@ -150,6 +156,10 @@ export default function Pricing() {
             return (
               <motion.div
                 key={plan.name}
+                initial={{ opacity: 0, y: 45 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.65, delay: plan.name === "Explorer" ? 0 : plan.name === "Pro Pass" ? 0.15 : 0.3, type: "spring", stiffness: 80 }}
                 whileHover={{ y: -8 }}
                 className="relative flex flex-col justify-between rounded-2xl p-8 shadow-md transition-all duration-300"
                 style={{

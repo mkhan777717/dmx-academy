@@ -66,48 +66,95 @@ export default function Testimonials() {
   };
 
   return (
-    <section id="testimonials" className="relative py-24 overflow-hidden" style={{ backgroundColor: "var(--bg-secondary)" }}>
+    <section id="testimonials" className="relative py-24 overflow-hidden transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
       {/* Background Gradients */}
-      <div className="absolute top-1/4 right-0 h-[400px] w-[400px] rounded-full blur-[120px] pointer-events-none" style={{ backgroundColor: "var(--accent-glow)" }} />
-      <div className="absolute bottom-1/4 left-0 h-[400px] w-[400px] rounded-full blur-[120px] pointer-events-none" style={{ backgroundColor: "var(--accent-glow)" }} />
+      <div className="absolute top-1/4 right-0 h-[400px] w-[400px] rounded-full blur-[120px] pointer-events-none transition-colors duration-300" style={{ backgroundColor: "var(--accent-glow)" }} />
+      <div className="absolute bottom-1/4 left-0 h-[400px] w-[400px] rounded-full blur-[120px] pointer-events-none transition-colors duration-300" style={{ backgroundColor: "var(--accent-glow)" }} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 md:px-8">
         
         {/* Header with Navigation Buttons */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7 }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16"
+        >
           <div className="space-y-4 max-w-2xl">
-            <div className="inline-flex items-center space-x-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700">
+            <div 
+              className="inline-flex items-center space-x-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors duration-300"
+              style={{
+                backgroundColor: "var(--bg-badge)",
+                borderColor: "var(--border-accent)",
+                color: "var(--text-accent)"
+              }}
+            >
               <MessageSquare size={12} />
               <span>Success Stories</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-3xl sm:text-4xl font-extrabold font-display tracking-tight transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               Endorsed by Top Creators
             </h2>
-            <p className="text-sm sm:text-base" style={{ color: "var(--text-secondary)" }}>
+            <p className="text-sm sm:text-base transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
               Read how developers, designers, and creative technologists around the globe level up their day-to-day skills with Synapse.
             </p>
           </div>
 
           {/* Nav arrows */}
           <div className="flex items-center space-x-3">
-            <button
+            <motion.button
               onClick={slideLeft}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex h-12 w-12 items-center justify-center rounded-full border transition-all focus:outline-none shadow-sm"
+              style={{
+                backgroundColor: "var(--bg-card)",
+                borderColor: "var(--border-primary)",
+                color: "var(--text-secondary)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-hover)";
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-card)";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               <ArrowLeft size={18} />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={slideRight}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all focus:outline-none shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex h-12 w-12 items-center justify-center rounded-full border transition-all focus:outline-none shadow-sm"
+              style={{
+                backgroundColor: "var(--bg-card)",
+                borderColor: "var(--border-primary)",
+                color: "var(--text-secondary)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-hover)";
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--bg-card)";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
             >
               <ArrowRight size={18} />
-            </button>
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Draggable Carousel */}
         <motion.div
           ref={carousel}
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, delay: 0.2 }}
           className="cursor-grab active:cursor-grabbing overflow-x-auto scrollbar-none flex gap-8 pb-8"
           whileTap={{ cursor: "grabbing" }}
         >
@@ -122,30 +169,30 @@ export default function Testimonials() {
                 className="w-[300px] sm:w-[380px] shrink-0 select-none rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-md relative group transition-colors duration-300"
                 style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-card)" }}
               >
-                <Quote size={48} className="absolute top-6 right-6 pointer-events-none" style={{ color: "var(--border-primary)" }} />
+                <Quote size={48} className="absolute top-6 right-6 pointer-events-none opacity-40 transition-colors duration-300" style={{ color: "var(--border-primary)" }} />
 
                 {/* Rating & Quote */}
-                <div className="space-y-6">
+                <div className="space-y-6 relative z-10">
                   <div className="flex items-center space-x-1">
                     {[...Array(test.rating)].map((_, i) => (
                       <Star key={i} size={14} style={{ fill: "var(--accent-primary)", color: "var(--accent-primary)" }} />
                     ))}
                   </div>
-                  <p className="text-sm sm:text-base leading-relaxed font-medium" style={{ color: "var(--text-secondary)" }}>
+                  <p className="text-sm sm:text-base leading-relaxed font-medium transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     "{test.quote}"
                   </p>
                 </div>
 
                 {/* Profile Row */}
-                <div className="flex items-center space-x-4 mt-8 pt-6" style={{ borderTop: "1px solid var(--border-primary)" }}>
-                  <div className="relative h-12 w-12 overflow-hidden rounded-full" style={{ border: "2px solid var(--border-accent)" }}>
+                <div className="flex items-center space-x-4 mt-8 pt-6 relative z-10" style={{ borderTop: "1px solid var(--border-primary)" }}>
+                  <div className="relative h-12 w-12 overflow-hidden rounded-full shrink-0" style={{ border: "2px solid var(--border-accent)" }}>
                     <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white uppercase" style={{ background: "var(--accent-gradient)" }}>
                       {test.name.charAt(0)}{test.name.split(" ")[1]?.charAt(0)}
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold font-display" style={{ color: "var(--text-primary)" }}>{test.name}</h4>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    <h4 className="text-sm font-bold font-display transition-colors duration-300" style={{ color: "var(--text-primary)" }}>{test.name}</h4>
+                    <p className="text-xs transition-colors duration-300" style={{ color: "var(--text-muted)" }}>
                       {test.role} at <span style={{ color: "var(--text-secondary)", fontWeight: 600 }}>{test.company}</span>
                     </p>
                   </div>
@@ -157,8 +204,8 @@ export default function Testimonials() {
         </motion.div>
 
         {/* Drag Hint */}
-        <div className="text-center mt-4 text-xs text-slate-500 flex items-center justify-center space-x-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse" />
+        <div className="text-center mt-4 text-xs flex items-center justify-center space-x-2 transition-colors duration-300" style={{ color: "var(--text-muted)" }}>
+          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: "var(--accent-primary)" }} />
           <span>Swipe or drag horizontal track to view all reviews</span>
         </div>
 

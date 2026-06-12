@@ -41,7 +41,11 @@ export default function CTA() {
       />
 
       <div className="relative z-10 mx-auto max-w-5xl px-4 md:px-8">
-        <div
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 30 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, type: "spring", stiffness: 85 }}
           className="relative overflow-hidden rounded-3xl p-8 sm:p-12 md:p-16 shadow-xl backdrop-blur-md text-center space-y-8"
           style={{
             backgroundColor: "var(--bg-card)",
@@ -111,7 +115,7 @@ export default function CTA() {
               No credit card required. Cancel anytime. Pro plan free 7-day trials available.
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
