@@ -40,7 +40,7 @@ const tracksData = {
   frontend: [
     {
       id: "f-1",
-      title: "Advanced React 19 Ecosystem & Server Actions",
+      title: "Advanced React 19 Ecosystem & Hooks",
       duration: "18 hrs",
       lessons: 30,
       students: "4.2k",
@@ -57,6 +57,16 @@ const tracksData = {
       difficulty: "Intermediate",
       gradient: "from-indigo-500/10 via-purple-500/5 to-transparent",
       accent: "#6366f1",
+    },
+    {
+      id: "f-5",
+      title: "Node.js & Express REST API Development",
+      duration: "15 hrs",
+      lessons: 24,
+      students: "3.5k",
+      difficulty: "Advanced",
+      gradient: "from-emerald-500/10 via-teal-500/5 to-transparent",
+      accent: "#10b981",
     },
     {
       id: "f-3",
@@ -258,13 +268,21 @@ export default function Tracks() {
                 onMouseEnter={() => setHoveredCourseId(course.id)}
                 onMouseLeave={() => setHoveredCourseId(null)}
                 onClick={() => {
-                  if (activeTab === "ai") {
-                    window.location.href = "/courses/generative-ai";
-                  } else if (course.id === "f-4") {
-                    window.location.href = "/courses/web-development";
+                  const courseIdMap = {
+                    "f-1": "react",
+                    "f-2": "next",
+                    "f-5": "node",
+                    "f-4": "web-development",
+                    "a-1": "ml-ai",
+                    "a-2": "generative-ai",
+                    "a-3": "generative-ai"
+                  };
+                  const mappedId = courseIdMap[course.id];
+                  if (mappedId) {
+                    window.location.href = `/courses/${mappedId}`;
                   } else {
-                    const el = document.getElementById("pricing");
-                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                    // If no exact lesson course mapping matches, go to catalog
+                    window.location.href = "/courses";
                   }
                 }}
                 className="group relative flex flex-col justify-between h-full rounded-2xl p-6 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"

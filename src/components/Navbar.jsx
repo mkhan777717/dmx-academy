@@ -2,20 +2,26 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, ArrowRight } from "lucide-react";
+import { Sparkles, Menu, X, ArrowRight, ChevronDown } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
   { name: "Tracks", href: "/#tracks" },
   { name: "Curriculum", href: "/#process" },
-  { name: "Gen AI Course", href: "/courses/generative-ai" },
-  { name: "Web Dev Course", href: "/courses/web-development" },
   { name: "Pricing", href: "/#pricing" },
+];
+
+const courseCategories = [
+  { name: "Web & Mobile Development", href: "/courses?category=Web%20%26%20Mobile%20Development", desc: "React, Next.js, Node.js, Flutter" },
+  { name: "Data & AI", href: "/courses?category=Data%20%26%20AI", desc: "Machine Learning, Generative AI" },
+  { name: "Cloud & DevOps", href: "/courses?category=Cloud%20%26%20DevOps", desc: "Docker, AWS, Cybersecurity" },
+  { name: "Creative Tech", href: "/courses?category=Creative%20Tech", desc: "Blockchain, Web3, Trending Tech" },
 ];
 
 export default function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   return (
     <motion.header
@@ -33,7 +39,7 @@ export default function Navbar() {
           }}
         >
           {/* Logo */}
-          <a href="#" className="flex items-center space-x-2 text-xl font-bold font-display tracking-tight group"
+          <a href="/" className="flex items-center space-x-2 text-xl font-bold font-display tracking-tight group"
             style={{ color: "var(--text-primary)" }}
           >
             <motion.div
@@ -72,6 +78,69 @@ export default function Navbar() {
                 </a>
               </li>
             ))}
+
+            {/* Premium Hover Dropdown for Courses */}
+            <li
+              className="relative"
+              onMouseEnter={() => setIsDropdownOpen(true)}
+              onMouseLeave={() => setIsDropdownOpen(false)}
+            >
+              <button
+                className="relative flex items-center gap-1 px-4 py-2 text-sm font-medium transition-colors outline-none cursor-pointer"
+                style={{ color: isDropdownOpen ? "var(--text-accent)" : "var(--text-secondary)" }}
+              >
+                <span>Courses</span>
+                <motion.span
+                  animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0"
+                >
+                  <ChevronDown size={14} />
+                </motion.span>
+              </button>
+
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl z-50"
+                    style={{
+                      backgroundColor: "var(--bg-card)",
+                      borderColor: "var(--border-primary)",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+                    }}
+                  >
+                    {courseCategories.map((cat) => (
+                      <a
+                        key={cat.name}
+                        href={cat.href}
+                        className="block rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all text-left"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                          {cat.name}
+                        </div>
+                        <div className="text-[10px] font-medium mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                          {cat.desc}
+                        </div>
+                      </a>
+                    ))}
+                    <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
+                    <a
+                      href="/courses"
+                      className="block rounded-xl px-4 py-2 text-xs font-bold text-center transition-all hover:bg-slate-500/10"
+                      style={{ color: "var(--text-accent)" }}
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      View All Courses &rarr;
+                    </a>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </li>
           </ul>
 
           {/* Right: Theme Toggle + CTA */}
@@ -120,14 +189,44 @@ export default function Navbar() {
                   <a
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className="block text-lg font-medium transition-colors"
+                    className="block text-base font-semibold transition-colors"
                     style={{ color: "var(--text-secondary)" }}
                   >
                     {item.name}
                   </a>
                 </li>
               ))}
-              <li className="pt-2">
+
+              <li className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
+
+              <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
+                Curriculums
+              </li>
+              
+              {courseCategories.map((cat) => (
+                <li key={cat.name}>
+                  <a
+                    href={cat.href}
+                    onClick={() => setIsOpen(false)}
+                    className="block text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {cat.name}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a
+                  href="/courses"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                  style={{ color: "var(--text-accent)" }}
+                >
+                  View Course Catalog &rarr;
+                </a>
+              </li>
+
+              <li className="pt-2 border-t" style={{ borderColor: "var(--border-primary)" }}>
                 <a
                   href="#pricing"
                   onClick={() => setIsOpen(false)}

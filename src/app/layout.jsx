@@ -1,17 +1,4 @@
-import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata = {
   title: "Synapse Academy | The Creative & Tech Learning Platform",
@@ -40,10 +27,14 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning={true}
     >
       <head>
+        {/* Google Fonts Link - Resilient build-time implementation */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         {/* Theme initialiser – runs before React hydration to prevent flash */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className={`${inter.variable} ${outfit.variable} min-h-full flex flex-col selection:bg-[var(--selection-bg)] selection:text-[var(--selection-text)]`}
+      <body className="min-h-full flex flex-col selection:bg-[var(--selection-bg)] selection:text-[var(--selection-text)]"
         style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
         suppressHydrationWarning={true}
       >

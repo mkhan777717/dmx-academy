@@ -1,35 +1,59 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { 
   BookOpen, CheckCircle, Circle, Search, ArrowLeft, ArrowRight, 
-  Menu, X, Sparkles, Glossary, HelpCircle, ChevronRight, Award,
+  Menu, X, Sparkles, HelpCircle, ChevronRight, Award,
   ExternalLink, FileText, CheckCircle2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { allPhases, resourcesList, glossary } from "@/data/courses/webdevData";
-import { HtmlCssSandbox, FlexboxLab, JsDomDebugger, PracticePlayground } from "@/components/courses/WebDevWidgets";
+import { coursesRegistry } from "@/data/courses";
 
-export default function WebDevCoursePage() {
+// Import Web Development widgets
+import { 
+  HtmlCssSandbox, FlexboxLab, JsDomDebugger, PracticePlayground 
+} from "@/components/courses/WebDevWidgets";
+
+// Import React/Next/Node widgets
+import { 
+  ReactStatePropsLab, ExpressRestController, NextRouterMap 
+} from "@/components/courses/ReactNextNodeWidgets";
+
+// Import General/AI widgets
+import { 
+  PromptPlayground, TokenVisualizer, ClassifierSandbox 
+} from "@/components/courses/Widgets";
+
+export default function DynamicCoursePage() {
+  const params = useParams();
+  const courseId = params.courseId;
+  const course = coursesRegistry[courseId];
+
   const [activeTab, setActiveTab] = useState("curriculum"); // "curriculum" | "practice" | "glossary" | "resources"
-  
-  // Track indexes for active module and lesson
   const [activeModuleIdx, setActiveModuleIdx] = useState(0);
   const [activeLessonIdx, setActiveLessonIdx] = useState(0);
-
-  // Search filter query
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // Mobile sidebar states
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  // Progress tracker state
   const [completedLessons, setCompletedLessons] = useState([]);
-
-  // Flat list of all lessons for easier indexing and prev/next logic
   const [flatLessons, setFlatLessons] = useState([]);
-  
   const contentRef = useRef(null);
+
+  // If course doesn't exist, show 404
+  if (!course) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center space-y-4" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
+        <h1 className="text-2xl font-black font-display">Course Not Found</h1>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>The requested course could not be located in our registry.</p>
+        <a href="/courses" className="px-5 py-2.5 rounded-full text-xs font-bold text-white shadow-md transition-all" style={{ background: "var(--accent-gradient)" }}>
+          Back to Catalog
+        </a>
+      </div>
+    );
+  }
+
+  const { allPhases, resourcesList, glossary, title, accent, duration, lessons } = course;
+  const progressKey = `${courseId}_course_progress`;
 
   // Parse and build flat list of lessons once
   useEffect(() => {
@@ -42,7 +66,6 @@ export default function WebDevCoursePage() {
             title: l.title,
             phaseTitle: p.title,
             moduleTitle: m.title,
-            moduleIdx: list.length === 0 ? 0 : null,
             lIdx: lIdx,
             mIndexInAll: allPhases.slice(0, pIdx).reduce((acc, curr) => acc + curr.modules.length, 0) + mIdx,
             lIndexInM: lIdx
@@ -51,12 +74,12 @@ export default function WebDevCoursePage() {
       });
     });
     setFlatLessons(list);
-  }, []);
+  }, [allPhases]);
 
-  // Load progress on component mount
+  // Load progress on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("webdev_course_progress");
+      const saved = localStorage.getItem(progressKey);
       if (saved) {
         try {
           setCompletedLessons(JSON.parse(saved));
@@ -65,18 +88,17 @@ export default function WebDevCoursePage() {
         }
       }
     }
-  }, []);
+  }, [progressKey]);
 
-  // Sync state coordinates to URL search parameters to support bookmarking/deep linking
+  // Sync state coordinates to URL search parameters
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const mParam = parseInt(params.get("m"));
-    const lParam = parseInt(params.get("l"));
+    const urlParams = new URLSearchParams(window.location.search);
+    const mParam = parseInt(urlParams.get("m"));
+    const lParam = parseInt(urlParams.get("l"));
 
     let targetM = 0;
     let targetL = 0;
     
-    // Validate module index
     let totalModules = 0;
     allPhases.forEach(p => { totalModules += p.modules.length; });
 
@@ -84,7 +106,6 @@ export default function WebDevCoursePage() {
       targetM = mParam;
     }
     
-    // Resolve module object
     let currentModule = null;
     let tempMIdx = 0;
     for (let p = 0; p < allPhases.length; p++) {
@@ -104,24 +125,27 @@ export default function WebDevCoursePage() {
 
     setActiveModuleIdx(targetM);
     setActiveLessonIdx(targetL);
-  }, []);
+  }, [allPhases]);
+
+  // Scroll to top when active lesson changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [activeModuleIdx, activeLessonIdx]);
 
   // Select lesson navigation handler
   const selectLesson = (mIdx, lIdx) => {
     setActiveModuleIdx(mIdx);
     setActiveLessonIdx(lIdx);
+    setActiveTab("curriculum");
     setIsSidebarOpen(false);
     
     // Update URL query parameters
-    const params = new URLSearchParams(window.location.search);
-    params.set("m", mIdx.toString());
-    params.set("l", lIdx.toString());
-    window.history.pushState(null, "", `?${params.toString()}`);
-
-    // Scroll reader container back to top
-    if (contentRef.current) {
-      contentRef.current.scrollTop = 0;
-    }
+    const urlParams = new URLSearchParams();
+    urlParams.set("m", mIdx.toString());
+    urlParams.set("l", lIdx.toString());
+    window.history.pushState(null, "", `?${urlParams.toString()}`);
   };
 
   // Toggle checklist complete state
@@ -133,17 +157,11 @@ export default function WebDevCoursePage() {
       nextList = [...completedLessons, lessonId];
     }
     setCompletedLessons(nextList);
-    localStorage.setItem("webdev_course_progress", JSON.stringify(nextList));
+    localStorage.setItem(progressKey, JSON.stringify(nextList));
   };
 
   // Resolve total lessons across all phases
-  let totalLessonsCount = 0;
-  allPhases.forEach(p => {
-    p.modules.forEach(m => {
-      totalLessonsCount += m.lessons.length;
-    });
-  });
-
+  let totalLessonsCount = flatLessons.length;
   const progressPercent = totalLessonsCount > 0 
     ? Math.round((completedLessons.length / totalLessonsCount) * 100) 
     : 0;
@@ -171,10 +189,8 @@ export default function WebDevCoursePage() {
 
   // Prev / Next logic
   const handlePrev = () => {
-    if (!flatLessons.length) return;
-    const currentFlatIdx = flatLessons.findIndex(
-      l => l.mIndexInAll === activeModuleIdx && l.lIndexInM === activeLessonIdx
-    );
+    if (!flatLessons.length || !activeLesson) return;
+    const currentFlatIdx = flatLessons.findIndex(l => l.id === activeLesson.id);
     if (currentFlatIdx > 0) {
       const prev = flatLessons[currentFlatIdx - 1];
       selectLesson(prev.mIndexInAll, prev.lIndexInM);
@@ -182,10 +198,8 @@ export default function WebDevCoursePage() {
   };
 
   const handleNext = () => {
-    if (!flatLessons.length) return;
-    const currentFlatIdx = flatLessons.findIndex(
-      l => l.mIndexInAll === activeModuleIdx && l.lIndexInM === activeLessonIdx
-    );
+    if (!flatLessons.length || !activeLesson) return;
+    const currentFlatIdx = flatLessons.findIndex(l => l.id === activeLesson.id);
     if (currentFlatIdx >= 0 && currentFlatIdx < flatLessons.length - 1) {
       const next = flatLessons[currentFlatIdx + 1];
       selectLesson(next.mIndexInAll, next.lIndexInM);
@@ -193,12 +207,14 @@ export default function WebDevCoursePage() {
   };
 
   const hasPrev = () => {
-    const idx = flatLessons.findIndex(l => l.mIndexInAll === activeModuleIdx && l.lIndexInM === activeLessonIdx);
+    if (!flatLessons.length || !activeLesson) return false;
+    const idx = flatLessons.findIndex(l => l.id === activeLesson.id);
     return idx > 0;
   };
 
   const hasNext = () => {
-    const idx = flatLessons.findIndex(l => l.mIndexInAll === activeModuleIdx && l.lIndexInM === activeLessonIdx);
+    if (!flatLessons.length || !activeLesson) return false;
+    const idx = flatLessons.findIndex(l => l.id === activeLesson.id);
     return idx >= 0 && idx < flatLessons.length - 1;
   };
 
@@ -322,7 +338,7 @@ export default function WebDevCoursePage() {
               <span className="text-xs font-semibold tracking-wider font-sans capitalize" style={{ color: "var(--text-muted)" }}>Example Code</span>
               <button 
                 onClick={() => navigator.clipboard.writeText(codeText)}
-                className="rounded px-2.5 py-1 text-[10px] font-semibold transition-colors"
+                className="rounded px-2.5 py-1 text-[10px] font-semibold transition-colors cursor-pointer"
                 style={{ backgroundColor: "var(--bg-badge)", border: "1px solid var(--border-accent)", color: "var(--text-accent)" }}
               >
                 Copy Code
@@ -475,7 +491,7 @@ export default function WebDevCoursePage() {
   const renderLessonWidget = (lessonId) => {
     if (!lessonId) return null;
     
-    // HTML/CSS live sandbox
+    // HTML/CSS live sandboxes
     if (lessonId === "wd-l-1-2" || lessonId === "wd-l-3-1") {
       return (
         <div className="my-8">
@@ -502,8 +518,74 @@ export default function WebDevCoursePage() {
       );
     }
 
+    // React State & Props Lab
+    if (lessonId === "r-l-2-1" || lessonId === "r-l-1-3") {
+      return (
+        <div className="my-8">
+          <ReactStatePropsLab />
+        </div>
+      );
+    }
+
+    // Express Controller Sandbox
+    if (lessonId === "nd-l-2-2" || lessonId === "nd-l-2-1") {
+      return (
+        <div className="my-8">
+          <ExpressRestController />
+        </div>
+      );
+    }
+
+    // Next.js Routing Map
+    if (lessonId === "n-l-1-2" || lessonId === "n-l-1-1") {
+      return (
+        <div className="my-8">
+          <NextRouterMap />
+        </div>
+      );
+    }
+
+    // ML Spam Classifier
+    if (
+      lessonId === "l-2-1" || 
+      lessonId === "l-2-2" || 
+      lessonId === "ml-ai-l-2-1" || 
+      lessonId === "ml-ai-l-2-2"
+    ) {
+      return (
+        <div className="my-8">
+          <ClassifierSandbox />
+        </div>
+      );
+    }
+
+    // Token Visualizer
+    if (
+      lessonId === "l-3-3" || 
+      lessonId === "l-5-1" || 
+      lessonId === "trending-tech-l-1-2"
+    ) {
+      return (
+        <div className="my-8">
+          <TokenVisualizer />
+        </div>
+      );
+    }
+
+    // Prompting Sandbox
+    if (lessonId === "l-6-8" || lessonId === "l-6-1") {
+      return (
+        <div className="my-8">
+          <PromptPlayground />
+        </div>
+      );
+    }
+
     return null;
   };
+
+  // Only render practice tab for web-development
+  const hasPracticeTab = courseId === "web-development";
 
   return (
     <div className="flex h-screen w-screen overflow-hidden font-sans" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
@@ -511,7 +593,7 @@ export default function WebDevCoursePage() {
       {/* 1. SIDEBAR NAVIGATION */}
       <aside 
         className={`fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r shadow-xl transition-transform duration-300 md:static md:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-0 -translate-x-full"
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{ backgroundColor: "var(--bg-sidebar)", borderColor: "var(--border-primary)" }}
       >
@@ -550,31 +632,33 @@ export default function WebDevCoursePage() {
         </div>
 
         {/* Tab Selection */}
-        <div className="flex px-2 py-2 gap-0.5 text-[11px] font-semibold" style={{ borderBottom: "1px solid var(--border-primary)" }}>
+        <div className="flex px-2 py-2 gap-0.5 text-[11px] font-semibold border-b" style={{ borderColor: "var(--border-primary)" }}>
           <button
             onClick={() => { setActiveTab("curriculum"); setSearchQuery(""); }}
-            className="flex-1 py-2 rounded-lg text-center transition-colors"
+            className="flex-1 py-2 rounded-lg text-center transition-colors cursor-pointer"
             style={activeTab === "curriculum" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
           >
             Syllabus
           </button>
-          <button
-            onClick={() => { setActiveTab("practice"); setSearchQuery(""); }}
-            className="flex-1 py-2 rounded-lg text-center transition-colors"
-            style={activeTab === "practice" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
-          >
-            Practice
-          </button>
+          {hasPracticeTab && (
+            <button
+              onClick={() => { setActiveTab("practice"); setSearchQuery(""); }}
+              className="flex-1 py-2 rounded-lg text-center transition-colors cursor-pointer"
+              style={activeTab === "practice" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
+            >
+              Practice
+            </button>
+          )}
           <button
             onClick={() => { setActiveTab("glossary"); setSearchQuery(""); }}
-            className="flex-1 py-2 rounded-lg text-center transition-colors"
+            className="flex-1 py-2 rounded-lg text-center transition-colors cursor-pointer"
             style={activeTab === "glossary" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
           >
             Glossary
           </button>
           <button
             onClick={() => { setActiveTab("resources"); setSearchQuery(""); }}
-            className="flex-1 py-2 rounded-lg text-center transition-colors"
+            className="flex-1 py-2 rounded-lg text-center transition-colors cursor-pointer"
             style={activeTab === "resources" ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" } : { color: "var(--text-muted)" }}
           >
             Resources
@@ -613,7 +697,6 @@ export default function WebDevCoursePage() {
           {activeTab === "curriculum" && (() => {
             let globalMIndex = 0;
             return allPhases.map((phase, pIdx) => {
-              // Check if search matches any lesson inside this phase
               const filteredModules = phase.modules.map(module => {
                 const matchedLessons = module.lessons.filter(lesson => 
                   lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -633,7 +716,7 @@ export default function WebDevCoursePage() {
                   <div className="space-y-1.5">
                     {phase.modules.map((module, mIdx) => {
                       const modIndex = globalMIndex;
-                      globalMIndex++; // increment global indexing
+                      globalMIndex++; 
 
                       const matchedLessons = module.lessons.filter(lesson => 
                         searchQuery === "" ||
@@ -649,13 +732,13 @@ export default function WebDevCoursePage() {
                         <div key={module.id} className="space-y-1 rounded-xl p-1.5" style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)" }}>
                           <button 
                             onClick={() => selectLesson(modIndex, 0)}
-                            className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-bold transition-all"
+                            className="flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-xs font-bold transition-all cursor-pointer"
                             style={isCurrentModule
                               ? { backgroundColor: "var(--bg-card)", color: "var(--text-accent)", border: "1px solid var(--border-accent)" }
                               : { color: "var(--text-primary)" }
                             }
                           >
-                            <span className="truncate">{module.title.split(": ")[1]}</span>
+                            <span className="truncate">{module.title.includes(": ") ? module.title.split(": ")[1] : module.title}</span>
                             <span className="text-[10px] font-semibold capitalize shrink-0" style={{ color: "var(--text-muted)" }}>{module.duration}</span>
                           </button>
 
@@ -675,7 +758,7 @@ export default function WebDevCoursePage() {
                                 <li key={lesson.id}>
                                   <button
                                     onClick={() => selectLesson(modIndex, lIdx)}
-                                    className="flex w-full items-center space-x-2 px-2.5 py-1.5 rounded-md text-left text-[11px] font-semibold transition-all"
+                                    className="flex w-full items-center space-x-2 px-2.5 py-1.5 rounded-md text-left text-[11px] font-semibold transition-all cursor-pointer"
                                     style={isCurrentLesson
                                       ? { background: "var(--accent-gradient)", color: "#ffffff" }
                                       : { color: "var(--text-secondary)" }
@@ -716,7 +799,7 @@ export default function WebDevCoursePage() {
                   <p className="text-xs italic" style={{ color: "var(--text-muted)" }}>No terms matched your search.</p>
                 ) : (
                   filteredGlossary.map((g, idx) => (
-                    <div key={idx} className="space-y-1 p-2 rounded-lg transition-colors" style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)" }}>
+                    <div key={idx} className="space-y-1 p-2 rounded-lg transition-colors border" style={{ backgroundColor: "var(--bg-hover)", borderColor: "var(--border-primary)" }}>
                       <h5 className="text-xs font-bold" style={{ color: "var(--text-accent)" }}>{g.term}</h5>
                       <p className="text-[10px] leading-normal" style={{ color: "var(--text-secondary)" }}>{g.def}</p>
                     </div>
@@ -768,15 +851,15 @@ export default function WebDevCoursePage() {
 
         </div>
 
-        {/* Sidebar Footer Link to Home */}
+        {/* Sidebar Footer Link to Catalog */}
         <div className="p-4 border-t" style={{ borderColor: "var(--border-primary)" }}>
           <a
-            href="/"
+            href="/courses"
             className="flex items-center justify-center space-x-1.5 rounded-lg py-2 text-xs font-semibold transition-colors shadow-sm"
             style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }}
           >
             <ArrowLeft size={12} />
-            <span>Return to Landing Page</span>
+            <span>Return to Course Catalog</span>
           </a>
         </div>
       </aside>
@@ -794,7 +877,7 @@ export default function WebDevCoursePage() {
             >
               <Menu size={22} />
             </button>
-            <span className="font-bold text-sm font-display" style={{ color: "var(--text-primary)" }}>Web Dev Course</span>
+            <span className="font-bold text-sm font-display" style={{ color: "var(--text-primary)" }}>{title}</span>
           </div>
           <div className="h-2 w-24 rounded-full overflow-hidden" style={{ backgroundColor: "var(--border-primary)" }}>
             <motion.div 
@@ -819,74 +902,41 @@ export default function WebDevCoursePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="space-y-8"
+                  className="space-y-6"
                 >
-                  {/* Lesson Context Header */}
-                  <div className="space-y-4">
-                    {/* Category Path Badge */}
-                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold capitalize tracking-wider" style={{ color: "var(--text-muted)" }}>
-                      <span>{activePhase?.title.split(": ")[0]}</span>
-                      <ChevronRight size={10} />
-                      <span style={{ color: "var(--text-accent)" }}>{activeModule?.title.split(": ")[0]}</span>
-                    </div>
-
-                    {/* Lesson title */}
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight leading-tight" style={{ color: "var(--text-primary)" }}>
-                        {activeLesson.title}
-                      </h1>
-
-                      {/* Meta info tags */}
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor: "var(--bg-badge)", border: "1px solid var(--border-accent)", color: "var(--text-accent)" }}>
-                          {activeLesson.time}
-                        </span>
-                        <span className="inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-semibold" style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }}>
-                          {activeModule?.difficulty}
-                        </span>
-                      </div>
-                    </div>
+                  {/* Phase & Module Breadcrumbs */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                      {activePhase?.title}
+                    </span>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold font-display tracking-tight" style={{ color: "var(--text-primary)" }}>
+                      {activeLesson.title}
+                    </h1>
                   </div>
 
-                  {/* Progress Checkbox Action Banner */}
-                  <div className="flex items-center justify-between rounded-xl p-4" style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)" }}>
-                    <div className="space-y-0.5 pr-2">
-                      <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>Done studying this concept?</div>
-                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Tick off this lesson to save progress and update the global tracker.</p>
+                  {/* Complete check-button box */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border" style={{ backgroundColor: "var(--bg-hover)", borderColor: "var(--border-primary)" }}>
+                    <div className="flex items-center space-x-2.5">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" }}>
+                        <BookOpen size={16} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{activeModule?.title}</p>
+                        <p className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>{activeLesson.time} read time</p>
+                      </div>
                     </div>
+
                     <button
                       onClick={() => toggleComplete(activeLesson.id)}
-                      className="flex items-center space-x-1.5 rounded-lg px-4 py-2 text-xs font-semibold shadow-sm transition-all"
-                      style={completedLessons.includes(activeLesson.id)
-                        ? { backgroundColor: "var(--bg-badge)", color: "var(--text-accent)", border: "1px solid var(--border-accent)" }
-                        : { backgroundColor: "var(--bg-card)", color: "var(--text-secondary)", border: "1px solid var(--border-primary)" }
+                      className="flex items-center space-x-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                      style={
+                        completedLessons.includes(activeLesson.id)
+                          ? { backgroundColor: "var(--bg-badge)", border: "1px solid var(--border-accent)", color: "var(--text-accent)" }
+                          : { backgroundColor: "var(--bg-card)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }
                       }
                     >
-                      <AnimatePresence mode="wait" initial={false}>
-                        {completedLessons.includes(activeLesson.id) ? (
-                          <motion.span
-                            key="completed"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            className="flex items-center space-x-1.5"
-                          >
-                            <CheckCircle size={14} style={{ color: "var(--text-accent)" }} />
-                            <span>Completed!</span>
-                          </motion.span>
-                        ) : (
-                          <motion.span
-                            key="incomplete"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            className="flex items-center space-x-1.5"
-                          >
-                            <Circle size={14} style={{ color: "var(--text-muted)" }} />
-                            <span>Mark Completed</span>
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
+                      <CheckCircle2 size={14} className={completedLessons.includes(activeLesson.id) ? "text-indigo-500" : "text-slate-400"} />
+                      <span>{completedLessons.includes(activeLesson.id) ? "Completed" : "Mark as Complete"}</span>
                     </button>
                   </div>
 
@@ -914,11 +964,11 @@ export default function WebDevCoursePage() {
                   )}
 
                   {/* Nav buttons for Prev / Next Lesson */}
-                  <div className="flex items-center justify-between pt-8 mt-12 gap-4" style={{ borderTop: "1px solid var(--border-primary)" }}>
+                  <div className="flex items-center justify-between pt-8 mt-12 gap-4 animate-fade-in" style={{ borderTop: "1px solid var(--border-primary)" }}>
                     <button
                       onClick={handlePrev}
                       disabled={!hasPrev()}
-                      className="flex items-center space-x-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex items-center space-x-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }}
                     >
                       <ArrowLeft size={14} />
@@ -927,7 +977,7 @@ export default function WebDevCoursePage() {
                     <button
                       onClick={handleNext}
                       disabled={!hasNext()}
-                      className="flex items-center space-x-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex items-center space-x-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                       style={{ background: "var(--accent-gradient)" }}
                     >
                       <span>Next Lesson</span>
@@ -935,7 +985,7 @@ export default function WebDevCoursePage() {
                     </button>
                   </div>
                 </motion.div>
-              ) : activeTab === "practice" ? (
+              ) : activeTab === "practice" && hasPracticeTab ? (
                 <motion.div
                   key="practice"
                   initial={{ opacity: 0, y: 15 }}
@@ -961,13 +1011,13 @@ export default function WebDevCoursePage() {
                       Course Glossary of Key Terms
                     </h1>
                     <p className="text-sm leading-normal" style={{ color: "var(--text-secondary)" }}>
-                      Quickly look up key acronyms and terms mentioned throughout the Web Development curriculum.
+                      Quickly look up key acronyms and terms mentioned throughout the {title} curriculum.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 pt-4">
                     {glossary.map((g, idx) => (
-                      <div key={idx} className="p-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow" style={{ backgroundColor: "var(--bg-hover)", borderColor: "var(--border-primary)" }}>
+                      <div key={idx} className="p-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow animate-fade-in" style={{ backgroundColor: "var(--bg-hover)", borderColor: "var(--border-primary)" }}>
                         <h3 className="font-bold text-sm mb-1" style={{ color: "var(--text-accent)" }}>{g.term}</h3>
                         <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{g.def}</p>
                       </div>
@@ -989,7 +1039,7 @@ export default function WebDevCoursePage() {
                       Recommended Study Resources
                     </h1>
                     <p className="text-sm leading-normal" style={{ color: "var(--text-secondary)" }}>
-                      Free online resources, reference guides, tools, and newsletters to support your Web Development learning pathway.
+                      Free online resources, reference guides, tools, and newsletters to support your {title} learning pathway.
                     </p>
                   </div>
 
