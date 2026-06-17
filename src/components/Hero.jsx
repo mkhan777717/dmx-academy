@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { 
-  Play, Sparkles, BookOpen, Star, Activity, X, ArrowRight, 
-  Zap, Brain, Code2, Layers, CheckCircle, Users, Award 
+import {
+  Play, Sparkles, BookOpen, Star, Activity, X, ArrowRight,
+  Zap, Brain, Code2, Layers, CheckCircle, Users, Award
 } from "lucide-react";
 
 /* ─── Animated Counter ────────────────────────────── */
@@ -40,7 +40,7 @@ function FloatCard({ icon: Icon, title, subtitle, accent, delay, style }) {
   return (
     <motion.div
       className="absolute z-20 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl backdrop-blur-xl cursor-default select-none"
-      style={{ 
+      style={{
         backgroundColor: "var(--glass-bg)",
         border: "1px solid var(--glass-border)",
         ...style
@@ -237,7 +237,7 @@ export default function Hero() {
               className="text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              Immersive, curriculum-led learning tracks with interactive sandboxes, 
+              Immersive, curriculum-led learning tracks with interactive sandboxes,
               real-time AI feedback, and motion design labs. Build extraordinary things.
             </motion.p>
 
@@ -443,7 +443,7 @@ export default function Hero() {
                     Synapse Academy Platform Tour
                   </h3>
                   <p className="text-sm max-w-sm" style={{ color: "var(--text-secondary)" }}>
-                    Compile animations live in the browser, track your motion design skills, 
+                    Compile animations live in the browser, track your motion design skills,
                     and unlock cryptographic credentials on completion.
                   </p>
                   <motion.a

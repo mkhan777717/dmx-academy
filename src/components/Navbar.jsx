@@ -52,8 +52,8 @@ export default function Navbar() {
             >
               <Sparkles size={18} />
             </motion.div>
-            <span style={{ color: "var(--text-primary)" }}>
-              Synapse
+            <span className="text-2xl" style={{ color: "var(--text-primary)" }}>
+              DMX Academy
             </span>
           </Link>
 
@@ -204,7 +204,7 @@ export default function Navbar() {
               <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
                 Curriculums
               </li>
-              
+
               {courseCategories.map((cat) => (
                 <li key={cat.name}>
                   <a
