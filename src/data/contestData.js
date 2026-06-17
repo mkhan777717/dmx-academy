@@ -1,10 +1,10 @@
-// Synapse Academy Contest Registry Data
+// DMX Academy Contest Registry Data
 import { practiceProblems } from "./practiceProblems";
 
 export const contests = [
   {
     id: "speedrun-01",
-    title: "Synapse Web & Algorithm Speedrun #01",
+    title: "DMX Web & Algorithm Speedrun #01",
     desc: "Test your skills in coding performance and core virtual DOM rendering mechanics in this weekly speed challenge.",
     durationMins: 30,
     totalPoints: 300,
@@ -54,7 +54,7 @@ export const contests = [
   },
   {
     id: "hackathon-04",
-    title: "Synapse Monthly Hackathon #04",
+    title: "DMX Monthly Hackathon #04",
     desc: "Our premium monthly marathon challenge exploring distributed services rate limits, array optimizations, and reconciliation trees.",
     durationMins: 90,
     totalPoints: 600,

@@ -4,34 +4,34 @@ import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { 
-  LayoutDashboard, PlusCircle, Trophy, LogOut, 
-  Menu, X, ChevronLeft, ChevronRight, ShieldAlert, ArrowLeftRight, Code
+  LayoutDashboard, Trophy, LogOut, 
+  Menu, X, ChevronLeft, ChevronRight, GraduationCap, ArrowLeftRight, BookOpen
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
-export default function AdminLayout({ children }) {
+export default function MentorLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [adminUser, setAdminUser] = useState(null);
+  const [mentorUser, setMentorUser] = useState(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const session = localStorage.getItem("synapse_admin_session");
-      const isLoginRoute = pathname === "/admin";
+      const session = localStorage.getItem("synapse_mentor_session");
+      const isLoginRoute = pathname === "/mentor";
 
       if (!session && !isLoginRoute) {
-        router.push("/admin");
+        router.push("/mentor");
       } else if (session && isLoginRoute) {
-        router.push("/admin/dashboard");
+        router.push("/mentor/dashboard");
       } else {
-        setAdminUser({
-          name: "DMX Admin",
-          email: "admin@synapse.com",
-          role: "Super Admin",
-          avatar: "SA"
+        setMentorUser({
+          name: "DMX Mentor",
+          email: "mentor@synapse.com",
+          role: "Senior Mentor",
+          avatar: "SM"
         });
       }
       setCheckingAuth(false);
@@ -40,12 +40,12 @@ export default function AdminLayout({ children }) {
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
-      localStorage.removeItem("synapse_admin_session");
-      router.push("/admin");
+      localStorage.removeItem("synapse_mentor_session");
+      router.push("/mentor");
     }
   };
 
-  const isLoginRoute = pathname === "/admin";
+  const isLoginRoute = pathname === "/mentor";
 
   if (checkingAuth) {
     return (
@@ -66,23 +66,18 @@ export default function AdminLayout({ children }) {
   const sidebarLinks = [
     {
       label: "Dashboard",
-      href: "/admin/dashboard",
+      href: "/mentor/dashboard",
       icon: LayoutDashboard
     },
     {
-      label: "Create Contest",
-      href: "/admin/contests/new",
-      icon: PlusCircle
-    },
-    {
-      label: "Create Problem",
-      href: "/admin/problems/new",
-      icon: Code
-    },
-    {
-      label: "Public Lobby",
+      label: "Public Arena",
       href: "/contest",
       icon: Trophy
+    },
+    {
+      label: "Course Catalog",
+      href: "/courses",
+      icon: BookOpen
     }
   ];
 
@@ -101,11 +96,11 @@ export default function AdminLayout({ children }) {
         <div className="flex items-center justify-between px-6 py-5 border-b" style={{ borderColor: "var(--border-primary)" }}>
           <div className="flex items-center space-x-3 overflow-hidden">
             <div className="p-2 rounded-xl" style={{ backgroundColor: "var(--bg-badge)", color: "var(--text-accent)" }}>
-              <ShieldAlert size={18} />
+              <GraduationCap size={18} />
             </div>
             {!isSidebarCollapsed && (
               <span className="font-bold text-sm tracking-tight text-gradient whitespace-nowrap">
-                DMX Admin
+                Mentor Board
               </span>
             )}
           </div>
@@ -159,15 +154,15 @@ export default function AdminLayout({ children }) {
 
         {/* Sidebar Footer / User Info */}
         <div className="p-4 border-t" style={{ borderColor: "var(--border-primary)" }}>
-          {!isSidebarCollapsed && adminUser ? (
+          {!isSidebarCollapsed && mentorUser ? (
             <div className="p-3 rounded-2xl flex items-center justify-between" style={{ backgroundColor: "var(--bg-primary)" }}>
               <div className="flex items-center space-x-3 overflow-hidden">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
-                  {adminUser.avatar}
+                <div className="w-8 h-8 rounded-xl bg-violet-500 text-white font-extrabold flex items-center justify-center text-xs shrink-0 shadow-sm">
+                  {mentorUser.avatar}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold truncate" style={{ color: "var(--text-primary)" }}>{adminUser.name}</p>
-                  <p className="text-[10px] truncate" style={{ color: "var(--text-muted)" }}>{adminUser.role}</p>
+                  <p className="text-xs font-bold truncate" style={{ color: "var(--text-primary)" }}>{mentorUser.name}</p>
+                  <p className="text-[10px] truncate" style={{ color: "var(--text-muted)" }}>{mentorUser.role}</p>
                 </div>
               </div>
               <button 
@@ -175,7 +170,7 @@ export default function AdminLayout({ children }) {
                 className="p-1.5 rounded-lg hover:bg-rose-500/10 hover:text-rose-500 transition-colors cursor-pointer"
                 style={{ color: "var(--text-secondary)" }}
                 title="Log Out"
-                id="admin-logout-btn"
+                id="mentor-logout-btn"
               >
                 <LogOut size={14} />
               </button>
@@ -186,7 +181,7 @@ export default function AdminLayout({ children }) {
               className="w-full flex items-center justify-center p-3 rounded-2xl hover:bg-rose-500/10 hover:text-rose-500 transition-colors cursor-pointer"
               style={{ color: "var(--text-secondary)" }}
               title="Log Out"
-              id="admin-logout-btn"
+              id="mentor-logout-btn"
             >
               <LogOut size={16} />
             </button>
@@ -204,9 +199,9 @@ export default function AdminLayout({ children }) {
             <div className="flex items-center justify-between mb-8">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-500">
-                  <ShieldAlert size={18} />
+                  <GraduationCap size={18} />
                 </div>
-                <span className="font-bold text-sm text-gradient">DMX Admin</span>
+                <span className="font-bold text-sm text-gradient">Mentor Board</span>
               </div>
               <button onClick={() => setIsMobileMenuOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-500/10">
                 <X size={18} style={{ color: "var(--text-primary)" }} />
@@ -237,15 +232,15 @@ export default function AdminLayout({ children }) {
             </nav>
 
             <div className="pt-6 border-t" style={{ borderColor: "var(--border-primary)" }}>
-              {adminUser && (
+              {mentorUser && (
                 <div className="flex items-center justify-between p-3 rounded-2xl" style={{ backgroundColor: "var(--bg-primary)" }}>
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white font-extrabold flex items-center justify-center text-xs">
-                      {adminUser.avatar}
+                      {mentorUser.avatar}
                     </div>
                     <div>
-                      <p className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{adminUser.name}</p>
-                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{adminUser.role}</p>
+                      <p className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{mentorUser.name}</p>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{mentorUser.role}</p>
                     </div>
                   </div>
                   <button 
@@ -284,7 +279,7 @@ export default function AdminLayout({ children }) {
 
             {/* Breadcrumbs */}
             <div className="hidden sm:flex items-center space-x-2 text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
-              <span>Admin</span>
+              <span>Mentor</span>
               <span style={{ color: "var(--text-muted)" }}>/</span>
               <span className="text-[var(--text-primary)] capitalize">
                 {pathname.split("/").filter(Boolean).slice(1).join(" / ") || "Dashboard"}

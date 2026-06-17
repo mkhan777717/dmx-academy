@@ -603,7 +603,7 @@ export default function DynamicCoursePage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-md" style={{ background: "var(--accent-gradient)" }}>
               <Sparkles size={16} />
             </div>
-            <span>Synapse Academy</span>
+            <span>DMX Academy</span>
           </a>
           <button 
             onClick={() => setIsSidebarOpen(false)}

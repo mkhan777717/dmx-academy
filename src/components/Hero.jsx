@@ -91,7 +91,7 @@ function LiveCodeCard() {
         <span className="h-3 w-3 rounded-full bg-red-500/80" />
         <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
         <span className="h-3 w-3 rounded-full bg-green-500/80" />
-        <span className="ml-3 text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>hero.jsx — Synapse Academy</span>
+        <span className="ml-3 text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>hero.jsx — DMX Academy</span>
         <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#4ade8020", color: "#4ade80" }}>● live</span>
       </div>
       {/* Code lines */}
@@ -440,7 +440,7 @@ export default function Hero() {
                     <Sparkles size={32} />
                   </motion.div>
                   <h3 className="text-2xl font-bold font-display" style={{ color: "var(--text-primary)" }}>
-                    Synapse Academy Platform Tour
+                    DMX Academy Platform Tour
                   </h3>
                   <p className="text-sm max-w-sm" style={{ color: "var(--text-secondary)" }}>
                     Compile animations live in the browser, track your motion design skills,

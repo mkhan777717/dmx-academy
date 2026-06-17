@@ -39,7 +39,7 @@ export default function Footer() {
     {
       title: "Company",
       links: [
-        { name: "About Synapse", href: "#" },
+        { name: "About DMX", href: "#" },
         { name: "Academy Blog", href: "#" },
         { name: "Student Work", href: "#" },
         { name: "Careers", href: "#" },

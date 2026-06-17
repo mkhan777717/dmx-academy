@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, ArrowRight, ChevronDown } from "lucide-react";
+import { Sparkles, Menu, X, ArrowRight, ChevronDown, User, GraduationCap, ShieldAlert } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 const navItems = [
@@ -24,6 +24,7 @@ export default function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSignInDropdownOpen, setIsSignInDropdownOpen] = useState(false);
 
   return (
     <motion.header
@@ -148,6 +149,105 @@ export default function Navbar() {
           {/* Right: Theme Toggle + CTA */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
+
+            {/* Sign In Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setIsSignInDropdownOpen(true)}
+              onMouseLeave={() => setIsSignInDropdownOpen(false)}
+            >
+              <button
+                className="relative flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors outline-none cursor-pointer rounded-full border"
+                style={{
+                  color: isSignInDropdownOpen ? "var(--text-accent)" : "var(--text-secondary)",
+                  backgroundColor: "var(--bg-card)",
+                  borderColor: "var(--border-primary)",
+                }}
+              >
+                <span>Sign In</span>
+                <motion.span
+                  animate={{ rotate: isSignInDropdownOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0"
+                >
+                  <ChevronDown size={14} />
+                </motion.span>
+              </button>
+
+              <AnimatePresence>
+                {isSignInDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-56 rounded-2xl border p-2 shadow-2xl backdrop-blur-xl z-50 text-left"
+                    style={{
+                      backgroundColor: "var(--bg-card)",
+                      borderColor: "var(--border-primary)",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+                    }}
+                  >
+                    <Link
+                      href="/student"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-500/5 transition-all"
+                      onClick={() => setIsSignInDropdownOpen(false)}
+                    >
+                      <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
+                        <User size={15} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                          Student Portal
+                        </div>
+                        <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                          Access your study desk
+                        </div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      href="/mentor"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-500/5 transition-all"
+                      onClick={() => setIsSignInDropdownOpen(false)}
+                    >
+                      <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500 shrink-0">
+                        <GraduationCap size={15} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                          Mentor Board
+                        </div>
+                        <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                          Review submissions
+                        </div>
+                      </div>
+                    </Link>
+
+                    <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
+
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-500/5 transition-all"
+                      onClick={() => setIsSignInDropdownOpen(false)}
+                    >
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                        <ShieldAlert size={15} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                          Admin Control
+                        </div>
+                        <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                          Manage competitions
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             <motion.a
               href="#pricing"
               whileHover={{ scale: 1.05, boxShadow: "0px 6px 20px var(--accent-glow)" }}
@@ -225,6 +325,46 @@ export default function Navbar() {
                   style={{ color: "var(--text-accent)" }}
                 >
                   View Course Catalog &rarr;
+                </Link>
+              </li>
+
+              <li className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
+
+              <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
+                Sign In Portals
+              </li>
+
+              <li>
+                <Link
+                  href="/student"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  <User size={14} className="text-indigo-500" />
+                  <span>Student Portal</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/mentor"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  <GraduationCap size={14} className="text-violet-500" />
+                  <span>Mentor Board</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/admin"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                  style={{ color: "var(--text-accent)" }}
+                >
+                  <ShieldAlert size={14} className="text-emerald-500" />
+                  <span>Admin Control</span>
                 </Link>
               </li>
 

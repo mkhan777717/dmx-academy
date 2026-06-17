@@ -11,7 +11,7 @@ const testimonials = [
     role: "Senior Creative Developer",
     company: "Vercel",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop",
-    quote: "Synapse completely changed how I study. The interactive code sandboxes made complex WebGL matrix math and shader math click immediately. Highly recommended!",
+    quote: "DMX Academy completely changed how I study. The interactive code sandboxes made complex WebGL matrix math and shader math click immediately. Highly recommended!",
     rating: 5,
   },
   {
@@ -97,7 +97,7 @@ export default function Testimonials() {
               Endorsed by Top Creators
             </h2>
             <p className="text-sm sm:text-base transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-              Read how developers, designers, and creative technologists around the globe level up their day-to-day skills with Synapse.
+              Read how developers, designers, and creative technologists around the globe level up their day-to-day skills with DMX Academy.
             </p>
           </div>
 

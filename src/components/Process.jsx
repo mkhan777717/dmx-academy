@@ -56,7 +56,7 @@ export default function Process() {
             Designed for Practical Mastery
           </h2>
           <p className="text-sm sm:text-base transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-            Traditional tutorials teach you to copy. Synapse Academy utilizes interactive, project-driven timelines to build muscle memory.
+            Traditional tutorials teach you to copy. DMX Academy utilizes interactive, project-driven timelines to build muscle memory.
           </p>
         </div>
 

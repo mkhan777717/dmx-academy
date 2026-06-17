@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Lock, Mail, ArrowRight, ShieldAlert } from "lucide-react";
+import { Lock, Mail, ArrowRight, BookOpen } from "lucide-react";
 
-export default function AdminLogin() {
+export default function StudentLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,9 +15,9 @@ export default function AdminLogin() {
   // Check if already logged in
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const isLoggedIn = localStorage.getItem("synapse_admin_session");
+      const isLoggedIn = localStorage.getItem("synapse_student_session");
       if (isLoggedIn) {
-        router.push("/admin/dashboard");
+        router.push("/student/dashboard");
       }
     }
   }, [router]);
@@ -27,11 +27,11 @@ export default function AdminLogin() {
     setError("");
     setLoading(true);
 
-    // Simple mock auth for the prototype
+    // Simple mock auth for prototype
     setTimeout(() => {
-      if (email === "admin@synapse.com" && password === "admin123") {
-        localStorage.setItem("synapse_admin_session", "true");
-        router.push("/admin/dashboard");
+      if (email === "student@synapse.com" && password === "student123") {
+        localStorage.setItem("synapse_student_session", "true");
+        router.push("/student/dashboard");
       } else {
         setError("Invalid email or password. Use the quick-fill helper below!");
         setLoading(false);
@@ -40,8 +40,8 @@ export default function AdminLogin() {
   };
 
   const handleQuickFill = () => {
-    setEmail("admin@synapse.com");
-    setPassword("admin123");
+    setEmail("student@synapse.com");
+    setPassword("student123");
     setError("");
   };
 
@@ -70,13 +70,13 @@ export default function AdminLogin() {
               color: "var(--text-accent)"
             }}
           >
-            <ShieldAlert size={28} className="animate-pulse" />
+            <BookOpen size={28} className="animate-pulse" />
           </div>
           <h1 className="text-3xl font-black font-display tracking-tight text-gradient">
-            DMX Control Center
+            DMX Student Portal
           </h1>
           <p className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
-            DMX Academy Contest & Problems Manager
+            DMX Academy Learning & Practice Hub
           </p>
         </motion.div>
 
@@ -89,10 +89,10 @@ export default function AdminLogin() {
         >
           <div className="space-y-1">
             <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-              Admin Sign In
+              Student Sign In
             </h2>
             <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
-              Access administrative features and contest creation
+              Access your study desk, courses, and practice problems
             </p>
           </div>
 
@@ -115,9 +115,9 @@ export default function AdminLogin() {
               <div className="relative">
                 <Mail size={16} className="absolute left-4 top-3.5" style={{ color: "var(--text-muted)" }} />
                 <input
-                  id="admin-email"
+                  id="student-email"
                   type="email"
-                  placeholder="name@synapse.com"
+                  placeholder="student@synapse.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-2xl py-3 pl-11 pr-4 text-xs outline-none border transition-all"
@@ -141,7 +141,7 @@ export default function AdminLogin() {
               <div className="relative">
                 <Lock size={16} className="absolute left-4 top-3.5" style={{ color: "var(--text-muted)" }} />
                 <input
-                  id="admin-password"
+                  id="student-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -159,13 +159,13 @@ export default function AdminLogin() {
 
             {/* Submit Button */}
             <button
-              id="admin-login-btn"
+              id="student-login-btn"
               type="submit"
               disabled={loading}
               className="w-full py-3 rounded-2xl font-bold text-xs text-white shadow-md transition-all cursor-pointer flex items-center justify-center space-x-2 group mt-2"
               style={{ background: "var(--accent-gradient)" }}
             >
-              <span>{loading ? "Verifying..." : "Sign In to Control Room"}</span>
+              <span>{loading ? "Logging in..." : "Enter Study Space"}</span>
               {!loading && <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
@@ -184,7 +184,7 @@ export default function AdminLogin() {
                 color: "var(--text-accent)"
               }}
             >
-              Autofill Admin Credentials
+              Autofill Student Credentials
             </button>
           </div>
         </motion.div>
