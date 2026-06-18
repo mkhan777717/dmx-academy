@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { 
-  Play, Sparkles, BookOpen, Star, Activity, X, ArrowRight, 
-  Zap, Brain, Code2, Layers, CheckCircle, Users, Award 
+import {
+  Play, Sparkles, BookOpen, Star, Activity, X, ArrowRight,
+  Zap, Brain, Code2, Layers, CheckCircle, Users, Award
 } from "lucide-react";
 
 /* ─── Animated Counter ────────────────────────────── */
@@ -40,7 +40,7 @@ function FloatCard({ icon: Icon, title, subtitle, accent, delay, style }) {
   return (
     <motion.div
       className="absolute z-20 flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl backdrop-blur-xl cursor-default select-none"
-      style={{ 
+      style={{
         backgroundColor: "var(--glass-bg)",
         border: "1px solid var(--glass-border)",
         ...style
@@ -91,7 +91,7 @@ function LiveCodeCard() {
         <span className="h-3 w-3 rounded-full bg-red-500/80" />
         <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
         <span className="h-3 w-3 rounded-full bg-green-500/80" />
-        <span className="ml-3 text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>hero.jsx — Synapse Academy</span>
+        <span className="ml-3 text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>hero.jsx — DMX Academy</span>
         <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded" style={{ backgroundColor: "#4ade8020", color: "#4ade80" }}>● live</span>
       </div>
       {/* Code lines */}
@@ -237,7 +237,7 @@ export default function Hero() {
               className="text-base sm:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed"
               style={{ color: "var(--text-secondary)" }}
             >
-              Immersive, curriculum-led learning tracks with interactive sandboxes, 
+              Immersive, curriculum-led learning tracks with interactive sandboxes,
               real-time AI feedback, and motion design labs. Build extraordinary things.
             </motion.p>
 
@@ -269,6 +269,7 @@ export default function Hero() {
               </motion.a>
 
               <motion.button
+                suppressHydrationWarning
                 onClick={() => setIsVideoOpen(true)}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -419,6 +420,7 @@ export default function Hero() {
               onClick={(e) => e.stopPropagation()}
             >
               <button
+                suppressHydrationWarning
                 onClick={() => setIsVideoOpen(false)}
                 className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors"
                 style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }}
@@ -440,10 +442,10 @@ export default function Hero() {
                     <Sparkles size={32} />
                   </motion.div>
                   <h3 className="text-2xl font-bold font-display" style={{ color: "var(--text-primary)" }}>
-                    Synapse Academy Platform Tour
+                    DMX Academy Platform Tour
                   </h3>
                   <p className="text-sm max-w-sm" style={{ color: "var(--text-secondary)" }}>
-                    Compile animations live in the browser, track your motion design skills, 
+                    Compile animations live in the browser, track your motion design skills,
                     and unlock cryptographic credentials on completion.
                   </p>
                   <motion.a

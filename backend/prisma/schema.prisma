@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Language {
+  JAVASCRIPT
+  PYTHON
+  CPP
+}
+
+enum SubmissionStatus {
+  ACCEPTED
+  WRONG_ANSWER
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+  TIME_LIMIT_EXCEEDED
+  PENDING
+}
+
+model User {
+  id               Int          @id @default(autoincrement())
+  email            String       @unique
+  username         String       @unique
+  password         String
+  role             Role         @default(USER)
+  submissions      Submission[]
+  contestsCreated  Contest[]    @relation("ContestCreator")
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Problem {
+  id              Int              @id @default(autoincrement())
+  title           String
+  slug            String           @unique
+  difficulty      Difficulty
+  statement       String
+  inputFormat     String
+  outputFormat    String
+  constraints     String
+  explanation     String
+  testCases       TestCase[]
+  submissions     Submission[]
+  contestProblems ContestProblem[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model TestCase {
+  id             Int      @id @default(autoincrement())
+  input          String
+  expectedOutput String
+  isSample       Boolean  @default(false)
+  problemId      Int
+  problem        Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Submission {
+  id            Int              @id @default(autoincrement())
+  userId        Int
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId     Int
+  problem       Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  language      Language
+  code          String
+  status        SubmissionStatus @default(PENDING)
+  executionTime Int?             // In milliseconds
+  createdAt     DateTime         @default(now())
+}
+
+model Contest {
+  id              Int              @id @default(autoincrement())
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  creatorId       Int?
+  creator         User?            @relation("ContestCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  contestProblems ContestProblem[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model ContestProblem {
+  id        Int     @id @default(autoincrement())
+  contestId Int
+  problemId Int
+  points    Int     @default(100)
+  contest   Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([contestId, problemId])
+}

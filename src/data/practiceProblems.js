@@ -1,4 +1,4 @@
-// Synapse Academy Practice Problems Dataset
+// DMX Academy Practice Problems Dataset
 // Contains detailed content for practice zone exercises
 
 export const practiceProblems = [

@@ -8,7 +8,7 @@ import {
   Play, Send, BookOpen, Terminal, 
   CheckCircle2, ChevronRight, Mic, RefreshCw,
   FileText, MessageCircle, ClipboardCheck, Palette, Trash2,
-  Trophy, Clock, Lock, Flag
+  Trophy, Clock, Lock, Flag, Volume2
 } from "lucide-react";
 import { contests } from "@/data/contestData";
 
@@ -106,6 +106,7 @@ export default function ContestWorkspace() {
   const [assistantTyping, setAssistantTyping] = useState(false);
   const [voiceEnabled] = useState(true);
   const [finalElapsedTime, setFinalElapsedTime] = useState("0m 0s");
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Code Editor Textarea Ref
   const editorRef = useRef(null);
@@ -272,6 +273,15 @@ export default function ContestWorkspace() {
     }
   }, [activeLeftTab, drawColor, lineWidth]);
 
+  // Clean speaking on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
   // EARLY CONDITIONAL RETURNS
   if (loadingContest) {
     return (
@@ -437,9 +447,20 @@ export default function ContestWorkspace() {
     drawCanvasBackground(canvas, ctx);
   };
 
+  const stopSpeaking = () => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  };
+
   // Voice Assistant speech-to-text / speech synthesis simulator
   const askVoiceAssistant = (customQuery = "") => {
     if (isListening || assistantTyping) return;
+    if (isSpeaking) {
+      stopSpeaking();
+      return;
+    }
     
     const query = customQuery || "How do I optimize the code for performance?";
     setIsListening(true);
@@ -468,6 +489,15 @@ export default function ContestWorkspace() {
         if (voiceEnabled && typeof window !== "undefined" && window.speechSynthesis) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(responseText);
+
+          setIsSpeaking(true);
+          utterance.onend = () => {
+            setIsSpeaking(false);
+          };
+          utterance.onerror = () => {
+            setIsSpeaking(false);
+          };
+
           utterance.rate = 1.0;
           const voices = window.speechSynthesis.getVoices();
           const preferredVoice = voices.find(v => v.lang.includes("en-US")) || voices.find(v => v.lang.includes("en"));
@@ -1028,17 +1058,31 @@ export default function ContestWorkspace() {
               {/* Voice Assistant panel */}
               <div className="flex items-center justify-between p-3 border-b bg-slate-500/5 shadow-sm" style={{ borderColor: "var(--border-primary)" }}>
                 <div className="flex items-center space-x-2.5">
-                  <div className="relative">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white shadow-sm ${
-                      isListening ? "bg-red-500" : "bg-indigo-600"
-                    }`}>
+                  <button
+                    onClick={isSpeaking ? stopSpeaking : () => askVoiceAssistant()}
+                    disabled={isListening || assistantTyping}
+                    className={`relative h-8 w-8 rounded-full flex items-center justify-center text-white shadow-sm transition-all border border-transparent outline-none focus:outline-none ${
+                      isSpeaking 
+                        ? "bg-rose-600 hover:bg-rose-700 cursor-pointer" 
+                        : isListening 
+                          ? "bg-red-500" 
+                          : "bg-indigo-600 hover:bg-indigo-700 cursor-pointer"
+                    }`}
+                    title={isSpeaking ? "Stop speaking" : "Start query"}
+                  >
+                    {isSpeaking ? (
+                      <Volume2 size={14} className="animate-bounce" />
+                    ) : (
                       <Mic size={14} className={isListening ? "animate-pulse" : ""} />
-                    </div>
-                  </div>
+                    )}
+                    {isListening && (
+                      <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-red-400 border border-white animate-ping" />
+                    )}
+                  </button>
                   <div>
                     <div className="text-xs font-bold text-[var(--text-primary)]">VOICE DEVELOPER ASSISTANT</div>
                     <div className="text-[10px] text-[var(--text-secondary)]">
-                      {isListening ? "Listening to query..." : assistantTyping ? "AI typing hints..." : "Locked on explaining security & algorithms."}
+                      {isListening ? "Listening to query..." : assistantTyping ? "AI typing hints..." : isSpeaking ? "Speaking... (Click speaker icon to stop)" : "Locked on explaining security & algorithms."}
                     </div>
                   </div>
                 </div>

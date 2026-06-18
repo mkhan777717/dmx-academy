@@ -107,13 +107,13 @@ export default function ContestLobby() {
               }}
             >
               <Trophy size={13} className="text-[var(--text-accent)] animate-bounce" />
-              <span>Synapse Competitive Coding</span>
+              <span>DMX Competitive Coding</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black font-display tracking-tight" style={{ color: "var(--text-primary)" }}>
               Contest Arena
             </h1>
             <p className="text-sm sm:text-base leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Challenge other students, solve system architectures under pressure, and climb the Synapse leaderboard in timed hackathons.
+              Challenge other students, solve system architectures under pressure, and climb the DMX leaderboard in timed hackathons.
             </p>
           </motion.div>
 
@@ -186,7 +186,7 @@ export default function ContestLobby() {
               >
                 <div className="px-6 py-5 border-b flex items-center justify-between" style={{ borderColor: "var(--border-primary)" }}>
                   <div>
-                    <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>Synapse Grand Rankings</h3>
+                    <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>DMX Grand Rankings</h3>
                     <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Updated after every official weekly speedrun contest.</p>
                   </div>
                   <Trophy size={20} className="text-amber-500" />

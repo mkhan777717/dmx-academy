@@ -91,7 +91,7 @@ export default function AdminDashboard() {
             Welcome back, System Administrator
           </h1>
           <p className="text-xs max-w-xl" style={{ color: "var(--text-secondary)" }}>
-            Here is the current state of Synapse Competitions. You can create contests, manage algorithm problems, and check user submission flows.
+            Here is the current state of DMX Competitions. You can create contests, manage algorithm problems, and check user submission flows.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0 relative z-10">

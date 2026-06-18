@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Synapse Academy | The Creative & Tech Learning Platform",
+  title: "DMX Academy | The Creative & Tech Learning Platform",
   description: "Master creative motion design, machine learning, and advanced frontend engineering with interactive, project-driven tracks.",
 };
 
