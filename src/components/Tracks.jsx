@@ -234,6 +234,7 @@ export default function Tracks() {
           >
             {tabList.map((tab) => (
               <button
+                suppressHydrationWarning
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className="relative px-5 py-2.5 rounded-full text-sm font-semibold transition-colors duration-300"

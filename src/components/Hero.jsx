@@ -269,6 +269,7 @@ export default function Hero() {
               </motion.a>
 
               <motion.button
+                suppressHydrationWarning
                 onClick={() => setIsVideoOpen(true)}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.96 }}
@@ -419,6 +420,7 @@ export default function Hero() {
               onClick={(e) => e.stopPropagation()}
             >
               <button
+                suppressHydrationWarning
                 onClick={() => setIsVideoOpen(false)}
                 className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors"
                 style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }}

@@ -109,6 +109,7 @@ export default function Pricing() {
               }}
             >
               <button
+                suppressHydrationWarning
                 onClick={() => setIsAnnual(false)}
                 className="relative px-4 py-2 text-xs font-bold uppercase transition-colors duration-300"
                 style={{ color: !isAnnual ? "var(--text-primary)" : "var(--text-muted)" }}
@@ -127,6 +128,7 @@ export default function Pricing() {
                 <span className="relative z-10">Monthly</span>
               </button>
               <button
+                suppressHydrationWarning
                 onClick={() => setIsAnnual(true)}
                 className="relative px-4 py-2 text-xs font-bold uppercase transition-colors duration-300"
                 style={{ color: isAnnual ? "var(--text-primary)" : "var(--text-muted)" }}
@@ -251,6 +253,7 @@ export default function Pricing() {
                 {/* CTA Button */}
                 <div className="mt-8 pt-6">
                   <motion.button
+                    suppressHydrationWarning
                     whileTap={{ scale: 0.95 }}
                     className="w-full rounded-xl py-3 text-sm font-bold shadow-md transition-all"
                     style={

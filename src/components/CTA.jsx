@@ -90,6 +90,7 @@ export default function CTA() {
           <div className="max-w-md mx-auto pt-4">
             <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row gap-3">
               <input
+                suppressHydrationWarning
                 type="email"
                 required
                 placeholder="Enter your email address"
@@ -101,6 +102,7 @@ export default function CTA() {
                 }}
               />
               <motion.button
+                suppressHydrationWarning
                 type="submit"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

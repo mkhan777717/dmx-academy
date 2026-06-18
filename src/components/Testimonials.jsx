@@ -104,6 +104,7 @@ export default function Testimonials() {
           {/* Nav arrows */}
           <div className="flex items-center space-x-3">
             <motion.button
+              suppressHydrationWarning
               onClick={slideLeft}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -125,6 +126,7 @@ export default function Testimonials() {
               <ArrowLeft size={18} />
             </motion.button>
             <motion.button
+              suppressHydrationWarning
               onClick={slideRight}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

@@ -1,0 +1,76 @@
+const { z } = require('zod');
+
+// Authentication schemas
+const registerSchema = z.object({
+  username: z
+    .string()
+    .min(3, 'Username must be at least 3 characters long')
+    .max(30, 'Username cannot exceed 30 characters')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain alphanumeric characters and underscores'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+  role: z.enum(['USER', 'ADMIN']).optional(),
+});
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+// Problem schemas
+const testCaseSchema = z.object({
+  input: z.string().default(''),
+  expectedOutput: z.string().default(''),
+  isSample: z.boolean().default(false),
+});
+
+const problemSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters long'),
+  difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+  statement: z.string().min(10, 'Statement must be at least 10 characters long'),
+  inputFormat: z.string().min(1, 'Input format is required'),
+  outputFormat: z.string().min(1, 'Output format is required'),
+  constraints: z.string().min(1, 'Constraints are required'),
+  explanation: z.string().min(1, 'Explanation is required'),
+  testCases: z.array(testCaseSchema).min(1, 'At least one testcase is required'),
+});
+
+const problemUpdateSchema = problemSchema.partial().extend({
+  testCases: z.array(testCaseSchema).optional(),
+});
+
+// Contest schemas
+const contestSchema = z.object({
+  title: z.string().min(3, 'Contest title must be at least 3 characters long'),
+  description: z.string().optional(),
+  startTime: z.string().refine(val => !isNaN(Date.parse(val)), {
+    message: 'Invalid start time date string',
+  }),
+  endTime: z.string().refine(val => !isNaN(Date.parse(val)), {
+    message: 'Invalid end time date string',
+  }),
+}).refine(data => new Date(data.startTime) < new Date(data.endTime), {
+  message: 'End time must be after start time',
+  path: ['endTime'],
+});
+
+const contestProblemSchema = z.object({
+  problemId: z.number().int('Problem ID must be an integer'),
+  points: z.number().int().min(1, 'Points must be at least 1').optional().default(100),
+});
+
+// Submission schemas
+const submissionSchema = z.object({
+  language: z.enum(['JAVASCRIPT', 'PYTHON', 'CPP']),
+  code: z.string().min(1, 'Code code is required'),
+});
+
+module.exports = {
+  registerSchema,
+  loginSchema,
+  problemSchema,
+  problemUpdateSchema,
+  contestSchema,
+  contestProblemSchema,
+  submissionSchema,
+};
