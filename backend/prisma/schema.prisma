@@ -34,15 +34,16 @@ enum SubmissionStatus {
 }
 
 model User {
-  id               Int          @id @default(autoincrement())
-  email            String       @unique
-  username         String       @unique
-  password         String
-  role             Role         @default(USER)
-  submissions      Submission[]
-  contestsCreated  Contest[]    @relation("ContestCreator")
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id                    Int                    @id @default(autoincrement())
+  email                 String                 @unique
+  username              String                 @unique
+  password              String
+  role                  Role                   @default(USER)
+  submissions           Submission[]
+  contestsCreated       Contest[]              @relation("ContestCreator")
+  contestParticipations ContestParticipation[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
 }
 
 model Problem {
@@ -87,16 +88,18 @@ model Submission {
 }
 
 model Contest {
-  id              Int              @id @default(autoincrement())
-  title           String
-  description     String?
-  startTime       DateTime
-  endTime         DateTime
-  creatorId       Int?
-  creator         User?            @relation("ContestCreator", fields: [creatorId], references: [id], onDelete: SetNull)
-  contestProblems ContestProblem[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                    Int                    @id @default(autoincrement())
+  title                 String
+  description           String?
+  category              String?
+  startTime             DateTime
+  endTime               DateTime
+  creatorId             Int?
+  creator               User?                  @relation("ContestCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  contestProblems       ContestProblem[]
+  contestParticipations ContestParticipation[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
 }
 
 model ContestProblem {
@@ -108,4 +111,18 @@ model ContestProblem {
   problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@unique([contestId, problemId])
+}
+
+model ContestParticipation {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contestId Int
+  contest   Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  completed Boolean  @default(false)
+  score     Int      @default(0)
+  timeSpent String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, contestId])
 }

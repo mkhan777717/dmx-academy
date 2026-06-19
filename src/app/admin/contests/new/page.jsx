@@ -25,18 +25,46 @@ export default function CreateContest() {
 
   // Custom problems states
   const [availableProblems, setAvailableProblems] = useState([]);
-  // Reload available problems from local storage
-  const refreshProblemsList = () => {
-    let merged = [...practiceProblems];
-    if (typeof window !== "undefined") {
-      const dynamicRaw = localStorage.getItem("synapse_dynamic_problems");
-      if (dynamicRaw) {
-        try {
-          const dynamicProbs = JSON.parse(dynamicRaw);
-          const dynamicFiltered = dynamicProbs.filter(dp => !practiceProblems.some(sp => sp.id === dp.id));
-          merged = [...dynamicFiltered, ...practiceProblems];
-        } catch (e) {
-          console.error("Error reading dynamic problems:", e);
+  // Reload available problems from backend & local storage fallback
+  const refreshProblemsList = async () => {
+    let merged = [];
+    try {
+      const res = await fetch("http://localhost:5000/api/problems");
+      const data = await res.json();
+      if (data.success && data.problems) {
+        // Map database problems to match the UI format
+        merged = data.problems.map(prob => {
+          // Find if there's a static problem matching this slug to borrow tags/time/icon etc.
+          const staticProb = practiceProblems.find(sp => sp.id === prob.slug);
+          // Capitalize difficulty: EASY -> Easy, MEDIUM -> Medium, HARD -> Hard
+          const formattedDiff = prob.difficulty.charAt(0) + prob.difficulty.slice(1).toLowerCase();
+          return {
+            id: prob.id, // Database integer ID
+            slug: prob.slug,
+            title: prob.title,
+            difficulty: formattedDiff,
+            category: staticProb ? staticProb.category : "Algorithms",
+            ...staticProb // Merge additional fields
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch problems from backend API:", err);
+    }
+
+    // Fallback if backend API is not responding or returned empty list
+    if (merged.length === 0) {
+      merged = [...practiceProblems];
+      if (typeof window !== "undefined") {
+        const dynamicRaw = localStorage.getItem("synapse_dynamic_problems");
+        if (dynamicRaw) {
+          try {
+            const dynamicProbs = JSON.parse(dynamicRaw);
+            const dynamicFiltered = dynamicProbs.filter(dp => !practiceProblems.some(sp => sp.id === dp.id));
+            merged = [...dynamicFiltered, ...practiceProblems];
+          } catch (e) {
+            console.error("Error reading dynamic problems:", e);
+          }
         }
       }
     }
@@ -67,63 +95,103 @@ export default function CreateContest() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title || !slug) return;
 
-    // Build the problems array from selection
-    const contestProblems = selectedProblemIds.map(id => {
-      const prob = availableProblems.find(p => p.id === id);
-      return {
-        ...prob,
-        points: Math.round(totalPoints / (selectedProblemIds.length || 1))
-      };
-    });
+    // 1. Construct times
+    let calculatedStartTime;
+    let calculatedEndTime;
 
-    // Formulate dates/strings
-    const startStr = startDate && startTime 
-      ? `Starts at ${startTime} on ${startDate}` 
-      : status === "active" ? "Started just now" : "Starts soon";
-
-    const timeLeftStr = status === "active" 
-      ? `${durationMins}m remaining` 
-      : status === "upcoming" ? "Starts in 2 hours" : "Completed";
-
-    const newContestObj = {
-      id: slug,
-      title,
-      desc,
-      durationMins: Number(durationMins),
-      totalPoints: Number(totalPoints),
-      status,
-      category,
-      timeLeftStr,
-      startTime: startStr,
-      problems: contestProblems,
-      leaderboard: []
-    };
-
-    // Save to localStorage
-    if (typeof window !== "undefined") {
-      const existingRaw = localStorage.getItem("synapse_dynamic_contests");
-      let existing = [];
-      if (existingRaw) {
-        try {
-          existing = JSON.parse(existingRaw);
-        } catch {
-          existing = [];
-        }
+    if (status === "active") {
+      calculatedStartTime = new Date();
+      calculatedEndTime = new Date(Date.now() + Number(durationMins) * 60 * 1000);
+    } else if (status === "past") {
+      calculatedEndTime = new Date();
+      calculatedStartTime = new Date(Date.now() - Number(durationMins) * 60 * 1000);
+    } else { // upcoming
+      if (startDate && startTime) {
+        calculatedStartTime = new Date(`${startDate}T${startTime}`);
+      } else {
+        calculatedStartTime = new Date();
       }
-      // Avoid duplicate slug
-      existing = existing.filter(c => c.id !== slug);
-      existing.unshift(newContestObj);
-      localStorage.setItem("synapse_dynamic_contests", JSON.stringify(existing));
+      calculatedEndTime = new Date(calculatedStartTime.getTime() + Number(durationMins) * 60 * 1000);
     }
 
-    setSuccess(true);
-    setTimeout(() => {
-      router.push("/contest");
-    }, 1200);
+    try {
+      // 2. Call backend to create the contest
+      const res = await fetch("http://localhost:5000/api/contests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-bypass-auth": "true" // dev bypass admin auth
+        },
+        body: JSON.stringify({
+          title,
+          description: desc,
+          category,
+          startTime: calculatedStartTime.toISOString(),
+          endTime: calculatedEndTime.toISOString()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to create contest in database.");
+      }
+
+      const createdContest = data.contest;
+      const contestId = createdContest.id;
+
+      // 3. Add each problem to the contest
+      for (const rawId of selectedProblemIds) {
+        // Resolve target problem database integer ID
+        const targetProb = availableProblems.find(p => p.id === rawId || p.slug === rawId);
+        if (targetProb) {
+          let dbProblemId = typeof targetProb.id === "number" ? targetProb.id : null;
+          
+          // If the availableProblems list was a static fallback, find the problem in database by slug
+          if (!dbProblemId) {
+            try {
+              const fetchProbRes = await fetch(`http://localhost:5000/api/problems/${targetProb.slug || rawId}`);
+              const fetchProbData = await fetchProbRes.json();
+              if (fetchProbData.success && fetchProbData.problem) {
+                dbProblemId = fetchProbData.problem.id;
+              }
+            } catch (fetchErr) {
+              console.error("Failed to fetch problem ID for slug:", targetProb.slug, fetchErr);
+            }
+          }
+
+          if (dbProblemId) {
+            const calculatedPoints = Math.round(Number(totalPoints) / (selectedProblemIds.length || 1));
+            const linkRes = await fetch(`http://localhost:5000/api/contests/${contestId}/problem`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-bypass-auth": "true"
+              },
+              body: JSON.stringify({
+                problemId: dbProblemId,
+                points: calculatedPoints
+              })
+            });
+            if (!linkRes.ok) {
+              console.error(`Failed to link problem ID ${dbProblemId} to contest ID ${contestId}`);
+            }
+          }
+        }
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        router.push("/contest");
+      }, 1200);
+
+    } catch (err) {
+      console.error("Error creating contest:", err);
+      alert(err.message || "Something went wrong while creating the contest.");
+    }
   };
 
   return (

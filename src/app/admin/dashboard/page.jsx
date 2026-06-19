@@ -7,7 +7,6 @@ import {
   Trophy, Clock, Users, Terminal, Plus, 
   ChevronRight, ArrowUpRight, Activity, Calendar
 } from "lucide-react";
-import { contests } from "@/data/contestData";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -16,22 +15,54 @@ export default function AdminDashboard() {
   const [allContests, setAllContests] = useState([]);
 
   useEffect(() => {
-    let merged = [...contests];
-    if (typeof window !== "undefined") {
-      const dynamicRaw = localStorage.getItem("synapse_dynamic_contests");
-      if (dynamicRaw) {
-        try {
-          const dynamicContests = JSON.parse(dynamicRaw);
-          const dynamicFiltered = dynamicContests.filter(dc => !contests.some(sc => sc.id === dc.id));
-          merged = [...dynamicFiltered, ...contests];
-        } catch (e) {
-          console.error("Error reading contests on dashboard:", e);
+    const loadContests = async () => {
+      let merged = [];
+
+      // Fetch from backend API
+      try {
+        const res = await fetch("http://localhost:5000/api/contests", {
+          headers: { "x-bypass-auth": "true", "x-bypass-role": "ADMIN" }
+        });
+        const data = await res.json();
+        if (data.success && data.contests) {
+          const now = new Date();
+          merged = data.contests.map(c => {
+            const start = new Date(c.startTime);
+            const end = new Date(c.endTime);
+            let status = "upcoming";
+            if (now >= start && now <= end) status = "active";
+            else if (now > end) status = "past";
+            const durationMins = Math.round((end - start) / 60000);
+            let timeLeftStr = "Completed";
+            if (status === "active") {
+              const diffMins = Math.max(0, Math.floor((end - now) / 60000));
+              timeLeftStr = `${diffMins}m remaining`;
+            } else if (status === "upcoming") {
+              const diffHrs = Math.max(0, Math.floor((new Date(c.startTime) - now) / 3600000));
+              timeLeftStr = diffHrs < 24 ? `Starts in ${diffHrs}h` : `Starts in ${Math.round(diffHrs / 24)}d`;
+            }
+            return {
+              id: c.id,
+              title: c.title,
+              desc: c.description || "No description.",
+              category: c.category || "General",
+              status,
+              durationMins,
+              timeLeftStr,
+              isDbContest: true
+            };
+          });
         }
+      } catch (err) {
+        console.error("Failed to fetch backend contests:", err);
       }
-    }
-    setAllContests(merged);
-    setTotalContestsCount(merged.length);
-    setActiveContestsCount(merged.filter(c => c.status === "active").length);
+
+      setAllContests(merged);
+      setTotalContestsCount(merged.length);
+      setActiveContestsCount(merged.filter(c => c.status === "active").length);
+    };
+
+    loadContests();
   }, []);
 
   const stats = [
@@ -228,9 +259,10 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4">
-            {allContests.slice(0, 4).map((contest) => {
+            {allContests.slice(0, 5).map((contest) => {
               const isActive = contest.status === "active";
               const isUpcoming = contest.status === "upcoming";
+              const isDbContest = contest.isDbContest || /^\d+$/.test(String(contest.id));
               return (
                 <div
                   key={contest.id}
@@ -269,7 +301,19 @@ export default function AdminDashboard() {
                       <Clock size={11} />
                       <span>{contest.durationMins} mins</span>
                     </div>
-                    <span className="font-bold">{contest.timeLeftStr || contest.startTime}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold">{contest.timeLeftStr || contest.startTime}</span>
+                      {isDbContest && (
+                        <button
+                          onClick={() => router.push(`/admin/contests/${contest.id}`)}
+                          className="flex items-center space-x-1 px-2 py-1 rounded-lg border text-[10px] font-bold transition-all cursor-pointer hover:bg-slate-500/10"
+                          style={{ borderColor: "var(--border-primary)", color: "var(--text-accent)" }}
+                        >
+                          <Users size={10} />
+                          <span>Participants</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

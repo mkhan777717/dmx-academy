@@ -43,6 +43,7 @@ const problemUpdateSchema = problemSchema.partial().extend({
 const contestSchema = z.object({
   title: z.string().min(3, 'Contest title must be at least 3 characters long'),
   description: z.string().optional(),
+  category: z.string().optional(),
   startTime: z.string().refine(val => !isNaN(Date.parse(val)), {
     message: 'Invalid start time date string',
   }),

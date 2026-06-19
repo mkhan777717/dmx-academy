@@ -7,9 +7,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Trophy, Search, Clock, Terminal, ChevronRight,
-  UserCheck, AlertCircle
+  UserCheck, AlertCircle, RefreshCw, Lock
 } from "lucide-react";
-import { contests } from "@/data/contestData";
 
 const globalLeaderboardMock = [
   { rank: 1, name: "quantum_coder", points: 2840, contests: 12, rankClass: "Grandmaster", color: "text-rose-500" },
@@ -26,44 +25,168 @@ export default function ContestLobby() {
   const [activeTab, setActiveTab] = useState("all"); // all, active, upcoming, past, leaderboard
   const [searchQuery, setSearchQuery] = useState("");
   const [allContests, setAllContests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [registeredContests, setRegisteredContests] = useState([]);
   const [pastContestResults, setPastContestResults] = useState(null);
+  const [isStudentLoggedIn, setIsStudentLoggedIn] = useState(false);
 
-  // Load registration history and dynamic contests from localStorage
+  // Load registration history from localStorage
   useEffect(() => {
-    let merged = [...contests];
     if (typeof window !== "undefined") {
       const savedRegs = localStorage.getItem("contest_registrations");
       if (savedRegs) {
-        try {
-          const parsed = JSON.parse(savedRegs);
-          setTimeout(() => {
-            setRegisteredContests(parsed);
-          }, 0);
-        } catch {
-          // ignore error
+        try { setRegisteredContests(JSON.parse(savedRegs)); } catch {}
+      }
+      // Check if a student is logged in
+      setIsStudentLoggedIn(localStorage.getItem("synapse_student_session") === "true");
+    }
+  }, []);
+
+  const fetchContests = async () => {
+    setLoading(true);
+    try {
+      let headersObj = {};
+      if (typeof window !== "undefined") {
+        if (localStorage.getItem("synapse_admin_session") === "true") {
+          headersObj = { "x-bypass-auth": "true", "x-bypass-role": "ADMIN" };
+        } else if (localStorage.getItem("synapse_mentor_session") === "true") {
+          headersObj = { "x-bypass-auth": "true", "x-bypass-role": "MENTOR" };
+        } else if (localStorage.getItem("synapse_student_session") === "true") {
+          headersObj = { "x-bypass-auth": "true", "x-bypass-role": "USER" };
         }
       }
 
-      // Load dynamic contests created by the Admin
-      const dynamicRaw = localStorage.getItem("synapse_dynamic_contests");
-      if (dynamicRaw) {
-        try {
-          const dynamicContests = JSON.parse(dynamicRaw);
-          const dynamicFiltered = dynamicContests.filter(dc => !contests.some(sc => sc.id === dc.id));
-          merged = [...dynamicFiltered, ...contests];
-        } catch (e) {
-          console.error("Error loading dynamic contests:", e);
-        }
+      const res = await fetch("http://localhost:5000/api/contests", { headers: headersObj });
+      const data = await res.json();
+
+      if (data.success && data.contests) {
+        const now = new Date();
+        const mapped = data.contests.map(c => {
+          const start = new Date(c.startTime);
+          const end = new Date(c.endTime);
+          
+          let status = "upcoming";
+          if (now >= start && now <= end) status = "active";
+          else if (now > end) status = "past";
+
+          const durationMins = Math.round((end - start) / 60000);
+          const totalPoints = c.contestProblems
+            ? c.contestProblems.reduce((sum, cp) => sum + cp.points, 0)
+            : 0;
+
+          let timeLeftStr = "Completed";
+          if (status === "active") {
+            const diffMins = Math.max(0, Math.floor((end - now) / 60000));
+            timeLeftStr = `${diffMins}m remaining`;
+          } else if (status === "upcoming") {
+            const diffHrs = Math.max(0, Math.floor((start - now) / 3600000));
+            timeLeftStr = diffHrs < 24 ? `Starts in ${diffHrs}h` : `Starts in ${Math.round(diffHrs / 24)} days`;
+          }
+
+          const displayStartTime = start.toLocaleDateString(undefined, {
+            month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+          });
+
+          const attempted = c.userParticipation ? c.userParticipation.completed : false;
+
+          return {
+            id: c.id,
+            title: c.title,
+            desc: c.description || "No description provided.",
+            durationMins,
+            totalPoints,
+            status,
+            category: c.category || "General",
+            timeLeftStr,
+            startTime: displayStartTime,
+            attempted,
+            leaderboard: []
+          };
+        });
+        setAllContests(mapped);
       }
+    } catch (err) {
+      console.error("Failed to fetch contests from backend API:", err);
+      setAllContests([]);
     }
-    setAllContests(merged);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchContests();
   }, []);
 
   const handleRegister = (contestId) => {
     const nextRegs = [...registeredContests, contestId];
     setRegisteredContests(nextRegs);
     localStorage.setItem("contest_registrations", JSON.stringify(nextRegs));
+  };
+
+  const handleViewScoreboard = async (contest) => {
+    const isNumeric = /^\d+$/.test(contest.id);
+    if (isNumeric) {
+      try {
+        let headersObj = {};
+        if (typeof window !== "undefined") {
+          if (localStorage.getItem("synapse_admin_session") === "true") {
+            headersObj = { "x-bypass-auth": "true", "x-bypass-role": "ADMIN" };
+          } else if (localStorage.getItem("synapse_mentor_session") === "true") {
+            headersObj = { "x-bypass-auth": "true", "x-bypass-role": "MENTOR" };
+          } else if (localStorage.getItem("synapse_student_session") === "true") {
+            headersObj = { "x-bypass-auth": "true", "x-bypass-role": "USER" };
+          }
+        }
+        const res = await fetch(`http://localhost:5000/api/contests/${contest.id}/leaderboard`, { headers: headersObj });
+        const data = await res.json();
+        if (data.success) {
+          const formattedLeaderboard = data.leaderboard.map((item, index) => ({
+            rank: index + 1,
+            username: item.user.username,
+            score: item.totalScore,
+            time: `${Math.round(item.totalExecutionTime / 1000)}s`
+          }));
+          
+          let currentUsername = "You";
+          if (typeof window !== "undefined") {
+            if (localStorage.getItem("synapse_student_session") === "true") {
+              currentUsername = "Student";
+            } else if (localStorage.getItem("synapse_admin_session") === "true") {
+              currentUsername = "Admin";
+            } else if (localStorage.getItem("synapse_mentor_session") === "true") {
+              currentUsername = "Mentor";
+            }
+          }
+          
+          if (!formattedLeaderboard.some(p => p.username === currentUsername)) {
+            const localSolved = localStorage.getItem("contest_solved_data");
+            if (localSolved) {
+              try {
+                const parsed = JSON.parse(localSolved);
+                const localData = parsed[contest.id];
+                if (localData) {
+                  formattedLeaderboard.push({
+                    rank: formattedLeaderboard.length + 1,
+                    username: currentUsername,
+                    score: localData.score,
+                    time: localData.time
+                  });
+                }
+              } catch {}
+            }
+          }
+
+          setPastContestResults({
+            ...contest,
+            leaderboard: formattedLeaderboard
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Failed to load database leaderboard:", err);
+      }
+    }
+    
+    setPastContestResults(contest);
   };
 
   const filteredContests = allContests.filter(c => {
@@ -227,6 +350,31 @@ export default function ContestLobby() {
                   </table>
                 </div>
               </motion.div>
+            ) : loading ? (
+              /* Loading state */
+              <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                <RefreshCw size={28} className="animate-spin" style={{ color: "var(--text-accent)" }} />
+                <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Loading contests from the server...</p>
+              </div>
+            ) : filteredContests.length === 0 ? (
+              /* Empty state */
+              <div className="flex flex-col items-center justify-center py-24 space-y-4">
+                <Trophy size={48} className="opacity-20" style={{ color: "var(--text-secondary)" }} />
+                <p className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>No contests found</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  {searchQuery ? "Try a different search term." : "No contests are scheduled yet. Check back soon."}
+                </p>
+                {!searchQuery && (
+                  <button
+                    onClick={fetchContests}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-xl border text-xs font-bold cursor-pointer transition-all"
+                    style={{ borderColor: "var(--border-accent)", color: "var(--text-accent)" }}
+                  >
+                    <RefreshCw size={12} />
+                    <span>Retry</span>
+                  </button>
+                )}
+              </div>
             ) : (
               /* Contests Card Grid */
               <motion.div 
@@ -311,58 +459,91 @@ export default function ContestLobby() {
                             <span>{contest.timeLeftStr}</span>
                           </div>
 
-                          {isActive && (
+                          {/* --- Student-only action buttons --- */}
+                          {!isStudentLoggedIn ? (
+                            // Non-students / guests: show login nudge
                             <Link
-                              href={`/contest/${contest.id}`}
-                              className="px-4 py-2 text-xs font-bold text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center space-x-1"
-                              style={{ background: "var(--accent-gradient)" }}
-                            >
-                              <span>Enter Arena</span>
-                              <ChevronRight size={13} />
-                            </Link>
-                          )}
-
-                          {isUpcoming && (
-                            isRegistered ? (
-                              <button
-                                disabled
-                                className="px-4 py-2 text-xs font-bold rounded-xl border flex items-center space-x-1"
-                                style={{
-                                  backgroundColor: "var(--bg-badge)",
-                                  borderColor: "var(--border-accent)",
-                                  color: "var(--text-accent)"
-                                }}
-                              >
-                                <UserCheck size={13} />
-                                <span>Registered</span>
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleRegister(contest.id)}
-                                className="px-4 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer"
-                                style={{
-                                  backgroundColor: "var(--bg-primary)",
-                                  borderColor: "var(--border-primary)",
-                                  color: "var(--text-primary)"
-                                }}
-                              >
-                                Register
-                              </button>
-                            )
-                          )}
-
-                          {isPast && (
-                            <button
-                              onClick={() => setPastContestResults(contest)}
-                              className="px-4 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer"
+                              href="/student"
+                              className="px-4 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer flex items-center space-x-1"
                               style={{
                                 backgroundColor: "var(--bg-primary)",
                                 borderColor: "var(--border-primary)",
-                                color: "var(--text-primary)"
+                                color: "var(--text-muted)"
                               }}
                             >
-                              View Scoreboard
-                            </button>
+                              <Lock size={11} />
+                              <span>Login to Participate</span>
+                            </Link>
+                          ) : (
+                            <>
+                              {isActive && (
+                                contest.attempted ? (
+                                  <button
+                                    disabled
+                                    className="px-4 py-2 text-xs font-bold rounded-xl border flex items-center space-x-1 opacity-60 cursor-not-allowed"
+                                    style={{
+                                      backgroundColor: "var(--bg-badge)",
+                                      borderColor: "var(--border-primary)",
+                                      color: "var(--text-secondary)"
+                                    }}
+                                  >
+                                    <span>Attempted</span>
+                                  </button>
+                                ) : (
+                                  <Link
+                                    href={`/contest/${contest.id}`}
+                                    className="px-4 py-2 text-xs font-bold text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center space-x-1"
+                                    style={{ background: "var(--accent-gradient)" }}
+                                  >
+                                    <span>Enter Arena</span>
+                                    <ChevronRight size={13} />
+                                  </Link>
+                                )
+                              )}
+
+                              {isUpcoming && (
+                                isRegistered ? (
+                                  <button
+                                    disabled
+                                    className="px-4 py-2 text-xs font-bold rounded-xl border flex items-center space-x-1"
+                                    style={{
+                                      backgroundColor: "var(--bg-badge)",
+                                      borderColor: "var(--border-accent)",
+                                      color: "var(--text-accent)"
+                                    }}
+                                  >
+                                    <UserCheck size={13} />
+                                    <span>Registered</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleRegister(contest.id)}
+                                    className="px-4 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer"
+                                    style={{
+                                      backgroundColor: "var(--bg-primary)",
+                                      borderColor: "var(--border-primary)",
+                                      color: "var(--text-primary)"
+                                    }}
+                                  >
+                                    Register
+                                  </button>
+                                )
+                              )}
+
+                              {isPast && (
+                                <button
+                                  onClick={() => handleViewScoreboard(contest)}
+                                  className="px-4 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer"
+                                  style={{
+                                    backgroundColor: "var(--bg-primary)",
+                                    borderColor: "var(--border-primary)",
+                                    color: "var(--text-primary)"
+                                  }}
+                                >
+                                  View Scoreboard
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </motion.div>
