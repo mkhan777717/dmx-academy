@@ -6,6 +6,27 @@ const prisma = require('../prisma');
  */
 const protect = async (req, res, next) => {
   try {
+    // Development bypass for local Next.js frontend integration
+    if (process.env.NODE_ENV === 'development' && req.headers['x-bypass-auth'] === 'true') {
+      const bypassRole = req.headers['x-bypass-role'] || 'ADMIN';
+      const bypassUsername = bypassRole === 'ADMIN' ? 'admin' : 'student';
+      const bypassEmail = bypassRole === 'ADMIN' ? 'admin@example.com' : 'student@example.com';
+      
+      let dbUser = await prisma.user.findFirst({ where: { role: bypassRole } });
+      if (!dbUser) {
+        dbUser = await prisma.user.create({
+          data: {
+            username: bypassUsername,
+            email: bypassEmail,
+            password: 'devbypasshashedpassword',
+            role: bypassRole,
+          }
+        });
+      }
+      req.user = dbUser;
+      return next();
+    }
+
     let token;
 
     // Check Authorization header for Bearer token
@@ -90,6 +111,27 @@ const restrictTo = (...roles) => {
  */
 const fetchUserIfExists = async (req, res, next) => {
   try {
+    // Development bypass — same as protect middleware
+    if (process.env.NODE_ENV === 'development' && req.headers['x-bypass-auth'] === 'true') {
+      const bypassRole = req.headers['x-bypass-role'] || 'USER';
+      const bypassUsername = bypassRole === 'ADMIN' ? 'admin' : bypassRole === 'MENTOR' ? 'mentor' : 'student';
+      const bypassEmail = bypassRole === 'ADMIN' ? 'admin@example.com' : bypassRole === 'MENTOR' ? 'mentor@example.com' : 'student@example.com';
+
+      let dbUser = await prisma.user.findFirst({ where: { role: bypassRole } });
+      if (!dbUser) {
+        dbUser = await prisma.user.create({
+          data: {
+            username: bypassUsername,
+            email: bypassEmail,
+            password: 'devbypasshashedpassword',
+            role: bypassRole,
+          }
+        });
+      }
+      req.user = dbUser;
+      return next();
+    }
+
     let token;
     if (
       req.headers.authorization &&

@@ -9,7 +9,7 @@ const registerSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain alphanumeric characters and underscores'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
-  role: z.enum(['USER', 'ADMIN', 'MENTOR']).optional(),
+  role: z.enum(['USER', 'ADMIN', 'MENTOR']).optional().default('USER'),
 });
 
 const loginSchema = z.object({
@@ -43,6 +43,7 @@ const problemUpdateSchema = problemSchema.partial().extend({
 const contestSchema = z.object({
   title: z.string().min(3, 'Contest title must be at least 3 characters long'),
   description: z.string().optional(),
+  category: z.string().optional(),
   startTime: z.string().refine(val => !isNaN(Date.parse(val)), {
     message: 'Invalid start time date string',
   }),

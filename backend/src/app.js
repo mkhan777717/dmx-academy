@@ -24,7 +24,7 @@ app.use(helmet());
 app.use(cors({
   origin: '*', // Customize to Next.js URL in production
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-bypass-auth', 'x-bypass-role']
 }));
 
 // Request Parsers & Limiters

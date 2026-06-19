@@ -7,13 +7,14 @@ const { contestSchema, contestProblemSchema } = require('../utils/validators');
 const createContest = async (req, res, next) => {
   try {
     const validatedData = contestSchema.parse(req.body);
-    const { title, description, startTime, endTime } = validatedData;
+    const { title, description, category, startTime, endTime } = validatedData;
     const creatorId = req.user.id;
 
     const contest = await prisma.contest.create({
       data: {
         title,
         description,
+        category,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         creatorId,
@@ -98,17 +99,34 @@ const getAllContests = async (req, res, next) => {
             username: true,
           },
         },
-        _count: {
-          select: { contestProblems: true },
+        contestProblems: {
+          select: {
+            points: true,
+          },
         },
       },
       orderBy: { startTime: 'desc' },
     });
 
+    let userParticipations = [];
+    if (req.user) {
+      userParticipations = await prisma.contestParticipation.findMany({
+        where: { userId: req.user.id }
+      });
+    }
+
+    const mappedContests = contests.map(c => {
+      const participation = userParticipations.find(p => p.contestId === c.id) || null;
+      return {
+        ...c,
+        userParticipation: participation
+      };
+    });
+
     res.status(200).json({
       success: true,
-      count: contests.length,
-      contests,
+      count: mappedContests.length,
+      contests: mappedContests,
     });
   } catch (error) {
     next(error);
@@ -152,9 +170,21 @@ const getContestDetails = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Contest not found.' });
     }
 
+    let userParticipation = null;
+    if (req.user) {
+      userParticipation = await prisma.contestParticipation.findUnique({
+        where: {
+          userId_contestId: { userId: req.user.id, contestId }
+        }
+      });
+    }
+
     res.status(200).json({
       success: true,
-      contest,
+      contest: {
+        ...contest,
+        userParticipation
+      },
     });
   } catch (error) {
     next(error);
@@ -285,10 +315,155 @@ const getContestLeaderboard = async (req, res, next) => {
   }
 };
 
+/**
+ * Register user participation in a contest
+ */
+const participateInContest = async (req, res, next) => {
+  try {
+    const contestId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    if (isNaN(contestId)) {
+      return res.status(400).json({ success: false, message: 'Invalid contest ID format.' });
+    }
+
+    const contest = await prisma.contest.findUnique({ where: { id: contestId } });
+    if (!contest) {
+      return res.status(404).json({ success: false, message: 'Contest not found.' });
+    }
+
+    const participation = await prisma.contestParticipation.upsert({
+      where: {
+        userId_contestId: { userId, contestId }
+      },
+      update: {},
+      create: {
+        userId,
+        contestId,
+        completed: false,
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Participation registered successfully.',
+      participation
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Finish user contest attempt
+ */
+const finishContestAttempt = async (req, res, next) => {
+  try {
+    const contestId = parseInt(req.params.id);
+    const userId = req.user.id;
+    const { score, timeSpent } = req.body;
+
+    if (isNaN(contestId)) {
+      return res.status(400).json({ success: false, message: 'Invalid contest ID format.' });
+    }
+
+    const participation = await prisma.contestParticipation.upsert({
+      where: {
+        userId_contestId: { userId, contestId }
+      },
+      update: {
+        completed: true,
+        score: score || 0,
+        timeSpent: timeSpent || '0m 0s'
+      },
+      create: {
+        userId,
+        contestId,
+        completed: true,
+        score: score || 0,
+        timeSpent: timeSpent || '0m 0s'
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Contest attempt finished successfully.',
+      participation
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get user participation in a contest
+ */
+const getContestParticipation = async (req, res, next) => {
+  try {
+    const contestId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    if (isNaN(contestId)) {
+      return res.status(400).json({ success: false, message: 'Invalid contest ID format.' });
+    }
+
+    const participation = await prisma.contestParticipation.findUnique({
+      where: {
+        userId_contestId: { userId, contestId }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      participation
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get all participants for a contest (Admin only)
+ */
+const getContestParticipants = async (req, res, next) => {
+  try {
+    const contestId = parseInt(req.params.id);
+
+    if (isNaN(contestId)) {
+      return res.status(400).json({ success: false, message: 'Invalid contest ID format.' });
+    }
+
+    const participants = await prisma.contestParticipation.findMany({
+      where: { contestId },
+      include: {
+        user: {
+          select: { id: true, username: true, email: true, role: true }
+        }
+      },
+      orderBy: [
+        { score: 'desc' },
+        { createdAt: 'asc' }
+      ]
+    });
+
+    res.status(200).json({
+      success: true,
+      count: participants.length,
+      participants
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createContest,
   addProblemToContest,
   getAllContests,
   getContestDetails,
   getContestLeaderboard,
+  participateInContest,
+  finishContestAttempt,
+  getContestParticipation,
+  getContestParticipants,
 };

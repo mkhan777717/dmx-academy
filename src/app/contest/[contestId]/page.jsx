@@ -12,6 +12,32 @@ import {
 } from "lucide-react";
 import { contests } from "@/data/contestData";
 import { useAuth } from "@/context/AuthContext";
+import { wrapCodeForBackend } from "@/utils/codeWrapper";
+
+function saveLocalSubmission(sub) {
+  if (typeof window === "undefined") return;
+  const key = "dmx_local_submissions";
+  let existing = [];
+  try {
+    existing = JSON.parse(localStorage.getItem(key) || "[]");
+  } catch { }
+  
+  const newSub = {
+    id: `local-sub-${Date.now()}`,
+    problemId: sub.problemId,
+    dbProblemId: sub.dbProblemId || null,
+    problem: {
+      title: sub.title,
+      slug: sub.problemId,
+    },
+    status: sub.status || "ACCEPTED",
+    language: sub.language,
+    code: sub.code,
+    createdAt: new Date().toISOString(),
+  };
+  existing.unshift(newSub);
+  localStorage.setItem(key, JSON.stringify(existing));
+}
 
 const getRandom = () => Math.random();
 const getCurrentTime = () => Date.now();
@@ -58,6 +84,22 @@ function highlightCode(code, lang) {
     });
   }
   return html;
+}
+
+// Helper: returns auth bypass headers based on current session
+function getAuthHeaders() {
+  if (typeof window === "undefined") return {};
+  const token = localStorage.getItem("dmx_auth_token");
+  if (token && !token.startsWith("demo-") && !token.startsWith("local-")) {
+    return { "Authorization": `Bearer ${token}` };
+  }
+  if (localStorage.getItem("synapse_admin_session") === "true")
+    return { "x-bypass-auth": "true", "x-bypass-role": "ADMIN" };
+  if (localStorage.getItem("synapse_mentor_session") === "true")
+    return { "x-bypass-auth": "true", "x-bypass-role": "MENTOR" };
+  if (localStorage.getItem("synapse_student_session") === "true")
+    return { "x-bypass-auth": "true", "x-bypass-role": "USER" };
+  return {};
 }
 
 export default function ContestWorkspace() {
@@ -118,136 +160,159 @@ export default function ContestWorkspace() {
 
   // Fetch contest metadata and linked problem definitions on mount / id change
   useEffect(() => {
-    async function loadContest() {
-      let found = null;
+    const fetchContestDetails = async () => {
+      const isNumeric = /^\d+$/.test(contestId);
 
-      try {
-        const res = await fetch(`${API_BASE}/api/contests/${contestId}`);
-        if (res.ok) {
+      if (isNumeric) {
+        try {
+          const res = await fetch(`${API_BASE}/api/contests/${contestId}`, {
+            headers: getAuthHeaders()
+          });
           const data = await res.json();
           if (data.success && data.contest) {
-            const dbContest = data.contest;
-            
-            const now = new Date();
-            const start = new Date(dbContest.startTime);
-            const end = new Date(dbContest.endTime);
-            const durationMins = Math.round((end - start) / 60000);
-            
-            let status = "upcoming";
-            if (now >= start && now <= end) {
-              status = "active";
-            } else if (now > end) {
-              status = "past";
-            }
+            const c = data.contest;
 
-            const resolvedProblems = [];
-            if (dbContest.contestProblems && dbContest.contestProblems.length > 0) {
-              for (const cp of dbContest.contestProblems) {
-                const dbProb = cp.problem;
-                if (!dbProb) continue;
-                
-                try {
-                  const resProb = await fetch(`${API_BASE}/api/problems/${dbProb.slug}`);
-                  if (resProb.ok) {
-                    const dataProb = await resProb.json();
-                    if (dataProb.success && dataProb.problem) {
-                      const fullProb = dataProb.problem;
-                      
-                      const mappedProb = {
-                        id: String(fullProb.id),
-                        title: fullProb.title,
-                        difficulty: fullProb.difficulty.charAt(0).toUpperCase() + fullProb.difficulty.slice(1).toLowerCase(),
-                        category: fullProb.category || "General",
-                        desc: fullProb.statement,
-                        points: cp.points || 100,
-                        defaultLanguage: "javascript",
-                        editorTemplates: {
-                          javascript: `// JavaScript Starter Code\nfunction solve(input) {\n  // Write your code here\n  return "";\n}`,
-                          python: `# Python 3 Starter Code\ndef solve(input_data):\n    # Write your code here\n    pass`
-                        },
-                        testcases: (fullProb.testCases || []).map((tc, index) => ({
-                          name: `Test Case ${index + 1}`,
-                          input: tc.input || "",
-                          expected: tc.expectedOutput || "",
-                          expectedOutput: tc.expectedOutput || "",
-                          isSample: tc.isSample || false,
-                          assertion: (codeStr, runFunc) => {
-                            if (!runFunc) return false;
-                            try {
-                              const cleanExpected = (tc.expectedOutput || "").trim().replace(/\r/g, "");
-                              let parsedInputs;
-                              try {
-                                parsedInputs = JSON.parse(`[${tc.input}]`);
-                              } catch {
-                                parsedInputs = [tc.input];
-                              }
-                              const actual = runFunc(...parsedInputs);
-                              const cleanActual = (actual !== undefined ? actual : "").toString().trim().replace(/\r/g, "");
-                              return cleanActual === cleanExpected;
-                            } catch {
-                              return false;
-                            }
-                          }
-                        })),
-                        tabs: {
-                          description: `### ${fullProb.title}\n\n${fullProb.statement}\n\n### Input Format\n${fullProb.inputFormat}\n\n### Output Format\n${fullProb.outputFormat}\n\n### Constraints\n${fullProb.constraints}`,
-                          followup: `### Followup\n${fullProb.explanation || "No follow-up explanations provided."}`,
-                          editorial: "No official editorial provided.",
-                          solution: "No official solutions provided.",
-                          evaluation: `Time Limit: ${fullProb.timeLimitMs || 1000}ms\nMemory Limit: ${fullProb.memoryLimitMb || 256}MB`
-                        }
-                      };
-                      resolvedProblems.push(mappedProb);
-                    }
-                  }
-                } catch (errProb) {
-                  console.error("Failed fetching problem details for slug:", dbProb.slug, errProb);
-                }
+            // Map problems from the database relation
+            const mappedProblems = c.contestProblems.map(cp => {
+              const dbProb = cp.problem;
+              const formattedDiff = dbProb.difficulty
+                ? dbProb.difficulty.charAt(0) + dbProb.difficulty.slice(1).toLowerCase()
+                : "Medium";
+
+              return {
+                id: dbProb.id,
+                slug: dbProb.slug,
+                title: dbProb.title,
+                difficulty: formattedDiff,
+                category: "Algorithms",
+                points: cp.points,
+                desc: dbProb.statement,
+                inputFormat: dbProb.inputFormat,
+                outputFormat: dbProb.outputFormat,
+                constraints: dbProb.constraints,
+                explanation: dbProb.explanation,
+                testcases: dbProb.testCases || [],
+                editorTemplates: {
+                  javascript: `// Solve: ${dbProb.title}\nfunction solution() {\n  // Write your code here\n}`,
+                  python: `# Solve: ${dbProb.title}\ndef solution():\n    # Write your code here\n    pass`
+                },
+                defaultLanguage: "javascript"
+              };
+            });
+
+            // Calculate duration and dynamic contest states
+            const start = new Date(c.startTime);
+            const end = new Date(c.endTime);
+            const now = new Date();
+
+            const isCurrentlyActive = now >= start && now <= end;
+            const isPast = now > end;
+
+            const durationMins = Math.round((end - start) / 60000);
+
+            // Calculate total points
+            const totalPoints = c.contestProblems.reduce((sum, cp) => sum + cp.points, 0);
+
+            // Construct mapped contest object
+            const mappedContestObj = {
+              id: c.id,
+              title: c.title,
+              desc: c.description || "No description provided.",
+              durationMins,
+              totalPoints,
+              problems: mappedProblems,
+              leaderboard: [],
+              startTime: c.startTime,
+              endTime: c.endTime
+            };
+
+            setContest(mappedContestObj);
+            setLoadingContest(false);
+
+            // Fetch dynamic username from session details
+            let currentUsername = "You";
+            if (typeof window !== "undefined") {
+              if (localStorage.getItem("synapse_admin_session") === "true") {
+                currentUsername = "Admin";
+              } else if (localStorage.getItem("synapse_mentor_session") === "true") {
+                currentUsername = "Mentor";
+              } else if (localStorage.getItem("synapse_student_session") === "true") {
+                currentUsername = "Student";
               }
             }
 
-            found = {
-              id: String(dbContest.id),
-              title: dbContest.title,
-              desc: dbContest.description || "No description provided.",
-              durationMins,
-              totalPoints: resolvedProblems.reduce((sum, p) => sum + p.points, 0) || 300,
-              status,
-              timeLeftStr: status === "active" ? `${Math.round((end - now) / 60000)}m remaining` : "Completed",
-              startTime: `Starts at ${start.toLocaleTimeString()} on ${start.toLocaleDateString()}`,
-              problems: resolvedProblems,
-              leaderboard: []
-            };
+            // Automatically manage active or past contest states on load
+            if (isCurrentlyActive) {
+              const remainingSeconds = Math.max(0, Math.floor((end - now) / 1000));
+              setSecondsLeft(remainingSeconds);
+              setStartTimeStamp(start.getTime());
+              setContestStarted(true);
+
+              const initialCodes = {};
+              mappedProblems.forEach(prob => {
+                if (prob.editorTemplates) {
+                  Object.keys(prob.editorTemplates).forEach(lang => {
+                    initialCodes[`${prob.id}_${lang}`] = prob.editorTemplates[lang];
+                  });
+                }
+              });
+              setEditorCodes(initialCodes);
+
+              if (mappedProblems[0]) {
+                setTestcaseInputs(mappedProblems[0].testcases ? mappedProblems[0].testcases.map(t => t.input) : []);
+                setSelectedLanguage(mappedProblems[0].defaultLanguage || "javascript");
+              }
+            } else if (isPast) {
+              setContestStarted(true);
+              setContestEnded(true);
+              setSecondsLeft(0);
+
+              const userEntry = {
+                rank: 1,
+                username: currentUsername,
+                score: 0,
+                time: "0m 0s",
+                isUser: true
+              };
+
+              const combinedLeaderboard = [userEntry];
+              const finalBoard = combinedLeaderboard.map((item, idx) => ({
+                ...item,
+                rank: idx + 1
+              }));
+              setFinalScoreboard(finalBoard);
+            }
+
+            return;
           }
+        } catch (err) {
+          console.error("Failed to fetch contest details from backend:", err);
         }
-      } catch (err) {
-        console.error("Failed fetching contest details from API:", err);
       }
 
-      if (!found) {
-        found = contests.find(c => c.id === contestId);
-        if (!found && typeof window !== "undefined") {
-          const dynamicRaw = localStorage.getItem("synapse_dynamic_contests");
-          if (dynamicRaw) {
-            try {
-              const dynamicContests = JSON.parse(dynamicRaw);
-              found = dynamicContests.find(c => c.id === contestId) || null;
-            } catch (e) {
-              console.error("Error reading dynamic contest detail:", e);
-            }
+      // Fallback: check static contests data and localStorage
+      let found = contests.find(c => String(c.id) === contestId) || null;
+      if (!found && typeof window !== "undefined") {
+        const dynamicRaw = localStorage.getItem("synapse_dynamic_contests");
+        if (dynamicRaw) {
+          try {
+            const dynamicContests = JSON.parse(dynamicRaw);
+            found = dynamicContests.find(c => c.id === contestId) || null;
+          } catch (e) {
+            console.error("Error reading dynamic contest detail:", e);
           }
         }
       }
 
       setContest(found);
       setLoadingContest(false);
-    }
+    };
 
-    loadContest();
+    fetchContestDetails();
   }, [contestId, API_BASE]);
 
   // Terminate contest callback
-  const finishContest = useCallback(() => {
+  const finishContest = useCallback(async () => {
     if (!contest) return;
     setContestEnded(true);
 
@@ -284,6 +349,7 @@ export default function ContestWorkspace() {
 
     setFinalScoreboard(finalBoard);
 
+    // Persist to localStorage
     if (typeof window !== "undefined") {
       const solvedList = localStorage.getItem("contest_solved_data");
       let list = {};
@@ -296,6 +362,23 @@ export default function ContestWorkspace() {
         completed: true
       };
       localStorage.setItem("contest_solved_data", JSON.stringify(list));
+    }
+
+    // Persist completion to backend if this is a database contest
+    const isNumeric = /^\d+$/.test(contestId);
+    if (isNumeric) {
+      try {
+        await fetch(`${API_BASE}/api/contests/${contestId}/finish`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({ score: userScore, timeSpent: timeStr })
+        });
+      } catch (err) {
+        console.error("Failed to persist contest finish to backend:", err);
+      }
     }
   }, [contest, contestId, startTimeStamp, userScore]);
 
@@ -421,7 +504,7 @@ export default function ContestWorkspace() {
   }
 
   // Initialize workspace when contest starts
-  const startContest = () => {
+  const startContest = async () => {
     if (!contest) return;
     
     setSecondsLeft(contest.durationMins * 60);
@@ -429,18 +512,38 @@ export default function ContestWorkspace() {
     
     const initialCodes = {};
     contest.problems.forEach(prob => {
-      Object.keys(prob.editorTemplates).forEach(lang => {
-        initialCodes[`${prob.id}_${lang}`] = prob.editorTemplates[lang];
-      });
+      if (prob.editorTemplates) {
+        Object.keys(prob.editorTemplates).forEach(lang => {
+          initialCodes[`${prob.id}_${lang}`] = prob.editorTemplates[lang];
+        });
+      }
     });
     setEditorCodes(initialCodes);
 
     if (contest.problems[0]) {
-      setTestcaseInputs(contest.problems[0].testcases.map(t => t.input));
+      setTestcaseInputs(
+        contest.problems[0].testcases ? contest.problems[0].testcases.map(t => t.input) : []
+      );
       setSelectedLanguage(contest.problems[0].defaultLanguage || "javascript");
     }
 
     setContestStarted(true);
+
+    // Register participation in backend (for numeric/database contests)
+    const isNumeric = /^\d+$/.test(contestId);
+    if (isNumeric) {
+      try {
+        await fetch(`${API_BASE}/api/contests/${contestId}/participate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+          }
+        });
+      } catch (err) {
+        console.error("Failed to register participation in backend:", err);
+      }
+    }
   };
 
   // Safe tab indentation key handler
@@ -657,10 +760,26 @@ export default function ContestWorkspace() {
             const targetFunction = evaluator();
 
             let parsedInputs;
-            try {
-              parsedInputs = JSON.parse(`[${testcaseInputs[index] || tc.input}]`);
-            } catch {
-              parsedInputs = [testcaseInputs[index] || tc.input];
+            if (activeQuestion.id === "rate-limiter" || activeQuestion.slug === "rate-limiter") {
+              const mockRedis = {
+                multi: () => {
+                  const tx = {
+                    zremrangebyscore: () => tx,
+                    zcard: () => tx,
+                    zadd: () => tx,
+                    expire: () => tx,
+                    exec: async () => [null, 2, null, null]
+                  };
+                  return tx;
+                }
+              };
+              parsedInputs = [mockRedis, "user_123", 5, 60];
+            } else {
+              try {
+                parsedInputs = JSON.parse(`[${testcaseInputs[index] || tc.input}]`);
+              } catch {
+                parsedInputs = [testcaseInputs[index] || tc.input];
+              }
             }
 
             const actual = targetFunction(...parsedInputs);
@@ -711,28 +830,164 @@ export default function ContestWorkspace() {
     }, 1200);
   };
 
-  // Submit flow
+  // Submit flow — runs tests inline to avoid stale React state closure bug
   const submitCode = () => {
     if (!activeQuestion) return;
     setIsSubmitting(true);
     setActiveConsoleTab("result");
-    
-    runCode();
+    setTestResults([]);
 
     setTimeout(() => {
+      const results = [];
+      const originalConsoleLog = console.log;
+
+      activeQuestion.testcases.forEach((tc, index) => {
+        let passed = false;
+        let output = "";
+        let error = "";
+        const runLogs = [];
+
+        console.log = (...args) => {
+          runLogs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '));
+        };
+
+        if (selectedLanguage === "javascript") {
+          try {
+            const funcNameMatch = currentCode.match(/function\s+(\w+)\s*\(/) || currentCode.match(/const\s+(\w+)\s*=\s*\(/);
+            const functionName = funcNameMatch ? funcNameMatch[1] : null;
+
+            if (!functionName) throw new Error("Could not find a valid function declaration in your code.");
+
+            const evaluator = new Function(`${currentCode}; return ${functionName};`);
+            const targetFunction = evaluator();
+
+            let parsedInputs;
+            if (activeQuestion.id === "rate-limiter" || activeQuestion.slug === "rate-limiter") {
+              const mockRedis = {
+                multi: () => {
+                  const tx = {
+                    zremrangebyscore: () => tx,
+                    zcard: () => tx,
+                    zadd: () => tx,
+                    expire: () => tx,
+                    exec: async () => [null, 2, null, null]
+                  };
+                  return tx;
+                }
+              };
+              parsedInputs = [mockRedis, "user_123", 5, 60];
+            } else {
+              try {
+                parsedInputs = JSON.parse(`[${testcaseInputs[index] || tc.input}]`);
+              } catch {
+                parsedInputs = [testcaseInputs[index] || tc.input];
+              }
+            }
+
+            const actual = targetFunction(...parsedInputs);
+            output = (actual !== undefined) ? JSON.stringify(actual) : "";
+
+            if (typeof tc.assertion === "function") {
+              passed = tc.assertion(currentCode, targetFunction);
+            } else {
+              const cleanExpected = (tc.expectedOutput || tc.expected || "").toString().trim().replace(/\r/g, "");
+              const cleanActual = (actual !== undefined ? actual : "").toString().trim().replace(/\r/g, "");
+              const cleanLogs = runLogs.join("\n").trim().replace(/\r/g, "");
+              passed = (cleanActual === cleanExpected) || (cleanLogs === cleanExpected);
+            }
+          } catch (e) {
+            error = e.message;
+            passed = false;
+          }
+        } else {
+          try {
+            runLogs.push("> Compiling code variables...");
+            runLogs.push(`> Simulating execution for ${selectedLanguage} interpreter...`);
+            passed = tc.assertion ? tc.assertion(currentCode, null) : true;
+            output = tc.expected || tc.expectedOutput;
+          } catch (e) {
+            error = e.message;
+            passed = false;
+          }
+        }
+
+        console.log = originalConsoleLog;
+
+        results.push({
+          name: tc.name || "Test Case",
+          input: testcaseInputs[index] || tc.input,
+          expected: tc.expected || tc.expectedOutput,
+          actual: output || runLogs.join("\n"),
+          passed,
+          error,
+          logs: runLogs
+        });
+      });
+
+      // Update UI with fresh results
+      setTestResults(results);
       setIsSubmitting(false);
-      
-      const allPassed = testResults && testResults.length > 0 && testResults.every(r => r.passed);
+
+      // Use fresh local results — NOT stale testResults state
+      const allPassed = results.length > 0 && results.every(r => r.passed);
+      const verdict = allPassed ? "ACCEPTED" : "WRONG_ANSWER";
       if (allPassed) {
         triggerConfettiParticles();
-        
-        // Award points if not already solved
-        if (!solvedQuestions.includes(activeQuestion.id)) {
-          setSolvedQuestions(prev => [...prev, activeQuestion.id]);
-          setUserScore(prev => prev + activeQuestion.points);
+        // Award points only once per question
+        setSolvedQuestions(prev => {
+          if (prev.includes(activeQuestion.id)) return prev;
+          setUserScore(score => score + activeQuestion.points);
+          return [...prev, activeQuestion.id];
+        });
+      }
+
+      // Prepare wrapped code for backend validation
+      const mappedLang = selectedLanguage.toUpperCase() === "JAVASCRIPT" ? "JAVASCRIPT" : selectedLanguage.toUpperCase() === "PYTHON" ? "PYTHON" : "CPP";
+      const wrappedCode = wrapCodeForBackend(activeQuestion.slug || activeQuestion.id, selectedLanguage, currentCode);
+
+      const localSub = {
+        problemId: activeQuestion.slug || activeQuestion.id,
+        dbProblemId: activeQuestion.id,
+        title: activeQuestion.title,
+        language: mappedLang,
+        code: currentCode,
+        status: verdict,
+      };
+
+      // Save locally
+      saveLocalSubmission(localSub);
+
+      // Post submission to backend DB if it's a database contest (numeric ID)
+      const isNumeric = /^\d+$/.test(contestId);
+      if (isNumeric) {
+        try {
+          const hasRealToken = token && !token.startsWith("demo-") && !token.startsWith("local-");
+          const headers = {
+            "Content-Type": "application/json",
+            ...(hasRealToken
+              ? { Authorization: `Bearer ${token}` }
+              : { "x-bypass-auth": "true", "x-bypass-role": "USER" }),
+          };
+          fetch(`${API_BASE}/api/submissions/problem/${activeQuestion.id}`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              language: mappedLang,
+              code: wrappedCode,
+            }),
+            signal: AbortSignal.timeout(6000),
+          }).then(res => {
+            if (res.ok) {
+              console.log("Contest submission recorded in backend database");
+            }
+          }).catch(err => {
+            console.error("Failed to post contest submission to backend:", err);
+          });
+        } catch (err) {
+          console.error("Failed to send contest submission:", err);
         }
       }
-    }, 1800);
+    }, 1200);
   };
 
   // Canvas Confetti generator
@@ -927,6 +1182,8 @@ export default function ContestWorkspace() {
     });
   };
 
+  const isUpcoming = contest && contest.startTime && new Date() < new Date(contest.startTime);
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden" style={{ backgroundColor: "var(--bg-primary)" }}>
       
@@ -976,11 +1233,16 @@ export default function ContestWorkspace() {
                 Exit to Lobby
               </Link>
               <button
+                disabled={isUpcoming}
                 onClick={startContest}
-                className="flex-grow py-3 font-bold rounded-xl text-xs text-white shadow-md cursor-pointer"
-                style={{ background: "var(--accent-gradient)" }}
+                className={`flex-grow py-3 font-bold rounded-xl text-xs text-white shadow-md ${
+                  isUpcoming ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                }`}
+                style={{
+                  background: isUpcoming ? "gray" : "var(--accent-gradient)"
+                }}
               >
-                {"Start Contest"}
+                {isUpcoming ? `Starts at ${new Date(contest.startTime).toLocaleTimeString()}` : "Start Contest"}
               </button>
             </div>
           </motion.div>
