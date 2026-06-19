@@ -35,6 +35,18 @@ enum SubmissionStatus {
 }
 
 model User {
+<<<<<<< HEAD
+  id               Int           @id @default(autoincrement())
+  email            String        @unique
+  username         String        @unique
+  password         String
+  role             Role          @default(USER)
+  submissions      Submission[]
+  contestsCreated  Contest[]     @relation("ContestCreator")
+  liveSessions     LiveSession[] @relation("SessionHost")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+=======
   id                    Int                    @id @default(autoincrement())
   email                 String                 @unique
   username              String                 @unique
@@ -45,6 +57,7 @@ model User {
   contestParticipations ContestParticipation[]
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
+>>>>>>> 9c5c3d3555e471facd39b4cc675bf96e066ccbbe
 }
 
 model Problem {
@@ -114,6 +127,28 @@ model ContestProblem {
   @@unique([contestId, problemId])
 }
 
+<<<<<<< HEAD
+// ─── Live Session (LiveKit Integration) ─────────────────────────────
+model LiveSession {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  thumbnailUrl  String?               // URL or base64 of session thumbnail
+  roomName      String    @unique     // LiveKit room identifier
+  hostId        Int
+  host          User      @relation("SessionHost", fields: [hostId], references: [id])
+  isLive        Boolean   @default(false)
+  scheduledAt   DateTime?             // Optional: when session is scheduled to start
+  startedAt     DateTime?             // Actual start time
+  endedAt       DateTime?             // Actual end time
+
+  // ── Recording placeholder (for future VPS implementation) ──
+  recordingUrl  String?               // Will hold path/URL to recorded file
+  recordingSize Int?                  // Size in bytes, for storage management
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+=======
 model ContestParticipation {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -126,4 +161,5 @@ model ContestParticipation {
   createdAt DateTime @default(now())
 
   @@unique([userId, contestId])
+>>>>>>> 9c5c3d3555e471facd39b4cc675bf96e066ccbbe
 }
