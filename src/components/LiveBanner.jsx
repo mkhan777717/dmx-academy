@@ -12,7 +12,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+import { getApiBase } from "@/utils/api";
+
+const API_BASE = getApiBase();
 
 // ─── Helper: Format date/time nicely ─────────────────────────────────
 function formatDateTime(dateStr) {

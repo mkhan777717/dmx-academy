@@ -2,9 +2,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+import { getApiBase } from "@/utils/api";
+
 const AuthContext = createContext(null);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE = getApiBase();
 
 // ---------------------------------------------------------------------------
 // Helper: format Zod/backend errors into a readable string
@@ -59,7 +61,6 @@ function setLegacySession(user) {
   localStorage.removeItem("synapse_admin_session");
   localStorage.removeItem("synapse_student_session");
   localStorage.removeItem("synapse_mentor_session");
-<<<<<<< HEAD
   if (!user) return;
 
   const role = user.role;
@@ -69,12 +70,7 @@ function setLegacySession(user) {
   if (role === "ADMIN" || emailLower.includes("admin")) {
     localStorage.setItem("synapse_admin_session", "true");
   } else if (role === "MENTOR" || emailLower.includes("mentor")) {
-=======
-  if (role === "ADMIN") {
     localStorage.setItem("synapse_admin_session", "true");
-  } else if (role === "MENTOR") {
-    localStorage.setItem("synapse_admin_session", "true");
->>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
     localStorage.setItem("synapse_mentor_session", "true");
   } else {
     localStorage.setItem("synapse_student_session", "true");

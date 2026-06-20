@@ -6,9 +6,10 @@ import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, BookOpen, Clock, Code, Sparkles, ShieldAlert,
-  Terminal, CheckCircle2, ChevronRight, Zap
+  Terminal, CheckCircle2, ChevronRight, Zap, RefreshCw
 } from "lucide-react";
 import { practiceProblems } from "@/data/practiceProblems";
+import { useAuth } from "@/context/AuthContext";
 
 const categories = [
   "All Categories",
@@ -42,11 +43,14 @@ const getIcon = (category) => {
 };
 
 export default function PracticeCatalogPage() {
+  const { API_BASE } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All Difficulties");
   const [hoveredProblemId, setHoveredProblemId] = useState(null);
   const [completedProblems, setCompletedProblems] = useState([]);
+  const [allProblems, setAllProblems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -66,7 +70,81 @@ export default function PracticeCatalogPage() {
     }
   }, []);
 
-  const filteredProblems = practiceProblems.filter(prob => {
+  useEffect(() => {
+    async function loadProblems() {
+      setLoading(true);
+      
+      let localProblems = [];
+      if (typeof window !== "undefined") {
+        try {
+          const localRaw = localStorage.getItem("synapse_dynamic_problems");
+          if (localRaw) localProblems = JSON.parse(localRaw);
+        } catch { }
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/problems`, {
+          signal: AbortSignal.timeout(4000)
+        });
+        const data = await res.json();
+        if (data.success && data.problems) {
+          const mapped = data.problems.map(p => {
+            const matchedStatic = practiceProblems.find(sp => sp.id === p.slug);
+            const matchedLocal = localProblems.find(lp => lp.id === p.slug);
+            const matchedSource = matchedLocal || matchedStatic;
+            
+            let diffStr = "Medium";
+            if (p.difficulty === "EASY") diffStr = "Easy";
+            else if (p.difficulty === "HARD") diffStr = "Hard";
+
+            if (matchedSource) {
+              return {
+                ...matchedSource,
+                dbId: p.id,
+                difficulty: diffStr
+              };
+            }
+
+            return {
+              id: p.slug,
+              dbId: p.id,
+              title: p.title,
+              difficulty: diffStr,
+              category: "Algorithms",
+              desc: "Solve this algorithmic exercise from the database.",
+              time: "20 min",
+              tags: ["Database", "Dynamic"],
+              testcases: []
+            };
+          });
+
+          const combined = [
+            ...mapped,
+            ...localProblems.filter(lp => !mapped.some(mp => mp.id === lp.id)),
+            ...practiceProblems.filter(sp => !mapped.some(mp => mp.id === sp.id) && !localProblems.some(lp => lp.id === sp.id))
+          ];
+          setAllProblems(combined);
+        } else {
+          const combined = [
+            ...localProblems,
+            ...practiceProblems.filter(sp => !localProblems.some(lp => lp.id === sp.id))
+          ];
+          setAllProblems(combined);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dynamic problems, falling back:", err);
+        const combined = [
+          ...localProblems,
+          ...practiceProblems.filter(sp => !localProblems.some(lp => lp.id === sp.id))
+        ];
+        setAllProblems(combined);
+      }
+      setLoading(false);
+    }
+    loadProblems();
+  }, [API_BASE]);
+
+  const filteredProblems = allProblems.filter(prob => {
     const matchesCategory = selectedCategory === "All Categories" || prob.category === selectedCategory;
     const matchesDifficulty = selectedDifficulty === "All Difficulties" || prob.difficulty === selectedDifficulty;
     const matchesSearch = 
@@ -187,136 +265,143 @@ export default function PracticeCatalogPage() {
             </div>
           </div>
 
-          {/* Cards Grid */}
-          <motion.div 
-            layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredProblems.map((prob, idx) => {
-                const isHovered = hoveredProblemId === prob.id;
-                const isCompleted = completedProblems.includes(prob.id);
-                
-                return (
-                  <motion.div
-                    key={prob.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.4, delay: idx * 0.03 }}
-                    onMouseEnter={() => setHoveredProblemId(prob.id)}
-                    onMouseLeave={() => setHoveredProblemId(null)}
-                    onClick={() => {
-                      window.location.href = `/practice/${prob.id}`;
-                    }}
-                    className="group relative flex flex-col justify-between rounded-3xl p-6 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border"
-                    style={{
-                      backgroundColor: "var(--bg-card)",
-                      borderColor: isHovered ? "var(--border-accent)" : "var(--border-card)"
-                    }}
-                  >
-                    {/* Hover highlights */}
-                    <div 
-                      className="absolute inset-0 z-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500"
-                      style={{
-                        background: "var(--accent-gradient)"
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 space-y-4">
+              <RefreshCw size={28} className="animate-spin" style={{ color: "var(--text-accent)" }} />
+              <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Loading practice exercises...</p>
+            </div>
+          ) : (
+            /* Cards Grid */
+            <motion.div 
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredProblems.map((prob, idx) => {
+                  const isHovered = hoveredProblemId === prob.id;
+                  const isCompleted = completedProblems.includes(prob.id);
+                  
+                  return (
+                    <motion.div
+                      key={prob.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.4, delay: idx * 0.03 }}
+                      onMouseEnter={() => setHoveredProblemId(prob.id)}
+                      onMouseLeave={() => setHoveredProblemId(null)}
+                      onClick={() => {
+                        window.location.href = `/practice/${prob.id}`;
                       }}
-                    />
+                      className="group relative flex flex-col justify-between rounded-3xl p-6 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border"
+                      style={{
+                        backgroundColor: "var(--bg-card)",
+                        borderColor: isHovered ? "var(--border-accent)" : "var(--border-card)"
+                      }}
+                    >
+                      {/* Hover highlights */}
+                      <div 
+                        className="absolute inset-0 z-0 opacity-5 group-hover:opacity-10 transition-opacity duration-500"
+                        style={{
+                          background: "var(--accent-gradient)"
+                        }}
+                      />
 
-                    <div className="relative z-10 space-y-4">
-                      {/* Top status */}
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-2">
-                          <div className="p-2 rounded-xl bg-slate-500/5 border border-slate-500/10">
-                            {getIcon(prob.category)}
-                          </div>
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
-                            {prob.category}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          {isCompleted && (
-                            <span className="inline-flex items-center space-x-1 text-xs text-emerald-500 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                              <CheckCircle2 size={12} />
-                              <span>Solved</span>
+                      <div className="relative z-10 space-y-4">
+                        {/* Top status */}
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-2">
+                            <div className="p-2 rounded-xl bg-slate-500/5 border border-slate-500/10">
+                              {getIcon(prob.category)}
+                            </div>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[var(--text-secondary)]">
+                              {prob.category}
                             </span>
-                          )}
-                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
-                            prob.difficulty === "Easy" ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
-                            prob.difficulty === "Medium" ? "text-amber-500 bg-amber-500/10 border-amber-500/20" :
-                            "text-rose-500 bg-rose-500/10 border-rose-500/20"
-                          }`}>
-                            {prob.difficulty}
-                          </span>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            {isCompleted && (
+                              <span className="inline-flex items-center space-x-1 text-xs text-emerald-500 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                                <CheckCircle2 size={12} />
+                                <span>Solved</span>
+                              </span>
+                            )}
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border ${
+                              prob.difficulty === "Easy" ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
+                              prob.difficulty === "Medium" ? "text-amber-500 bg-amber-500/10 border-amber-500/20" :
+                              "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                            }`}>
+                              {prob.difficulty}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Header details */}
+                        <div className="space-y-2">
+                          <h3 className="text-xl font-bold font-display" style={{ color: "var(--text-primary)" }}>
+                            {prob.title}
+                          </h3>
+                          <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                            {prob.desc}
+                          </p>
+                        </div>
+
+                        {/* Pill tags */}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {prob.tags.map(tag => (
+                            <span 
+                              key={tag}
+                              className="text-[9px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider"
+                              style={{
+                                color: "var(--text-secondary)",
+                                borderColor: "var(--border-primary)",
+                                backgroundColor: "var(--bg-hover)"
+                              }}
+                            >
+                              {tag}
+                            </span>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Header details */}
-                      <div className="space-y-2">
-                        <h3 className="text-xl font-bold font-display" style={{ color: "var(--text-primary)" }}>
-                          {prob.title}
-                        </h3>
-                        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                          {prob.desc}
-                        </p>
-                      </div>
-
-                      {/* Pill tags */}
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {prob.tags.map(tag => (
-                          <span 
-                            key={tag}
-                            className="text-[9px] font-bold px-2.5 py-1 rounded-full border uppercase tracking-wider"
-                            style={{
-                              color: "var(--text-secondary)",
-                              borderColor: "var(--border-primary)",
-                              backgroundColor: "var(--bg-hover)"
-                            }}
-                          >
-                            {tag}
+                      {/* Bottom Details */}
+                      <div className="relative z-10 flex items-center justify-between pt-4 mt-6 border-t" style={{ borderColor: "var(--border-primary)" }}>
+                        <div className="flex items-center space-x-3 text-xs text-[var(--text-secondary)]">
+                          <span className="flex items-center space-x-1">
+                            <Clock size={12} />
+                            <span>{prob.time} Est.</span>
                           </span>
-                        ))}
-                      </div>
-                    </div>
+                          <span className="flex items-center space-x-1">
+                            <Terminal size={12} />
+                            <span>{prob.testcases ? prob.testcases.length : 0} Test Cases</span>
+                          </span>
+                        </div>
 
-                    {/* Bottom Details */}
-                    <div className="relative z-10 flex items-center justify-between pt-4 mt-6 border-t" style={{ borderColor: "var(--border-primary)" }}>
-                      <div className="flex items-center space-x-3 text-xs text-[var(--text-secondary)]">
-                        <span className="flex items-center space-x-1">
-                          <Clock size={12} />
-                          <span>{prob.time} Est.</span>
-                        </span>
-                        <span className="flex items-center space-x-1">
-                          <Terminal size={12} />
-                          <span>{prob.testcases.length} Test Cases</span>
-                        </span>
+                        <motion.div
+                          animate={{ x: isHovered ? 4 : 0 }}
+                          className="inline-flex items-center space-x-1 text-xs font-bold text-[var(--text-accent)]"
+                        >
+                          <span>Start Practice</span>
+                          <ChevronRight size={14} />
+                        </motion.div>
                       </div>
 
-                      <motion.div
-                        animate={{ x: isHovered ? 4 : 0 }}
-                        className="inline-flex items-center space-x-1 text-xs font-bold text-[var(--text-accent)]"
-                      >
-                        <span>Start Practice</span>
-                        <ChevronRight size={14} />
-                      </motion.div>
-                    </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
 
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-
-            {/* Empty view */}
-            {filteredProblems.length === 0 && (
-              <div className="col-span-full py-16 text-center space-y-4">
-                <Terminal size={48} className="mx-auto text-[var(--text-muted)] animate-bounce" />
-                <p className="text-base font-bold" style={{ color: "var(--text-primary)" }}>No practice exercises match filters.</p>
-                <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Try modifying filters or search query terms.</p>
-              </div>
-            )}
-          </motion.div>
+              {/* Empty view */}
+              {filteredProblems.length === 0 && (
+                <div className="col-span-full py-16 text-center space-y-4">
+                  <Terminal size={48} className="mx-auto text-[var(--text-muted)] animate-bounce" />
+                  <p className="text-base font-bold" style={{ color: "var(--text-primary)" }}>No practice exercises match filters.</p>
+                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Try modifying filters or search query terms.</p>
+                </div>
+              )}
+            </motion.div>
+          )}
 
         </div>
       </main>

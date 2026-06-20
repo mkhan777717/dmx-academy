@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard, PlusCircle, Trophy, LogOut,
-  Menu, X, ChevronLeft, ChevronRight, ShieldAlert, ArrowLeftRight, Code, Radio, AlertTriangle
+  Menu, X, ChevronLeft, ChevronRight, ShieldAlert, ArrowLeftRight, Code, Radio, AlertTriangle, List
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
@@ -121,9 +121,19 @@ export default function AdminLayout({ children }) {
       icon: LayoutDashboard
     },
     {
+      label: "All Contests",
+      href: "/admin/contests",
+      icon: Trophy
+    },
+    {
       label: "Create Contest",
       href: "/admin/contests/new",
       icon: PlusCircle
+    },
+    {
+      label: "All Problems",
+      href: "/admin/problems",
+      icon: Code
     },
     {
       label: "Go Live",
@@ -133,7 +143,7 @@ export default function AdminLayout({ children }) {
     {
       label: "Public Lobby",
       href: "/contest",
-      icon: Trophy
+      icon: List
     }
   ];
 

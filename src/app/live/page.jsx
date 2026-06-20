@@ -37,8 +37,10 @@ import {
 import Link from "next/link";
 import LiveChat from "@/components/LiveChat";
 
+import { getApiBase } from "@/utils/api";
+
 const LIVEKIT_URL = process.env.NEXT_PUBLIC_LIVEKIT_URL;
-const API_BASE_FALLBACK = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE_FALLBACK = getApiBase();
 
 // ─── Session Timer ───────────────────────────────────────────────────
 function SessionTimer({ startTime }) {

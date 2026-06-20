@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { getApiBase } from "@/utils/api";
 import { useParams } from "next/navigation";
 import { 
   BookOpen, CheckCircle, Circle, Search, ArrowLeft, ArrowRight, 
@@ -28,7 +29,9 @@ import {
 export default function DynamicCoursePage() {
   const params = useParams();
   const courseId = params.courseId;
-  const course = coursesRegistry[courseId];
+
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState("curriculum"); // "curriculum" | "practice" | "glossary" | "resources"
   const [activeModuleIdx, setActiveModuleIdx] = useState(0);
@@ -39,20 +42,33 @@ export default function DynamicCoursePage() {
   const [flatLessons, setFlatLessons] = useState([]);
   const contentRef = useRef(null);
 
-  // If course doesn't exist, show 404
-  if (!course) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center space-y-4" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
-        <h1 className="text-2xl font-black font-display">Course Not Found</h1>
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>The requested course could not be located in our registry.</p>
-        <a href="/courses" className="px-5 py-2.5 rounded-full text-xs font-bold text-white shadow-md transition-all" style={{ background: "var(--accent-gradient)" }}>
-          Back to Catalog
-        </a>
-      </div>
-    );
-  }
+  // Fetch course details dynamically
+  useEffect(() => {
+    async function loadCourseDetails() {
+      try {
+        const apiBase = getApiBase();
+        const res = await fetch(`${apiBase}/api/courses/${courseId}`);
+        const data = await res.json();
+        if (data.success && data.course) {
+          setCourse(data.course);
+        } else if (coursesRegistry[courseId]) {
+          setCourse(coursesRegistry[courseId]);
+        }
+      } catch (err) {
+        console.error("Failed to load course details dynamically:", err);
+        if (coursesRegistry[courseId]) {
+          setCourse(coursesRegistry[courseId]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (courseId) {
+      loadCourseDetails();
+    }
+  }, [courseId]);
 
-  const { allPhases, resourcesList, glossary, title, accent, duration, lessons } = course;
+  const { allPhases = [], resourcesList = [], glossary = [], title, accent, duration, lessons } = course || {};
   const progressKey = `${courseId}_course_progress`;
 
   // Parse and build flat list of lessons once
@@ -586,6 +602,27 @@ export default function DynamicCoursePage() {
 
   // Only render practice tab for web-development
   const hasPracticeTab = courseId === "web-development";
+
+  if (loading && !course) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center space-y-4" style={{ backgroundColor: "var(--bg-primary)" }}>
+        <div className="w-10 h-10 border-4 rounded-full border-t-transparent animate-spin mx-auto" style={{ borderColor: "var(--text-accent)" }} />
+        <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Loading course syllabus...</p>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center space-y-4" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
+        <h1 className="text-2xl font-black font-display">Course Not Found</h1>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>The requested course could not be located in our registry.</p>
+        <a href="/courses" className="px-5 py-2.5 rounded-full text-xs font-bold text-white shadow-md transition-all" style={{ background: "var(--accent-gradient)" }}>
+          Back to Catalog
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden font-sans" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>

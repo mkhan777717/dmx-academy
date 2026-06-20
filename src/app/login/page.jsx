@@ -24,31 +24,53 @@ function LoginForm() {
 
   // Role Tab Switcher
   const [activeTab, setActiveTab] = useState("STUDENT"); // STUDENT, MENTOR, ADMIN
+  const [hasExplicitRole, setHasExplicitRole] = useState(false);
 
   // State
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Detect and lock active role and pre-populated fields from query params/redirect path
+  useEffect(() => {
+    const roleParam = searchParams.get("role");
+    let targetRole = null;
+    if (roleParam) {
+      const parsed = roleParam.toUpperCase();
+      if (["STUDENT", "MENTOR", "ADMIN"].includes(parsed)) {
+        targetRole = parsed;
+      }
+    } else {
+      const path = redirectTo.toLowerCase();
+      if (path.includes("admin")) targetRole = "ADMIN";
+      else if (path.includes("mentor")) targetRole = "MENTOR";
+      else if (path.includes("student")) targetRole = "STUDENT";
+    }
+
+    if (targetRole) {
+      setActiveTab(targetRole);
+      setHasExplicitRole(true);
+    } else {
+      setHasExplicitRole(false);
+    }
+
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams, redirectTo]);
+
   // Mismatch check
   const isMismatched = (() => {
     if (!user || !redirectTo) return false;
     const path = redirectTo.toLowerCase();
-<<<<<<< HEAD
     const emailLower = (user.email || "").toLowerCase();
     
     const isUserAdmin = user.role === 'ADMIN' || emailLower.includes('admin');
     const isUserMentor = user.role === 'MENTOR' || emailLower.includes('mentor');
-    const isUserStudent = !isUserAdmin && !isUserMentor;
 
-    if (path.startsWith('/admin') && !isUserAdmin) return true;
+    if (path.startsWith('/admin') && !isUserAdmin && !isUserMentor) return true;
     if (path.startsWith('/mentor') && !isUserMentor) return true;
     // Admins and Mentors are allowed to access student views/desks without mismatch errors
-    if (path.startsWith('/student') && isUserStudent === false && !isUserAdmin && !isUserMentor) return true;
-=======
-    if (path.startsWith('/admin') && user.role !== 'ADMIN' && user.role !== 'MENTOR') return true;
-    if (path.startsWith('/mentor') && user.role !== 'MENTOR' && user.email !== 'mentor@synapse.com') return true;
-    if (path.startsWith('/student') && user.role === 'ADMIN' && user.role !== 'MENTOR') return true;
->>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
     return false;
   })();
 
@@ -70,15 +92,11 @@ function LoginForm() {
   }, [user, redirectTo, router, isMismatched]);
 
   if (user && isMismatched) {
-<<<<<<< HEAD
     const emailLower = (user.email || "").toLowerCase();
     const isUserAdmin = user.role === 'ADMIN' || emailLower.includes('admin');
     const isUserMentor = user.role === 'MENTOR' || emailLower.includes('mentor');
 
     const userRoleLabel = isUserMentor 
-=======
-    const userRoleLabel = (user.role === 'MENTOR' || user.email === 'mentor@synapse.com')
->>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
       ? 'Mentor' 
       : isUserAdmin 
         ? 'Administrator' 
@@ -91,13 +109,8 @@ function LoginForm() {
         : 'Student Desk';
 
     const getDashboardPath = () => {
-<<<<<<< HEAD
       if (isUserMentor) return '/mentor/dashboard';
       if (isUserAdmin) return '/admin/dashboard';
-=======
-      if (user.role === 'MENTOR' || user.email === 'mentor@synapse.com') return '/mentor/dashboard';
-      if (user.role === 'ADMIN') return '/admin/dashboard';
->>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
       return '/student/dashboard';
     };
 
@@ -260,25 +273,27 @@ function LoginForm() {
       className="w-full max-w-md space-y-6"
     >
       {/* Role selection tab bar */}
-      <div className="flex p-1.5 rounded-2xl border" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
-        {["STUDENT", "MENTOR", "ADMIN"].map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => {
-              setActiveTab(tab);
-              setErrorMsg("");
-            }}
-            className="flex-1 py-2.5 rounded-xl font-extrabold text-[10px] uppercase tracking-wider transition-all cursor-pointer text-center"
-            style={{
-              backgroundColor: activeTab === tab ? "var(--bg-badge)" : "transparent",
-              color: activeTab === tab ? "var(--text-accent)" : "var(--text-secondary)"
-            }}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {!hasExplicitRole && (
+        <div className="flex p-1.5 rounded-2xl border" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+          {["STUDENT", "MENTOR", "ADMIN"].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => {
+                setActiveTab(tab);
+                setErrorMsg("");
+              }}
+              className="flex-1 py-2.5 rounded-xl font-extrabold text-[10px] uppercase tracking-wider transition-all cursor-pointer text-center"
+              style={{
+                backgroundColor: activeTab === tab ? "var(--bg-badge)" : "transparent",
+                color: activeTab === tab ? "var(--text-accent)" : "var(--text-secondary)"
+              }}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Card Container */}
       <div

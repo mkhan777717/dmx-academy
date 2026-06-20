@@ -88,7 +88,16 @@ export default function CTA() {
 
           {/* Email Form */}
           <div className="max-w-md mx-auto pt-4">
-            <form onSubmit={(e) => e.preventDefault()} className="flex flex-col sm:flex-row gap-3">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const emailInput = e.currentTarget.querySelector('input[type="email"]');
+                if (emailInput && emailInput.value) {
+                  window.location.href = `/login?redirect=/student&email=${encodeURIComponent(emailInput.value)}`;
+                }
+              }}
+              className="flex flex-col sm:flex-row gap-3"
+            >
               <input
                 suppressHydrationWarning
                 type="email"

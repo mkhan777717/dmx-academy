@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getApiBase } from "@/utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Sparkles, BookOpen, Clock, Users, ArrowRight, Zap } from "lucide-react";
 
@@ -175,6 +176,38 @@ const tabList = [
 export default function Tracks() {
   const [activeTab, setActiveTab] = useState("frontend");
   const [hoveredCourseId, setHoveredCourseId] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTracks() {
+      try {
+        const apiBase = getApiBase();
+        const res = await fetch(`${apiBase}/api/courses`);
+        const data = await res.json();
+        if (data.success && data.courses) {
+          setCourses(data.courses);
+        }
+      } catch (err) {
+        console.error("Failed to fetch tracks dynamically:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTracks();
+  }, []);
+
+  // Group courses dynamically by categories
+  const groupedCourses = {
+    frontend: courses.filter(c => c.category === "Web & Mobile Development"),
+    ai: courses.filter(c => c.category === "Data & AI"),
+    devops: courses.filter(c => c.category === "Cloud & DevOps"),
+    creative: courses.filter(c => c.category === "Creative Tech")
+  };
+
+  const displayedCourses = courses.length > 0
+    ? (groupedCourses[activeTab] || [])
+    : (tracksData[activeTab] || []);
 
   return (
     <section id="tracks" className="relative py-24 transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
@@ -268,7 +301,7 @@ export default function Tracks() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           <AnimatePresence mode="popLayout">
-            {tracksData[activeTab].map((course, index) => (
+            {displayedCourses.map((course, index) => (
               <motion.div
                 key={course.id}
                 layout
