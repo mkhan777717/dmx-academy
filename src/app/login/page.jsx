@@ -33,6 +33,7 @@ function LoginForm() {
   const isMismatched = (() => {
     if (!user || !redirectTo) return false;
     const path = redirectTo.toLowerCase();
+<<<<<<< HEAD
     const emailLower = (user.email || "").toLowerCase();
     
     const isUserAdmin = user.role === 'ADMIN' || emailLower.includes('admin');
@@ -43,6 +44,11 @@ function LoginForm() {
     if (path.startsWith('/mentor') && !isUserMentor) return true;
     // Admins and Mentors are allowed to access student views/desks without mismatch errors
     if (path.startsWith('/student') && isUserStudent === false && !isUserAdmin && !isUserMentor) return true;
+=======
+    if (path.startsWith('/admin') && user.role !== 'ADMIN' && user.role !== 'MENTOR') return true;
+    if (path.startsWith('/mentor') && user.role !== 'MENTOR' && user.email !== 'mentor@synapse.com') return true;
+    if (path.startsWith('/student') && user.role === 'ADMIN' && user.role !== 'MENTOR') return true;
+>>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
     return false;
   })();
 
@@ -64,11 +70,15 @@ function LoginForm() {
   }, [user, redirectTo, router, isMismatched]);
 
   if (user && isMismatched) {
+<<<<<<< HEAD
     const emailLower = (user.email || "").toLowerCase();
     const isUserAdmin = user.role === 'ADMIN' || emailLower.includes('admin');
     const isUserMentor = user.role === 'MENTOR' || emailLower.includes('mentor');
 
     const userRoleLabel = isUserMentor 
+=======
+    const userRoleLabel = (user.role === 'MENTOR' || user.email === 'mentor@synapse.com')
+>>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
       ? 'Mentor' 
       : isUserAdmin 
         ? 'Administrator' 
@@ -81,8 +91,13 @@ function LoginForm() {
         : 'Student Desk';
 
     const getDashboardPath = () => {
+<<<<<<< HEAD
       if (isUserMentor) return '/mentor/dashboard';
       if (isUserAdmin) return '/admin/dashboard';
+=======
+      if (user.role === 'MENTOR' || user.email === 'mentor@synapse.com') return '/mentor/dashboard';
+      if (user.role === 'ADMIN') return '/admin/dashboard';
+>>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
       return '/student/dashboard';
     };
 

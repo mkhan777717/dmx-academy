@@ -98,6 +98,7 @@ const protect = async (req, res, next) => {
 const restrictTo = (...roles) => {
   return (req, res, next) => {
     const userRole = req.user?.role;
+<<<<<<< HEAD
     const email = req.user?.email || "";
     const emailLower = email.toLowerCase();
 
@@ -108,6 +109,11 @@ const restrictTo = (...roles) => {
 
     const isAllowedRole = roles.includes(effectiveRole);
     const isAllowedMentor = roles.includes('MENTOR') && (isEmailMentor || emailLower === 'mentor@synapse.com');
+=======
+    const isAllowedRole = roles.includes(userRole);
+    const isMentorEmail = req.user?.email === 'mentor@synapse.com';
+    const isAllowedMentor = (roles.includes('MENTOR') || roles.includes('ADMIN')) && (userRole === 'MENTOR' || isMentorEmail);
+>>>>>>> 9bc2b064da6f845518be96bc13e4a770924210cc
 
     if (!req.user || (!isAllowedRole && !isAllowedMentor)) {
       return res.status(403).json({
@@ -140,7 +146,7 @@ const fetchUserIfExists = async (req, res, next) => {
             username: bypassUsername,
             email: bypassEmail,
             password: 'devbypasshashedpassword',
-            role: bypassRole === 'MENTOR' ? 'USER' : bypassRole,
+            role: bypassRole,
           }
         });
       }
