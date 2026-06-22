@@ -42,28 +42,114 @@ function saveLocalSubmission(sub) {
 export default function PracticeWorkspace() {
   const params = useParams();
   const problemId = params.problemId;
-  const problem = practiceProblems.find(p => p.id === problemId);
   const { user, token, API_BASE } = useAuth();
+  
+  const [problem, setProblem] = useState(null);
   const [dbProblem, setDbProblem] = useState(null);
+  const [loadingProblem, setLoadingProblem] = useState(true);
 
   useEffect(() => {
-    async function fetchDbProblem() {
+    async function loadProblemData() {
       if (!problemId) return;
+      setLoadingProblem(true);
+      
+      let localProblem = null;
+      if (typeof window !== "undefined") {
+        try {
+          const localRaw = localStorage.getItem("synapse_dynamic_problems");
+          if (localRaw) {
+            const parsed = JSON.parse(localRaw);
+            localProblem = parsed.find(p => p.id === problemId);
+          }
+        } catch { }
+      }
+
       try {
         const res = await fetch(`${API_BASE}/api/problems/${problemId}`, {
           signal: AbortSignal.timeout(4000)
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.success) {
-            setDbProblem(data.problem);
+          if (data.success && data.problem) {
+            const dbp = data.problem;
+            setDbProblem(dbp);
+
+            const matchedStatic = practiceProblems.find(p => p.id === problemId);
+            const matchedSource = localProblem || matchedStatic;
+
+            let diffStr = "Medium";
+            if (dbp.difficulty === "EASY") diffStr = "Easy";
+            else if (dbp.difficulty === "HARD") diffStr = "Hard";
+
+            if (matchedSource) {
+              setProblem({
+                ...matchedSource,
+                dbId: dbp.id,
+                difficulty: diffStr
+              });
+            } else {
+              const dynamicTC = dbp.testCases.map((tc, index) => ({
+                name: `Test Case ${index + 1}${tc.isSample ? " (Sample)" : ""}`,
+                input: tc.input,
+                expected: tc.expectedOutput,
+                assertion: (codeStr, runFunc) => {
+                  if (!runFunc) return true;
+                  try {
+                    let parsed;
+                    try {
+                      parsed = JSON.parse(`[${tc.input}]`);
+                    } catch {
+                      parsed = [tc.input];
+                    }
+                    const actual = runFunc(...parsed);
+                    const expectedNormalized = tc.expectedOutput.trim();
+                    return JSON.stringify(actual) === expectedNormalized || String(actual).trim() === expectedNormalized;
+                  } catch {
+                    return false;
+                  }
+                }
+              }));
+
+              setProblem({
+                id: dbp.slug,
+                dbId: dbp.id,
+                title: dbp.title,
+                difficulty: diffStr,
+                category: "Algorithms",
+                desc: dbp.statement,
+                time: "20 min",
+                tags: ["Database", "Dynamic"],
+                defaultLanguage: "javascript",
+                editorTemplates: {
+                  javascript: `// JavaScript Starter Code\nfunction solve(input) {\n  // Write your code here\n}`,
+                  python: `# Python Starter Code\ndef solve(input):\n    pass`
+                },
+                testcases: dynamicTC,
+                tabs: {
+                  description: dbp.statement,
+                  followup: "Review complexity bounds and optimize your implementation.",
+                  editorial: dbp.explanation || "No editorial guide published yet.",
+                  solution: "No official reference solutions yet.",
+                  evaluation: "Verify against sample assertions below."
+                }
+              });
+            }
+            setLoadingProblem(false);
+            return;
           }
         }
       } catch (err) {
         console.error("Failed to load db problem details:", err);
       }
+
+      const matchedStatic = practiceProblems.find(p => p.id === problemId);
+      const matchedSource = localProblem || matchedStatic;
+      if (matchedSource) {
+        setProblem(matchedSource);
+      }
+      setLoadingProblem(false);
     }
-    fetchDbProblem();
+    loadProblemData();
   }, [problemId, API_BASE]);
 
   // Layout resize state
@@ -670,6 +756,17 @@ export default function PracticeWorkspace() {
 
     animateConfetti();
   };
+
+  if (loadingProblem) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center" style={{ backgroundColor: "var(--bg-primary)" }}>
+        <div className="text-center space-y-4">
+          <RefreshCw className="animate-spin mx-auto text-[var(--text-accent)]" size={32} />
+          <p className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>Initializing workspace...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!problem) {
     return (

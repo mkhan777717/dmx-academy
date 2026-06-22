@@ -98,9 +98,17 @@ const protect = async (req, res, next) => {
 const restrictTo = (...roles) => {
   return (req, res, next) => {
     const userRole = req.user?.role;
-    const isAllowedRole = roles.includes(userRole);
-    const isMentorEmail = req.user?.email === 'mentor@synapse.com';
-    const isAllowedMentor = roles.includes('MENTOR') && isMentorEmail;
+    const email = req.user?.email || "";
+    const emailLower = email.toLowerCase();
+
+    // Dynamically map role based on email keyword or DB role
+    const isEmailAdmin = emailLower.includes('admin');
+    const isEmailMentor = emailLower.includes('mentor') || emailLower === 'mentor@synapse.com';
+    const effectiveRole = isEmailAdmin ? 'ADMIN' : (isEmailMentor ? 'MENTOR' : userRole);
+
+    const isAllowedRole = roles.includes(effectiveRole);
+    // Mentors are allowed access to ADMIN routes as well
+    const isAllowedMentor = (roles.includes('MENTOR') || roles.includes('ADMIN')) && (effectiveRole === 'MENTOR');
 
     if (!req.user || (!isAllowedRole && !isAllowedMentor)) {
       return res.status(403).json({
@@ -133,7 +141,7 @@ const fetchUserIfExists = async (req, res, next) => {
             username: bypassUsername,
             email: bypassEmail,
             password: 'devbypasshashedpassword',
-            role: bypassRole === 'MENTOR' ? 'USER' : bypassRole,
+            role: bypassRole,
           }
         });
       }

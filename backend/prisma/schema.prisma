@@ -86,7 +86,7 @@ model Submission {
   language      Language
   code          String
   status        SubmissionStatus @default(PENDING)
-  executionTime Int?             // In milliseconds
+  executionTime Int? // In milliseconds
   createdAt     DateTime         @default(now())
 }
 
@@ -132,24 +132,24 @@ model ContestParticipation {
 
 // ─── Live Session (LiveKit Integration) ─────────────────────────────
 model LiveSession {
-  id            Int       @id @default(autoincrement())
-  title         String
-  description   String?
-  thumbnailUrl  String?               // URL or base64 of session thumbnail
-  roomName      String    @unique     // LiveKit room identifier
-  hostId        Int
-  host          User      @relation("SessionHost", fields: [hostId], references: [id])
-  isLive        Boolean   @default(false)
-  scheduledAt   DateTime?             // Optional: when session is scheduled to start
-  startedAt     DateTime?             // Actual start time
-  endedAt       DateTime?             // Actual end time
+  id           Int       @id @default(autoincrement())
+  title        String
+  description  String?
+  thumbnailUrl String? // URL or base64 of session thumbnail
+  roomName     String    @unique // LiveKit room identifier
+  hostId       Int
+  host         User      @relation("SessionHost", fields: [hostId], references: [id])
+  isLive       Boolean   @default(false)
+  scheduledAt  DateTime? // Optional: when session is scheduled to start
+  startedAt    DateTime? // Actual start time
+  endedAt      DateTime? // Actual end time
 
   // ── Recording placeholder (for future VPS implementation) ──
-  recordingUrl  String?               // Will hold path/URL to recorded file
-  recordingSize Int?                  // Size in bytes, for storage management
+  recordingUrl  String? // Will hold path/URL to recorded file
+  recordingSize Int? // Size in bytes, for storage management
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ─── AI Viva System ─────────────────────────────

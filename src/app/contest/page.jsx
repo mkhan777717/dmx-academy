@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
@@ -11,6 +11,72 @@ import {
 } from "lucide-react";
 import { contests } from "@/data/contestData";
 import { useAuth } from "@/context/AuthContext";
+
+// ─── Live timing helpers ───────────────────────────────────────────────────
+function computeContestTiming(c) {
+  const now = new Date();
+  const start = c.startTime ? new Date(c.startTime) : null;
+  const end   = c.endTime   ? new Date(c.endTime)   : null;
+
+  // If timestamps are invalid ISO (old static strings), preserve legacy fields
+  if (!start || isNaN(start.getTime()) || !end || isNaN(end.getTime())) {
+    return {
+      status: c.status || "upcoming",
+      timeLeftStr: c.timeLeftStr || "—",
+      durationMins: c.durationMins || 0,
+    };
+  }
+
+  let status = "upcoming";
+  if (now >= start && now <= end) status = "active";
+  else if (now > end) status = "past";
+
+  const durationMins = c.durationMins || Math.round((end - start) / 60000);
+
+  let timeLeftStr;
+  if (status === "active") {
+    const secsLeft = Math.max(0, Math.floor((end - now) / 1000));
+    const h = Math.floor(secsLeft / 3600);
+    const m = Math.floor((secsLeft % 3600) / 60);
+    const s = secsLeft % 60;
+    if (h > 0) {
+      timeLeftStr = `${h}h ${m}m remaining`;
+    } else if (m > 0) {
+      timeLeftStr = `${m}m ${String(s).padStart(2, "0")}s remaining`;
+    } else {
+      timeLeftStr = `${s}s remaining`;
+    }
+  } else if (status === "upcoming") {
+    const secsUntil = Math.max(0, Math.floor((start - now) / 1000));
+    const h = Math.floor(secsUntil / 3600);
+    const m = Math.floor((secsUntil % 3600) / 60);
+    const s = secsUntil % 60;
+    if (h >= 24) {
+      const days = Math.floor(h / 24);
+      timeLeftStr = `Starts in ${days}d ${h % 24}h`;
+    } else if (h > 0) {
+      timeLeftStr = `Starts in ${h}h ${m}m`;
+    } else if (m > 0) {
+      timeLeftStr = `Starts in ${m}m ${String(s).padStart(2, "0")}s`;
+    } else {
+      timeLeftStr = `Starts in ${s}s`;
+    }
+  } else {
+    // past
+    const secsAgo = Math.floor((now - end) / 1000);
+    const h = Math.floor(secsAgo / 3600);
+    const days = Math.floor(secsAgo / 86400);
+    if (days >= 1) {
+      timeLeftStr = `Completed ${days} day${days > 1 ? "s" : ""} ago`;
+    } else if (h >= 1) {
+      timeLeftStr = `Completed ${h}h ago`;
+    } else {
+      timeLeftStr = `Completed recently`;
+    }
+  }
+
+  return { status, timeLeftStr, durationMins };
+}
 
 const globalLeaderboardMock = [
   { rank: 1, name: "quantum_coder", points: 2840, contests: 12, rankClass: "Grandmaster", color: "text-rose-500" },
@@ -32,6 +98,12 @@ export default function ContestLobby() {
   const [registeredContests, setRegisteredContests] = useState([]);
   const [pastContestResults, setPastContestResults] = useState(null);
   const [isStudentLoggedIn, setIsStudentLoggedIn] = useState(false);
+  // Live tick — forces re-render every second so countdowns stay accurate
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Load registration history from localStorage
   useEffect(() => {
@@ -130,6 +202,7 @@ export default function ContestLobby() {
             merged = [...dynamicFiltered, ...contests];
           } catch { }
         }
+        // Normalize static/local contests with computed timings
         setAllContests(merged);
       }
     } catch (err) {
@@ -226,7 +299,13 @@ export default function ContestLobby() {
     setPastContestResults(contest);
   };
 
-  const filteredContests = allContests.filter(c => {
+  // Re-derive live timings from timestamps on every tick
+  const liveContests = allContests.map(c => {
+    const { status, timeLeftStr, durationMins } = computeContestTiming(c);
+    return { ...c, status, timeLeftStr, durationMins };
+  });
+
+  const filteredContests = liveContests.filter(c => {
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "active" && c.status === "active") ||

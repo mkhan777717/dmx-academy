@@ -255,6 +255,9 @@ export default function Pricing() {
                   <motion.button
                     suppressHydrationWarning
                     whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      window.location.href = "/login?redirect=/student";
+                    }}
                     className="w-full rounded-xl py-3 text-sm font-bold shadow-md transition-all"
                     style={
                       plan.popular

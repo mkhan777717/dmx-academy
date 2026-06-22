@@ -15,6 +15,7 @@ const submissionRoutes = require('./routes/submissionRoutes');
 const contestRoutes = require('./routes/contestRoutes');
 const livekitRoutes = require('./routes/livekitRoutes');
 const vivaRoutes = require('./routes/vivaRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/submissions', submissionRoutes);
 app.use('/api/contests', contestRoutes);
 app.use('/api/livekit', livekitRoutes);
 app.use('/api/viva', vivaRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Fallback for undefined routes
 app.use((req, res, next) => {

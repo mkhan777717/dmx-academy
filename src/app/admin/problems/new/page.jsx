@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Sparkles, FileText, Code, CheckCircle, Save, 
   ArrowLeft, ArrowRight, Settings, Plus, Trash2,
@@ -84,6 +85,7 @@ function renderMarkdown(md) {
 
 export default function CreateProblem() {
   const router = useRouter();
+  const { token, API_BASE, user } = useAuth();
   const [activeTab, setActiveTab] = useState("details"); // details, statement, templates, testcases
   const [showGuide, setShowGuide] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -335,10 +337,36 @@ Explain the output: The first element becomes last, the second becomes second-to
     { id: "testcases", label: "4. Test Cases & Limits", icon: CheckCircle }
   ];
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (!title || !desc) {
+    if (!title) {
       setActiveTab("details");
+      alert("Please enter a Problem Title (minimum 3 characters)");
+      return;
+    }
+    if (title.length < 3) {
+      setActiveTab("details");
+      alert("Title must be at least 3 characters long");
+      return;
+    }
+    if (!desc) {
+      setActiveTab("statement");
+      alert("Please enter a Problem Description/Statement (minimum 10 characters)");
+      return;
+    }
+    if (desc.length < 10) {
+      setActiveTab("statement");
+      alert("Description/Statement must be at least 10 characters long");
+      return;
+    }
+    if (!sampleInput.trim()) {
+      setActiveTab("testcases");
+      alert("Please enter a Sample Input");
+      return;
+    }
+    if (!sampleOutput.trim()) {
+      setActiveTab("testcases");
+      alert("Please enter a Sample Output");
       return;
     }
 
@@ -371,8 +399,62 @@ Explain the output: The first element becomes last, the second becomes second-to
       ]
     };
 
+    // Save to backend database
+    let dbSaved = false;
+    try {
+      const hasRealToken = token && !token.startsWith("demo-") && !token.startsWith("local-");
+      const headers = {
+        "Content-Type": "application/json",
+        ...(hasRealToken
+          ? { Authorization: `Bearer ${token}` }
+          : { "x-bypass-auth": "true", "x-bypass-role": user?.role === "MENTOR" ? "MENTOR" : "ADMIN" }),
+      };
+
+      const body = {
+        title,
+        difficulty: difficulty.toUpperCase() === "EASY" ? "EASY" : difficulty.toUpperCase() === "HARD" ? "HARD" : "MEDIUM",
+        statement: desc,
+        inputFormat: inputFormat || "Standard input",
+        outputFormat: outputFormat || "Standard output",
+        constraints: constraints || "None",
+        explanation: "No explanation provided.",
+        testCases: [
+          {
+            input: sampleInput,
+            expectedOutput: sampleOutput,
+            isSample: true
+          }
+        ]
+      };
+
+      const res = await fetch(`${API_BASE}/api/problems`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.error("Failed to save to database:", data.message || data.errors);
+        let errMsg = "Validation or authorization error.";
+        if (data.errors && Array.isArray(data.errors)) {
+          errMsg = data.errors.map(e => `• ${e.field ? e.field + ": " : ""}${e.message}`).join("\n");
+        } else if (data.message) {
+          errMsg = data.message;
+        }
+        alert(`Failed to save to database:\n${errMsg}`);
+        return; // Halt execution
+      } else {
+        console.log("Successfully saved problem to database:", data.problem);
+        dbSaved = true;
+      }
+    } catch (err) {
+      console.error("Network error saving to database:", err);
+      alert("Network error connecting to the database server. Check your connection.");
+      return; // Halt execution
+    }
+
     // Save to localStorage
-    if (typeof window !== "undefined") {
+    if (dbSaved && typeof window !== "undefined") {
       const existingRaw = localStorage.getItem("synapse_dynamic_problems");
       let existing = [];
       if (existingRaw) {

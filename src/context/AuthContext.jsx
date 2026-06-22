@@ -2,9 +2,11 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
+import { getApiBase } from "@/utils/api";
+
 const AuthContext = createContext(null);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+const API_BASE = getApiBase();
 
 // ---------------------------------------------------------------------------
 // Helper: format Zod/backend errors into a readable string
@@ -48,19 +50,31 @@ function findLocalAccount(email, password) {
 const DEMO_ACCOUNTS = [
   { email: "admin@demo.com",   password: "demo123", user: { id: "demo-1", username: "Admin",   email: "admin@demo.com",   role: "ADMIN" } },
   { email: "student@demo.com", password: "demo123", user: { id: "demo-2", username: "Student", email: "student@demo.com", role: "USER"  } },
-  { email: "mentor@demo.com",  password: "demo123", user: { id: "demo-3", username: "Mentor",  email: "mentor@demo.com",  role: "USER"  } },
+  { email: "mentor@demo.com",  password: "demo123", user: { id: "demo-3", username: "Mentor",  email: "mentor@demo.com",  role: "MENTOR" } },
 ];
 
 // ---------------------------------------------------------------------------
 // Legacy session keys (used by other pages to detect role)
 // ---------------------------------------------------------------------------
-function setLegacySession(role) {
+function setLegacySession(user) {
   if (typeof window === "undefined") return;
   localStorage.removeItem("synapse_admin_session");
   localStorage.removeItem("synapse_student_session");
   localStorage.removeItem("synapse_mentor_session");
-  if (role === "ADMIN")  localStorage.setItem("synapse_admin_session",   "true");
-  else                   localStorage.setItem("synapse_student_session", "true");
+  if (!user) return;
+
+  const role = user.role;
+  const email = user.email || "";
+  const emailLower = email.toLowerCase();
+
+  if (role === "ADMIN" || emailLower.includes("admin")) {
+    localStorage.setItem("synapse_admin_session", "true");
+  } else if (role === "MENTOR" || emailLower.includes("mentor")) {
+    localStorage.setItem("synapse_admin_session", "true");
+    localStorage.setItem("synapse_mentor_session", "true");
+  } else {
+    localStorage.setItem("synapse_student_session", "true");
+  }
 }
 
 function clearLegacySessions() {
@@ -76,6 +90,29 @@ export function AuthProvider({ children }) {
   const [user, setUser]     = useState(null);
   const [token, setToken]   = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeSession, setActiveSession] = useState(null);
+
+  // Sync / check active session for host
+  useEffect(() => {
+    async function checkActiveSession() {
+      if (!token || !user) {
+        setActiveSession(null);
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/livekit/session/active`);
+        const data = await res.json();
+        if (data.success && data.session && data.session.hostId === user?.id) {
+          setActiveSession(data.session);
+        } else {
+          setActiveSession(null);
+        }
+      } catch (e) {
+        console.error("AuthContext: failed to check active session:", e);
+      }
+    }
+    checkActiveSession();
+  }, [token, user]);
 
   // On mount: restore session from localStorage
   useEffect(() => {
@@ -98,7 +135,7 @@ export function AuthProvider({ children }) {
               if (data.success) {
                 setUser(data.user);
                 setToken(storedToken);
-                setLegacySession(data.user.role);
+                setLegacySession(data.user);
                 setLoading(false);
                 return;
               }
@@ -113,7 +150,7 @@ export function AuthProvider({ children }) {
           const parsedUser = JSON.parse(storedUser);
           setUser(parsedUser);
           setToken(storedToken);
-          setLegacySession(parsedUser.role);
+          setLegacySession(parsedUser);
         } catch {
           localStorage.removeItem("dmx_auth_token");
           localStorage.removeItem("dmx_auth_user");
@@ -141,10 +178,10 @@ export function AuthProvider({ children }) {
       if (res.ok && data.success) {
         setToken(data.token);
         setUser(data.user);
-        setLegacySession(data.user.role);
+        setLegacySession(data.user);
         localStorage.setItem("dmx_auth_token", data.token);
         localStorage.setItem("dmx_auth_user", JSON.stringify(data.user));
-        return { success: true };
+        return { success: true, user: data.user };
       }
 
       // If it's a 4xx (bad credentials, wrong password, etc.) — report immediately
@@ -162,10 +199,10 @@ export function AuthProvider({ children }) {
       const localToken = `local-token-${Date.now()}`;
       setToken(localToken);
       setUser(localAccount.user);
-      setLegacySession(localAccount.user.role);
+      setLegacySession(localAccount.user);
       localStorage.setItem("dmx_auth_token", localToken);
       localStorage.setItem("dmx_auth_user", JSON.stringify(localAccount.user));
-      return { success: true };
+      return { success: true, user: localAccount.user };
     }
 
     // 3. Check built-in demo accounts
@@ -174,10 +211,10 @@ export function AuthProvider({ children }) {
       const demoToken = `demo-token-${Date.now()}`;
       setToken(demoToken);
       setUser(demo.user);
-      setLegacySession(demo.user.role);
+      setLegacySession(demo.user);
       localStorage.setItem("dmx_auth_token", demoToken);
       localStorage.setItem("dmx_auth_user", JSON.stringify(demo.user));
-      return { success: true };
+      return { success: true, user: demo.user };
     }
 
     return {
@@ -202,10 +239,10 @@ export function AuthProvider({ children }) {
       if (res.ok && data.success) {
         setToken(data.token);
         setUser(data.user);
-        setLegacySession(data.user.role);
+        setLegacySession(data.user);
         localStorage.setItem("dmx_auth_token", data.token);
         localStorage.setItem("dmx_auth_user", JSON.stringify(data.user));
-        return { success: true };
+        return { success: true, user: data.user };
       }
 
       // 4xx — validation or duplicate error, report immediately
@@ -231,10 +268,10 @@ export function AuthProvider({ children }) {
     const localToken = `local-token-${Date.now()}`;
     setToken(localToken);
     setUser(newUser);
-    setLegacySession(role);
+    setLegacySession(newUser);
     localStorage.setItem("dmx_auth_token", localToken);
     localStorage.setItem("dmx_auth_user", JSON.stringify(newUser));
-    return { success: true, offlineMode: true };
+    return { success: true, offlineMode: true, user: newUser };
   };
 
   // ---------------------------------------------------------------------------
@@ -248,7 +285,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, API_BASE }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, API_BASE, activeSession, setActiveSession }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,11 @@
 // DMX Academy Contest Registry Data
 import { practiceProblems } from "./practiceProblems";
 
+// Helper: build ISO timestamp relative to NOW
+function relativeISO(offsetMinutes) {
+  return new Date(Date.now() + offsetMinutes * 60 * 1000).toISOString();
+}
+
 export const contests = [
   {
     id: "speedrun-01",
@@ -8,10 +13,10 @@ export const contests = [
     desc: "Test your skills in coding performance and core virtual DOM rendering mechanics in this weekly speed challenge.",
     durationMins: 30,
     totalPoints: 300,
-    status: "active",
     category: "Algorithms & Frontend",
-    timeLeftStr: "24m:15s",
-    startTime: "Started 15 mins ago",
+    // Started 15 mins ago, ends in 15 mins (30-min contest)
+    startTime: relativeISO(-15),
+    endTime: relativeISO(15),
     problems: [
       {
         ...practiceProblems.find(p => p.id === "two-sum"),
@@ -36,10 +41,10 @@ export const contests = [
     desc: "A rigorous system architecture and API security design contest focusing on rate limiters, token authorization, and network attacks defense.",
     durationMins: 60,
     totalPoints: 400,
-    status: "upcoming",
     category: "System Design & Security",
-    timeLeftStr: "Starts in 2h 15m",
-    startTime: "Starts at 8:00 PM Local Time",
+    // Starts in ~2h 15m
+    startTime: relativeISO(135),
+    endTime: relativeISO(195),
     problems: [
       {
         ...practiceProblems.find(p => p.id === "auth-vs-auth"),
@@ -50,7 +55,7 @@ export const contests = [
         points: 300
       }
     ],
-    leaderboard: [] // No submissions yet
+    leaderboard: []
   },
   {
     id: "hackathon-04",
@@ -58,10 +63,10 @@ export const contests = [
     desc: "Our premium monthly marathon challenge exploring distributed services rate limits, array optimizations, and reconciliation trees.",
     durationMins: 90,
     totalPoints: 600,
-    status: "past",
     category: "Full Stack Mastery",
-    timeLeftStr: "Completed 2 days ago",
-    startTime: "June 14, 2026",
+    // Ended ~2 days ago
+    startTime: relativeISO(-60 * 24 * 2 - 90),
+    endTime: relativeISO(-60 * 24 * 2),
     problems: [
       {
         ...practiceProblems.find(p => p.id === "two-sum"),
