@@ -162,6 +162,27 @@ model VivaAnswer {
   session    VivaSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
 
+model StudyMaterial {
+  id               Int                   @id @default(autoincrement())
+  title            String
+  fileName         String
+  filePath         String
+  subject          String
+  uploadedById     Int
+  uploadDate       DateTime              @default(now())
+  processingStatus StudyMaterialStatus   @default(UPLOADED)
+  extractedText    String?               @db.Text
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+}
+
+enum StudyMaterialStatus {
+  UPLOADED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 enum Role {
   USER
   ADMIN
