@@ -135,7 +135,6 @@ model VivaQuestion {
   difficulty     Difficulty   @default(EASY)
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-  topic          String       @default("")
   vivaAnswers    VivaAnswer[]
 }
 
