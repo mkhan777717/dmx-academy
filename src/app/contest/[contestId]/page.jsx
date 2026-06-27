@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { wrapCodeForBackend } from "@/utils/codeWrapper";
 import { getSocket } from "@/utils/socket";
+import { getProblemTabs } from "@/utils/problemTabsData";
 
 
 const getRandom = () => Math.random();
@@ -100,6 +101,7 @@ export default function ContestWorkspace() {
   const [showViolationOverlay, setShowViolationOverlay] = useState(false);
   const [violationReason, setViolationReason] = useState("");
   const fullscreenRequestedRef = useRef(false);
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   // Layout resize state
   const [leftWidth, setLeftWidth] = useState(50); // percentage
@@ -254,9 +256,9 @@ export default function ContestWorkspace() {
                 explanation: dbProb.explanation,
                 testcases: dbProb.testCases || [],
                 editorTemplates: {
-                  javascript: `// Solve: ${dbProb.title}\nfunction solution() {\n    // Write your code here\n}`,
-                  python: `# Solve: ${dbProb.title}\ndef solution():\n    # Write your code here\n    pass`,
-                  go: `package main\n\nimport "fmt"\n\n// Solve: ${dbProb.title}\nfunc solution() {\n    // Write your code here\n    fmt.Println(0)\n}\n\nfunc main() {\n    solution()\n}`
+                  javascript: dbProb.templateJS || `// Solve: ${dbProb.title}\nfunction solution() {\n    // Write your code here\n}`,
+                  python: dbProb.templatePython || `# Solve: ${dbProb.title}\ndef solution():\n    # Write your code here\n    pass`,
+                  go: dbProb.templateGo || `package main\n\nimport "fmt"\n\n// Solve: ${dbProb.title}\nfunc solution() {\n    // Write your code here\n    fmt.Println(0)\n}\n\nfunc main() {\n    solution()\n}`
                 },
                 defaultLanguage: "javascript"
               };
@@ -609,19 +611,29 @@ export default function ContestWorkspace() {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
       
-      const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = 500;
+      const updateCanvasSize = () => {
+        if (!canvasRef.current) return;
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = 400; // Match CSS height of h-[400px]
+        
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = drawColor;
+        ctx.lineWidth = lineWidth;
+        
+        drawCanvasBackground(canvas, ctx);
+        restoreDrawing();
+      };
+
+      updateCanvasSize();
       
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = drawColor;
-      ctx.lineWidth = lineWidth;
-      
-      drawCanvasBackground(canvas, ctx);
-      restoreDrawing();
+      window.addEventListener("resize", updateCanvasSize);
+      return () => {
+        window.removeEventListener("resize", updateCanvasSize);
+      };
     }
-  }, [activeLeftTab, drawColor, lineWidth]);
+  }, [activeLeftTab, drawColor, lineWidth, leftWidth]);
 
   // Clean speaking on unmount
   useEffect(() => {
@@ -1382,13 +1394,18 @@ export default function ContestWorkspace() {
     if (!activeQuestion) return null;
 
     // Normalize tabs mapping for custom dynamically loaded problems
-    const problemTabs = activeQuestion.tabs || {
-      description: `### Description\n${activeQuestion.desc || ""}\n\n### Input Format\n${activeQuestion.inputFormat || ""}\n\n### Output Format\n${activeQuestion.outputFormat || ""}\n\n### Constraints\n${activeQuestion.constraints || ""}`,
-      followup: "No follow-up questions for this problem.",
-      editorial: "Editorial not available for this custom problem.",
-      solution: "Official solution not available for this custom problem.",
-      evaluation: `Evaluation Limits:\n- **Time Limit:** ${activeQuestion.timeLimitMs || 1000}ms\n- **Memory Limit:** ${activeQuestion.memoryLimitMb || 256}MB`
-    };
+    const problemTabs = getProblemTabs(activeQuestion.slug || activeQuestion.id, activeQuestion.title, {
+      desc: activeQuestion.desc || activeQuestion.statement,
+      inputFormat: activeQuestion.inputFormat,
+      outputFormat: activeQuestion.outputFormat,
+      constraints: activeQuestion.constraints,
+      timeout: activeQuestion.timeLimitMs || activeQuestion.timeout,
+      memoryLimit: activeQuestion.memoryLimitMb || activeQuestion.memoryLimit,
+      followup: activeQuestion.followup,
+      editorial: activeQuestion.editorial,
+      solution: activeQuestion.solution,
+      evaluation: activeQuestion.evaluation,
+    });
 
     // Lock Solutions and Editorials during contest
     const isLockedTab = activeLeftTab === "editorial" || activeLeftTab === "solution";
@@ -1531,6 +1548,74 @@ export default function ContestWorkspace() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden" style={{ backgroundColor: "var(--bg-primary)" }}>
+
+      {/* ══════ Submit Contest Confirmation Overlay ══════ */}
+      <AnimatePresence>
+        {showSubmitConfirm && !contestEnded && (
+          <motion.div
+            key="submit-confirm-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9998] flex items-center justify-center"
+            style={{ backdropFilter: "blur(12px)", backgroundColor: "rgba(10, 10, 14, 0.8)" }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="w-full max-w-md p-8 rounded-3xl border border-indigo-500/20 shadow-2xl flex flex-col items-center text-center space-y-6"
+              style={{
+                background: "linear-gradient(135deg, rgba(20, 20, 25, 0.95), rgba(15, 15, 20, 0.95))",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15)"
+              }}
+            >
+              {/* Flag Icon */}
+              <div className="h-16 w-16 rounded-full flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 shadow-lg">
+                <Flag className="h-8 w-8 text-indigo-500" />
+              </div>
+
+              {/* Title */}
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold tracking-tight text-white">Submit Contest?</h3>
+                <p className="text-xs font-semibold text-indigo-400/95 uppercase tracking-wider">
+                  Confirmation Required
+                </p>
+              </div>
+
+              {/* Description */}
+              <div className="p-4 w-full rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-left">
+                <p className="text-xs text-indigo-200/80 leading-relaxed">
+                  Are you sure you want to finish and submit your contest attempt? Once submitted, you cannot change your code or answer further questions.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex w-full space-x-3">
+                <button
+                  onClick={() => setShowSubmitConfirm(false)}
+                  className="flex-1 py-3 font-bold rounded-2xl text-xs text-[var(--text-secondary)] border border-[var(--border-primary)] hover:bg-slate-500/5 active:scale-[0.98] transition-all cursor-pointer"
+                  style={{ backgroundColor: "rgba(255,255,255,0.02)" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowSubmitConfirm(false);
+                    await finishContest();
+                  }}
+                  className="flex-1 py-3 font-bold rounded-2xl text-xs text-white shadow-lg shadow-indigo-950/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                  style={{
+                    background: "linear-gradient(135deg, #6366f1, #4f46e5)"
+                  }}
+                >
+                  Yes, Submit
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ══════ Anti-Cheat Security Violation Overlay ══════ */}
       <AnimatePresence>
@@ -1957,7 +2042,7 @@ export default function ContestWorkspace() {
               </div>
 
               <button 
-                onClick={finishContest}
+                onClick={() => setShowSubmitConfirm(true)}
                 className="flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-bold text-white shadow-[0_4px_12px_rgba(239,68,68,0.25)] hover:scale-105 hover:shadow-[0_4px_20px_rgba(239,68,68,0.4)] active:scale-95 transition-all duration-200 cursor-pointer border border-rose-500/30 shadow-red-500/10"
                 style={{ background: "linear-gradient(135deg, #f43f5e, #e11d48)" }}
               >
