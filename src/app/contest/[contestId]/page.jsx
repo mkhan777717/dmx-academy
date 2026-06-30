@@ -1196,7 +1196,7 @@ export default function ContestWorkspace() {
               code: wrappedCode,
               input: currentInput,
             }),
-            signal: AbortSignal.timeout(15000),
+            signal: AbortSignal.timeout(30000),
           });
 
           if (!res.ok) {
