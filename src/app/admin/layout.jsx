@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   LayoutDashboard, PlusCircle, Trophy, LogOut,
   Menu, X, ChevronLeft, ChevronRight, ShieldAlert, ArrowLeftRight, Code, Radio, AlertTriangle, List,
-  Users, Layers
+  Users, Layers, Brain, FileText, Settings
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
@@ -155,27 +155,42 @@ export default function AdminLayout({ children }) {
       href: "/admin/batch-manager",
       icon: Layers
     },
-    !isBatchMgr && {
+    isBatchMgr && {
+      label: "Question Bank",
+      href: "/mentor/viva/questions",
+      icon: Brain
+    },
+    isBatchMgr && {
+      label: "Study Materials",
+      href: "/mentor/viva/materials",
+      icon: FileText
+    },
+    isBatchMgr && {
+      label: "AI Settings",
+      href: "/mentor/viva/ai-settings",
+      icon: Settings
+    },
+    {
       label: "All Contests",
       href: "/admin/contests",
       icon: Trophy
     },
-    !isBatchMgr && {
+    {
       label: "Create Contest",
       href: "/admin/contests/new",
       icon: PlusCircle
     },
-    !isBatchMgr && {
+    {
       label: "All Problems",
       href: "/admin/problems",
       icon: Code
     },
-    !isBatchMgr && {
+    {
       label: "Go Live",
       href: "/admin/live",
       icon: Radio
     },
-    !isBatchMgr && {
+    {
       label: "Public Lobby",
       href: "/contest",
       icon: List

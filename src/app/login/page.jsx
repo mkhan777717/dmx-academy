@@ -66,7 +66,7 @@ function LoginForm() {
     const emailLower = (user.email || "").toLowerCase();
 
     const isUserAdmin = user.role === 'ADMIN' || user.role === 'INSTITUTE_ADMIN' || user.role === 'BATCH_MANAGER' || emailLower.includes('admin');
-    const isUserMentor = user.role === 'MENTOR' || emailLower.includes('mentor');
+    const isUserMentor = user.role === 'MENTOR' || user.role === 'BATCH_MANAGER' || emailLower.includes('mentor');
 
     if (path.startsWith('/admin') && !isUserAdmin && !isUserMentor) return true;
     if (path.startsWith('/mentor') && !isUserMentor) return true;
@@ -109,8 +109,8 @@ function LoginForm() {
         : 'Student Desk';
 
     const getDashboardPath = () => {
-      if (isUserMentor) return '/mentor/dashboard';
       if (isUserAdmin) return '/admin/dashboard';
+      if (isUserMentor) return '/mentor/dashboard';
       return '/student/dashboard';
     };
 

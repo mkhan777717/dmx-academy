@@ -32,8 +32,8 @@ export default function Navbar() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const userEmailLower = (user?.email || "").toLowerCase();
-  const isUserAdmin = user?.role === "ADMIN" || userEmailLower.includes("admin");
-  const isUserMentor = user?.role === "MENTOR" || userEmailLower.includes("mentor");
+  const isUserAdmin = user?.role === "ADMIN" || user?.role === "INSTITUTE_ADMIN" || user?.role === "BATCH_MANAGER" || userEmailLower.includes("admin");
+  const isUserMentor = user?.role === "MENTOR" || user?.role === "BATCH_MANAGER" || userEmailLower.includes("mentor");
 
   return (
     <motion.header
@@ -227,46 +227,49 @@ export default function Navbar() {
                         Logged in as: <span className="text-[var(--text-primary)] block font-mono font-medium truncate">{user.email}</span>
                       </div>
 
-                      {isUserAdmin ? (
-                        <>
-                          <Link
-                            href="/admin"
-                            className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
-                            onClick={() => setIsSignInDropdownOpen(false)}
-                          >
-                            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
-                              <ShieldAlert size={15} />
-                            </div>
-                            <div>
-                              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                                Admin Panel
-                              </div>
-                              <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                                Create contests & problems
-                              </div>
-                            </div>
-                          </Link>
-                          <Link
-                            href="/mentor"
-                            className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
-                            onClick={() => setIsSignInDropdownOpen(false)}
-                          >
-                            <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500 shrink-0">
-                              <GraduationCap size={15} />
-                            </div>
-                            <div>
-                              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                                Mentor Portal
-                              </div>
-                              <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                                Review submissions
-                              </div>
-                            </div>
-                          </Link>
-                        </>
-                      ) : (
+                      {isUserAdmin && (
                         <Link
-                          href={isUserMentor ? "/mentor" : "/student"}
+                          href="/admin"
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
+                          onClick={() => setIsSignInDropdownOpen(false)}
+                        >
+                          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                            <ShieldAlert size={15} />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                              Admin Panel
+                            </div>
+                            <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                              Create contests & problems
+                            </div>
+                          </div>
+                        </Link>
+                      )}
+
+                      {isUserMentor && (
+                        <Link
+                          href="/mentor"
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
+                          onClick={() => setIsSignInDropdownOpen(false)}
+                        >
+                          <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500 shrink-0">
+                            <GraduationCap size={15} />
+                          </div>
+                          <div>
+                            <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                              Mentor Portal
+                            </div>
+                            <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                              Review submissions
+                            </div>
+                          </div>
+                        </Link>
+                      )}
+
+                      {!isUserAdmin && !isUserMentor && (
+                        <Link
+                          href="/student"
                           className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
                           onClick={() => setIsSignInDropdownOpen(false)}
                         >
@@ -501,32 +504,20 @@ export default function Navbar() {
                   <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
                     Hello, {user.username}
                   </li>
-                  {isUserAdmin ? (
-                    <>
-                      <li>
-                        <Link
-                          href="/admin"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                          style={{ color: "var(--text-secondary)" }}
-                        >
-                          <ShieldAlert size={14} className="text-emerald-500" />
-                          <span>Admin Control</span>
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          href="/mentor"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                          style={{ color: "var(--text-secondary)" }}
-                        >
-                          <GraduationCap size={14} className="text-violet-500" />
-                          <span>Mentor Board</span>
-                        </Link>
-                      </li>
-                    </>
-                  ) : isUserMentor ? (
+                  {isUserAdmin && (
+                    <li>
+                      <Link
+                        href="/admin"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                        style={{ color: "var(--text-secondary)" }}
+                      >
+                        <ShieldAlert size={14} className="text-emerald-500" />
+                        <span>Admin Control</span>
+                      </Link>
+                    </li>
+                  )}
+                  {isUserMentor && (
                     <li>
                       <Link
                         href="/mentor"
@@ -538,7 +529,8 @@ export default function Navbar() {
                         <span>Mentor Board</span>
                       </Link>
                     </li>
-                  ) : (
+                  )}
+                  {!isUserAdmin && !isUserMentor && (
                     <li>
                       <Link
                         href="/student"
