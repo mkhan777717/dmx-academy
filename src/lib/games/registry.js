@@ -1,5 +1,8 @@
 import FlexDojo from "@/components/games/FlexDojo";
 import DebugTheBug from "@/components/games/DebugTheBug";
+import TypeRacer from "@/components/games/TypeRacer";
+import CodeFillIn from "@/components/games/CodeFillIn";
+import SqlDojo from "@/components/games/SqlDojo";
 
 export const gamesRegistry = [
   {
@@ -21,6 +24,39 @@ export const gamesRegistry = [
     estimatedMinutes: 20,
     component: DebugTheBug,
     status: "live"
+  },
+  {
+    slug: "type-racer",
+    title: "TypeRacer Pro",
+    track: "Python & JS Syntax",
+    difficulty: "Beginner",
+    description: "Race against yourself typing real Python and JavaScript code snippets. Track WPM, accuracy, and unlock progressively complex levels.",
+    estimatedMinutes: 10,
+    component: TypeRacer,
+    status: "live",
+    totalLevels: 10,
+  },
+  {
+    slug: "code-fill-in",
+    title: "Code Fill-In",
+    track: "Multi-Language",
+    difficulty: "Beginner",
+    description: "Fill in the missing keyword or operator from 4 choices across Python, JavaScript, and SQL. Speed bonuses reward fast correct answers.",
+    estimatedMinutes: 15,
+    component: CodeFillIn,
+    status: "live",
+    totalLevels: 15,
+  },
+  {
+    slug: "sql-dojo",
+    title: "SQL Dojo",
+    track: "SQL & Databases",
+    difficulty: "Intermediate",
+    description: "Write real SQL queries against live in-browser datasets. Solve 10 progressive challenges from SELECT to subqueries — no backend needed.",
+    estimatedMinutes: 20,
+    component: SqlDojo,
+    status: "live",
+    totalLevels: 10,
   },
   {
     slug: "api-quest",

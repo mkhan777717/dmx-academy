@@ -146,9 +146,10 @@ export default function GamesHubPage() {
               const isLive = game.status === "live";
               const prog = progressMap[game.slug];
               const completedCount = prog?.completedLevels?.length || 0;
-              const isFullyCompleted = 
-                (game.slug === "flex-dojo" && completedCount === 8) ||
-                (game.slug === "debug-the-bug" && completedCount === 5);
+              const isFullyCompleted = game.totalLevels
+                ? completedCount === game.totalLevels
+                : (game.slug === "flex-dojo" && completedCount === 8) ||
+                  (game.slug === "debug-the-bug" && completedCount === 5);
               
               return (
                 <motion.div
@@ -199,8 +200,10 @@ export default function GamesHubPage() {
                         <span className="flex items-center gap-1 font-bold text-[#7CFFB2]">
                           <Award size={12} />
                           <span>
-                            {game.slug === "flex-dojo" 
-                              ? `${completedCount}/8 Levels` 
+                            {game.totalLevels
+                              ? `${completedCount}/${game.totalLevels} Levels`
+                              : game.slug === "flex-dojo"
+                              ? `${completedCount}/8 Levels`
                               : game.slug === "debug-the-bug"
                               ? `${completedCount}/5 Levels`
                               : `${completedCount} Completed`}
