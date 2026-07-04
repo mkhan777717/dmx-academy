@@ -193,6 +193,11 @@ export default function CreateProblem() {
   const [evaluation, setEvaluation] = useState("");
   const [sub5,       setSub5]       = useState("followup");
 
+  const showToast = useCallback((text, type = "error") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
   const loadProblemData = useCallback(async () => {
     if (!problemId) return;
     setLoadingProblem(true);
@@ -263,11 +268,6 @@ export default function CreateProblem() {
     testcases:  testCases.length > 0 && testCases.some(t => t.isSample && t.expectedOutput.trim()),
     tabcontent: tabcontentVisited,
   };
-
-  const showToast = useCallback((text, type = "error") => {
-    setToast({ text, type });
-    setTimeout(() => setToast(null), 3500);
-  }, []);
 
   const handleTitleChange = (v) => {
     setTitle(v);
