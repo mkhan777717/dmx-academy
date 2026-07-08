@@ -292,6 +292,26 @@ export default function FlexDojo({ onProgressChange, savedProgress }) {
     addTerminalLog(`[SYSTEM] Jumping to level checkpoint #${idx + 1}.`, "system");
   };
 
+  const handleResetLevel = () => {
+    setUserCode(currentLevel.defaultCode);
+    setIsSuccess(false);
+    setShowHint(false);
+    playRetroSound("snap");
+    addTerminalLog(`[SYSTEM] Workspace reset to default config.`, "system");
+  };
+
+  const handleInsertSuggestion = (suggestion) => {
+    setUserCode((prev) => {
+      if (prev.endsWith("\n") || prev === "") {
+        return prev + suggestion;
+      }
+      return prev + "\n" + suggestion;
+    });
+    setIsSuccess(false);
+    playRetroSound("snap");
+    addTerminalLog(`[INPUT] Applied suggestion rule.`, "input");
+  };
+
   return (
 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-[#E8E6E1] bg-[#24133F]/20 backdrop-blur-md p-3 md:p-6 rounded-3xl border border-purple-500/20 shadow-2xl relative overflow-hidden font-sans">
       
@@ -630,16 +650,16 @@ export default function FlexDojo({ onProgressChange, savedProgress }) {
             ref={targetContainerRef}
             className="absolute inset-0 p-6 flex pointer-events-none"
             style={{
-              ...currentLevel.targetStyle,
+              ...currentLevel.targetStyles,
               opacity: 0.25
             }}
           >
-            {Array.from({ length: currentLevel.itemsCount }).map((_, i) => (
+            {currentLevel.items.map((item, i) => (
               <div 
-                key={i} 
-                className="dojo-target w-12 h-12 border-2 border-dashed border-purple-400 rounded-xl flex items-center justify-center text-purple-400 text-xs font-bold"
+                key={item.id} 
+                className="dojo-target w-12 h-12 border-2 border-dashed border-purple-400 rounded-xl flex items-center justify-center text-purple-400 text-lg font-bold"
               >
-                T{i+1}
+                {item.emoji}
               </div>
             ))}
           </div>
@@ -650,13 +670,13 @@ export default function FlexDojo({ onProgressChange, savedProgress }) {
             className="absolute inset-0 p-6 flex"
             style={studentStyles}
           >
-            {Array.from({ length: currentLevel.itemsCount }).map((_, i) => (
+            {currentLevel.items.map((item, i) => (
               <div 
-                key={i} 
-                className="dojo-item w-12 h-12 bg-purple-600 border border-purple-400 text-white rounded-xl flex items-center justify-center text-xs font-black shadow-lg animate-float"
+                key={item.id} 
+                className="dojo-item w-12 h-12 bg-purple-600 border border-purple-400 text-white rounded-xl flex items-center justify-center text-lg font-black shadow-lg animate-float"
                 style={{ animationDelay: `${i * 0.2}s` }}
               >
-                {i+1}
+                {item.emoji}
               </div>
             ))}
           </div>
