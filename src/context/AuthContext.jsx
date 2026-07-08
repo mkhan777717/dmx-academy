@@ -46,7 +46,6 @@ function findLocalAccount(email, password) {
   return accounts.find(a => a.email === email && a.password === password) || null;
 }
 
-
 // ---------------------------------------------------------------------------
 // Legacy session keys (used by other pages to detect role)
 // ---------------------------------------------------------------------------

@@ -550,22 +550,6 @@ function LoginForm() {
             {isRegistering ? "Already have an account? Sign In" : "New to DMX? Register an account"}
           </button>
 
-          {/* Demo credentials hint */}
-          <div
-            className="p-3 rounded-2xl border text-left space-y-1.5 transition-all"
-            style={{
-              backgroundColor: theme.bgBadge,
-              borderColor: theme.borderAccent
-            }}
-          >
-            <p className="text-[10px] font-extrabold uppercase tracking-wider" style={{ color: "var(--text-accent)" }}>
-              Demo {theme.label} Access (Offline Mode)
-            </p>
-            <div className="text-[10px] space-y-0.5" style={{ color: "var(--text-secondary)" }}>
-              <p><span className="font-bold" style={{ color: "var(--text-primary)" }}>Email:</span> {theme.demoEmail}</p>
-              <p><span className="font-bold" style={{ color: "var(--text-primary)" }}>Password:</span> demo123</p>
-            </div>
-          </div>
         </div>
       </div>
     </motion.div>
