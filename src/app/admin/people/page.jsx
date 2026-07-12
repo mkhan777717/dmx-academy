@@ -192,18 +192,7 @@ export default function ManagePeoplePage() {
             // "Origin": "http://localhost:3000",
             // "Referer": "http://localhost:3000/",
           },
-<<<<<<< Updated upstream
           body: JSON.stringify(payload)
-=======
-          body: JSON.stringify({
-            username: name.trim(),
-            email: email.trim().toLowerCase(),
-            password: password.trim(),
-            role: payloadRole,
-            batchIds: selectedBatchIds,
-            instituteId // this will now always be present and non-undefined
-          })
->>>>>>> Stashed changes
         });
 
         // Check for HTTP errors directly - sometimes the API doesn't return a JSON success on non-200 responses
@@ -222,31 +211,6 @@ export default function ManagePeoplePage() {
 
         const data = await res.json();
 
-<<<<<<< Updated upstream
-=======
-        // Specific handling for Prisma foreign key error
-        if (
-          data &&
-          typeof data.message === "string" &&
-          (
-            data.message.includes("Database integrity error") ||
-            data.message.includes("Foreign key constraint") ||
-            (
-              data.stack &&
-              typeof data.stack === "string" &&
-              (
-                data.stack.includes("PrismaClientKnownRequestError") ||
-                data.stack.includes("Foreign key constraint")
-              )
-            )
-          )
-        ) {
-          setFormError("Failed to register member: The selected institute or associated batch does not exist. Please check your institute and batch assignments, or try re-logging in.");
-          setSubmitting(false);
-          return;
-        }
-
->>>>>>> Stashed changes
         if (data.success) {
           const assignedBatchNames = batches
             .filter(b => selectedBatchIds.includes(b.id))
