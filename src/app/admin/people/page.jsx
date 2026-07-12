@@ -127,6 +127,7 @@ export default function ManagePeoplePage() {
     setFormSuccess("");
     setSubmitting(true);
 
+    // Simple client-side validations
     if (!name.trim() || !email.trim() || !password.trim()) {
       setFormError("All fields are required.");
       setSubmitting(false);
@@ -145,25 +146,50 @@ export default function ManagePeoplePage() {
       return;
     }
 
+    // Use the backend's expected role mapping
     const payloadRole = memberRole === 'STUDENT' ? 'USER' : memberRole;
 
     try {
       if (token) {
+        // Prepare payload exactly as backend expects
+        const payload = {
+          username: name.trim(),
+          email: email.trim().toLowerCase(),
+          password: password.trim(),
+          role: payloadRole,
+          batchIds: selectedBatchIds
+        };
+
+        // Use fetch with correct headers and method
         const res = await fetch(`${API_BASE}/api/institutes/members`, {
           method: "POST",
           headers: {
+            "Accept": "*/*",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
+            "Authorization": `Bearer ${token}`,
+            // These can be sent from browser by default but for reference from CURL:
+            // "Origin": "http://localhost:3000",
+            // "Referer": "http://localhost:3000/",
           },
-          body: JSON.stringify({
-            username: name.trim(),
-            email: email.trim().toLowerCase(),
-            password: password.trim(),
-            role: payloadRole,
-            batchIds: selectedBatchIds
-          })
+          body: JSON.stringify(payload)
         });
+
+        // Check for HTTP errors directly - sometimes the API doesn't return a JSON success on non-200 responses
+        if (!res.ok) {
+          const text = await res.text();
+          // Try to parse json error if possible
+          try {
+            const errData = JSON.parse(text);
+            setFormError(errData.message || "Failed to register member (server error).");
+          } catch (parseErr) {
+            setFormError(text || "Failed to register member (unknown error).");
+          }
+          setSubmitting(false);
+          return;
+        }
+
         const data = await res.json();
+
         if (data.success) {
           const assignedBatchNames = batches
             .filter(b => selectedBatchIds.includes(b.id))

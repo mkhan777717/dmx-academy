@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useChat, useRoomContext, useParticipants } from "@livekit/components-react";
 import { useAuth } from "@/context/AuthContext";
 import { getApiBase } from "@/utils/api";
+import { createPortal } from "react-dom";
 import {
   MessageSquare,
   Send,
@@ -21,9 +22,81 @@ import {
   MicOff,
   XCircle,
   Hand,
+  Minimize2,
+  ExternalLink,
 } from "lucide-react";
 import LivePollCreator from "@/components/LivePollCreator";
 import { SessionLeaderboard } from "@/components/LiveLeaderboard";
+
+// ─── RenderInWindow (Browser Popout Window) ───────────────────────────
+function RenderInWindow({ children, onClose, title = "Live Chat Popout" }) {
+  const [container, setContainer] = useState(null);
+  const [newWindow, setNewWindow] = useState(null);
+  const onCloseRef = useRef(onClose);
+
+  // Keep ref updated with latest onClose handler
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    // Open a resizable, scrollable popup window
+    const w = window.open(
+      "",
+      "ChatPopout",
+      "width=400,height=700,left=300,top=100,resizable=yes,scrollbars=yes,status=no,location=no,toolbar=no,menubar=no"
+    );
+    if (!w) {
+      alert("Popup blocked! Please allow popups for this site so the chat can pop out.");
+      return;
+    }
+
+    w.document.title = title;
+    
+    // Create container inside the new window's document
+    const newContainer = w.document.createElement("div");
+    newContainer.id = "popout-root";
+    w.document.body.appendChild(newContainer);
+    
+    // Set background and styling
+    w.document.body.style.margin = "0";
+    w.document.body.style.padding = "0";
+    w.document.body.style.overflow = "hidden";
+    
+    setContainer(newContainer);
+    setNewWindow(w);
+
+    // Copy styling from the parent document
+    const copyStyles = () => {
+      // Copy stylesheets
+      Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).forEach((node) => {
+        w.document.head.appendChild(node.cloneNode(true));
+      });
+      // Copy classes/theme variables
+      w.document.documentElement.className = document.documentElement.className;
+      w.document.documentElement.style.cssText = document.documentElement.style.cssText;
+      w.document.body.className = document.body.className + " h-screen w-screen m-0 p-0 overflow-hidden";
+      w.document.body.style.backgroundColor = "var(--bg-primary)";
+      w.document.body.style.color = "var(--text-primary)";
+    };
+
+    copyStyles();
+
+    const handleClose = () => {
+      if (onCloseRef.current) onCloseRef.current();
+    };
+
+    // Attach unload listener
+    w.addEventListener("beforeunload", handleClose);
+
+    return () => {
+      w.removeEventListener("beforeunload", handleClose);
+      w.close();
+    };
+  }, [title]);
+
+  return container ? createPortal(children, container) : null;
+}
 
 const OPTION_LABELS = ["A", "B", "C", "D"];
 
@@ -162,6 +235,8 @@ export default function LiveChat({
   authToken: authTokenProp = "",
   isHost: isHostProp = null,
   showPollCreatorExternal = false,
+  isPopoutInstance = false,
+  onClosePopout = () => { },
 }) {
   const { chatMessages, send, isSending } = useChat();
   const roomContext = useRoomContext();
@@ -181,6 +256,7 @@ export default function LiveChat({
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [dbMessages, setDbMessages] = useState([]);
   const [showPollCreator, setShowPollCreator] = useState(false);
+  const [isPoppedOut, setIsPoppedOut] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const prevMessageCount = useRef(0);
@@ -196,7 +272,7 @@ export default function LiveChat({
   const isHost = isHostProp !== null
     ? isHostProp
     : (user?.role === "ADMIN" || user?.role === "MENTOR" || userEmailLower.includes("admin") || userEmailLower.includes("mentor"));
-  const canCollapse = !isHost;
+  const canCollapse = true;
   const isFullscreen = controlledIsFullscreen ?? isFullscreenLocal;
   const toggleFullscreen = onToggleFullscreen || (() => setIsFullscreenLocal((prev) => !prev));
   const localIdentity = room?.localParticipant?.identity;
@@ -360,7 +436,7 @@ export default function LiveChat({
   });
 
   // ─── Collapsed Toggle Button ───────────────────────────────────────
-  if (canCollapse && !isOpen) {
+  if (canCollapse && !isOpen && !isPoppedOut && !isPopoutInstance) {
     return (
       <button
         onClick={() => setInternalIsOpen(true)}
@@ -381,14 +457,116 @@ export default function LiveChat({
     );
   }
 
+  // ─── Popout Window Rendering ───────────────────────────────────────
+  if (isPoppedOut && !isPopoutInstance) {
+    return (
+      <>
+        {/* The Portal Window */}
+        <RenderInWindow onClose={() => setIsPoppedOut(false)} title="Live Chat Popout">
+          <LiveChat
+            {...{
+              collapsed,
+              persistent,
+              className,
+              blockedUsers,
+              setBlockedUsers,
+              hostUsername,
+              sessionId,
+              isFullscreen,
+              onToggleFullscreen,
+              onClose,
+              isOpen,
+              onUnreadChange,
+              controlledActiveTab,
+              onTabChange,
+              raisedHands,
+              activeSpeaker,
+              acceptSpeaker,
+              rejectHand,
+              revokeSpeaker,
+              activePoll,
+              pollAnswers,
+              pollResultData,
+              leaderboard,
+              totalPolls,
+              onPollLaunched,
+              onPollEnded,
+              room,
+              authToken,
+              isHost,
+              showPollCreatorExternal,
+            }}
+            isPopoutInstance={true}
+            onClosePopout={() => setIsPoppedOut(false)}
+          />
+        </RenderInWindow>
+
+        {/* Placeholder in the sidebar on the main screen */}
+        <div
+          className={`flex flex-col rounded-[1.1rem] border overflow-hidden ${className} h-full`}
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "rgba(148, 163, 184, 0.18)",
+            minHeight: "300px",
+          }}
+          id="live-chat-placeholder-panel"
+        >
+          {/* Header Bar */}
+          <div
+            className="flex items-center justify-between px-4 py-2.5 border-b select-none shadow-sm"
+            style={{ borderColor: "rgba(148, 163, 184, 0.16)", backgroundColor: "var(--bg-card)" }}
+          >
+            <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[var(--text-muted)]">
+              <MessageSquare size={13} className="text-indigo-500" />
+              <span>Live Chat (Popped Out)</span>
+            </div>
+            
+            {/* Minimize / Close button to hide the sidebar */}
+            <button
+              onClick={() => {
+                if (onClose) onClose();
+              }}
+              className="p-1 rounded-lg hover:bg-slate-500/10 transition-colors cursor-pointer"
+              style={{ color: "var(--text-secondary)" }}
+              id="chat-placeholder-close-btn"
+              title="Minimize chat"
+              aria-label="Minimize chat"
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Centered Body Content */}
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4">
+            <MessageSquare size={36} className="text-indigo-500 animate-pulse" />
+            <h4 className="text-sm font-black tracking-tight text-[var(--text-primary)]">Chat is Popped Out</h4>
+            <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+              The chat panel is running in a separate window. You can drag it to another monitor.
+            </p>
+            <button
+              onClick={() => setIsPoppedOut(false)}
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all hover:scale-105 shadow-md shadow-indigo-600/20 cursor-pointer"
+            >
+              Merge Chat Back
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   // ─── Chat Panel ────────────────────────────────────────────────────
   return (
-    <div className={isFullscreen ? "fixed inset-0 z-[70] p-4 sm:p-6 bg-black/45 backdrop-blur-sm" : "flex flex-col min-h-0 h-full overflow-hidden"}>
+    <div className={isPopoutInstance ? "w-screen h-screen overflow-hidden bg-[var(--bg-card)]" : (isFullscreen ? "fixed inset-0 z-[70] p-4 sm:p-6 bg-black/45 backdrop-blur-sm" : "flex flex-col min-h-0 h-full overflow-hidden")}>
       <div
-        className={`flex flex-col rounded-[1.1rem] border overflow-hidden ${className} ${isFullscreen ? "w-full h-full max-h-none shadow-2xl" : "h-full"}`}
+        className={`flex flex-col overflow-hidden ${className} ${
+          isPopoutInstance
+            ? "w-full h-full border-0 rounded-none"
+            : (isFullscreen ? "w-full h-full max-h-none shadow-2xl rounded-[1.1rem]" : "h-full rounded-[1.1rem] border")
+        }`}
         style={{
           backgroundColor: "var(--bg-card)",
-          borderColor: "rgba(148, 163, 184, 0.18)",
+          borderColor: isPopoutInstance ? "transparent" : "rgba(148, 163, 184, 0.18)",
           minHeight: "0",
         }}
         id="live-chat-panel"
@@ -451,10 +629,29 @@ export default function LiveChat({
             </button>
           </div>
 
-          {canCollapse && (
+          <div className="flex items-center gap-1.5">
+            {/* PIP / Popout button: Only for hosts (mentor/admin) and only if it's not already a popout instance */}
+            {isHost && !isPopoutInstance && (
+              <button
+                onClick={() => setIsPoppedOut(true)}
+                className="p-1 rounded-lg hover:bg-slate-500/10 transition-colors cursor-pointer"
+                style={{ color: "var(--text-secondary)" }}
+                id="chat-pip-btn"
+                title="Pop out chat (Picture-in-Picture)"
+                aria-label="Pop out chat"
+              >
+                <ExternalLink size={14} />
+              </button>
+            )}
+
+            {/* Minimize / Close button: For everyone.
+                If it's the popout instance, clicking this closes the popout (merging back).
+                Otherwise, it collapses the sidebar. */}
             <button
               onClick={() => {
-                if (onClose) {
+                if (isPopoutInstance) {
+                  onClosePopout();
+                } else if (onClose) {
                   onClose();
                 } else {
                   if (controlledIsFullscreen !== undefined) {
@@ -468,12 +665,12 @@ export default function LiveChat({
               className="p-1 rounded-lg hover:bg-slate-500/10 transition-colors cursor-pointer"
               style={{ color: "var(--text-secondary)" }}
               id="chat-close-btn"
-              title="Hide chat"
-              aria-label="Hide chat"
+              title={isPopoutInstance ? "Merge chat back" : "Minimize chat"}
+              aria-label={isPopoutInstance ? "Merge chat back" : "Minimize chat"}
             >
-              <X size={14} />
+              {isPopoutInstance ? <Minimize2 size={14} /> : <X size={14} />}
             </button>
-          )}
+          </div>
         </div>
 
         {/* Main Panel Content Area */}

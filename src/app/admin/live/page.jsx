@@ -42,6 +42,7 @@ import {
   ArrowLeft,
   Share2,
   Check,
+  MessageSquare,
 } from "lucide-react";
 import { ReactionOverlay, ReactionPicker } from "@/components/LiveReactions";
 
@@ -232,6 +233,7 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
 
   // Active Tab for sidebar
   const [activeTab, setActiveTab] = useState("chat");
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const [activePoll, setActivePoll] = useState(null);         // poll currently running
   const [pollAnswers, setPollAnswers] = useState(new Map()); // Map<username, {chosenIdx, timeMs}>
   const [pollResultData, setPollResultData] = useState(null); // fetched after poll ends
@@ -814,6 +816,21 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
 
               <div className="w-px h-8 bg-slate-500/20 mx-2" />
 
+              {/* Chat Toggle Button */}
+              <button
+                onClick={() => setIsChatOpen((prev) => !prev)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-wide transition-all hover:scale-105 cursor-pointer shadow-sm ${
+                  isChatOpen
+                    ? "bg-indigo-600 border-transparent text-white"
+                    : "bg-[var(--bg-primary)] border-[var(--border-primary)] text-[var(--text-primary)]"
+                }`}
+                title={isChatOpen ? "Hide Live Chat" : "Show Live Chat"}
+                id="admin-chat-toggle-btn"
+              >
+                <MessageSquare size={14} />
+                <span>Live Chat</span>
+              </button>
+
               <ReactionPicker onReact={handleReaction} />
 
               <div className="w-px h-8 bg-slate-500/20 mx-2" />
@@ -839,7 +856,7 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
         </div>
 
         {/* Right — Live Chat */}
-        <div className="xl:w-[320px] xl:min-w-[300px] xl:max-w-[360px] flex flex-col min-h-0 overflow-hidden shrink-0 order-2">
+        <div className={`xl:w-[320px] xl:min-w-[300px] xl:max-w-[360px] flex flex-col min-h-0 overflow-hidden shrink-0 order-2 ${!isChatOpen ? "hidden" : ""}`}>
           <LiveChat
             persistent
             sessionId={session?.id}
@@ -848,6 +865,8 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
             blockedUsers={blockedUsers}
             setBlockedUsers={setBlockedUsers}
             className="flex-1 min-h-0"
+            isOpen={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
             raisedHands={raisedHands}
             activeSpeaker={activeSpeaker}
             acceptSpeaker={acceptSpeaker}
