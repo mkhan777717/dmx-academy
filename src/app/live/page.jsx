@@ -270,6 +270,16 @@ function VideoPlayer({
   const [isStudentCameraHiddenLocal, setIsStudentCameraHiddenLocal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [reactions, setReactions] = useState([]);
+  const [watermarkPos, setWatermarkPos] = useState({ top: "20%", left: "20%" });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const top = Math.floor(Math.random() * 65) + 15; // 15% to 80%
+      const left = Math.floor(Math.random() * 65) + 15; // 15% to 80%
+      setWatermarkPos({ top: `${top}%`, left: `${left}%` });
+    }, 10000); // Shift every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const handleReaction = useCallback((emoji) => {
     // username must be derived from props or session, since 'user' is not defined
@@ -618,6 +628,13 @@ console.log(session)
             LIVE
           </div>
 
+          {session?.isRecording && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/5 text-red-500 text-[10px] font-extrabold uppercase tracking-wider shrink-0">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+              REC
+            </div>
+          )}
+
           {/* Session Title & Taker */}
           <div className="flex flex-col min-w-0" title={session?.description}>
             
@@ -851,6 +868,21 @@ console.log(session)
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Dynamic Watermark Overlay */}
+        {user && (
+          <div 
+            className="absolute z-10 pointer-events-none select-none text-slate-100 font-mono text-[9px] sm:text-xs bg-slate-950/20 backdrop-blur-[1px] px-2.5 py-1.5 rounded-lg border border-white/5 opacity-[0.16] shadow-sm"
+            style={{
+              top: watermarkPos.top,
+              left: watermarkPos.left,
+              transition: "top 2s ease-in-out, left 2s ease-in-out"
+            }}
+          >
+            <div className="font-black uppercase tracking-wider">{user.username}</div>
+            <div className="text-[7px] sm:text-[9px] font-bold opacity-80 mt-0.5">{user.email}</div>
           </div>
         )}
 
@@ -1264,6 +1296,9 @@ export default function LiveViewerPage() {
           } else if (data.session.id !== session.id) {
             // A different session is active now, meaning the previous one ended
             setSessionEnded(true);
+          } else {
+            // Sync session details like isRecording state in real-time
+            setSession(data.session);
           }
         }
       } catch (e) {

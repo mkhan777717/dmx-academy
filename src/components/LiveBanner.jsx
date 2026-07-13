@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import { getApiBase } from "@/utils/api";
+import { useAuth } from "@/context/AuthContext";
 
 const API_BASE = getApiBase();
 
@@ -94,7 +95,7 @@ function LiveNowBanner({ session }) {
 }
 
 // ─── Past Session Card (vertical card) ───────────────────────────────
-function PastSessionCard({ session }) {
+function PastSessionCard({ session, onWatchRecording }) {
   return (
     <div
       className="group flex flex-col rounded-lg border overflow-hidden transition-all hover:shadow-md"
@@ -129,17 +130,37 @@ function PastSessionCard({ session }) {
           )}
         </div>
         
-        {/* Metadata footer */}
-        <div className="flex items-center gap-2.5 text-[9px] font-semibold pt-2 border-t" style={{ borderColor: "var(--border-primary)", color: "var(--text-muted)" }}>
-          <span className="flex items-center gap-1">
-            <CalendarDays size={10} />
-            {formatDateTime(session.startedAt)}
-          </span>
-          {session.endedAt && (
+        <div className="space-y-3">
+          {/* Metadata footer */}
+          <div className="flex items-center gap-2.5 text-[9px] font-semibold pt-2 border-t" style={{ borderColor: "var(--border-primary)", color: "var(--text-muted)" }}>
             <span className="flex items-center gap-1">
-              <Clock size={10} />
-              {formatDuration(session.startedAt, session.endedAt)}
+              <CalendarDays size={10} />
+              {formatDateTime(session.startedAt)}
             </span>
+            {session.endedAt && (
+              <span className="flex items-center gap-1">
+                <Clock size={10} />
+                {formatDuration(session.startedAt, session.endedAt)}
+              </span>
+            )}
+          </div>
+
+          {/* Recording Link or Warning */}
+          {session.recordingUrl ? (
+            <button
+              onClick={() => {
+                const url = session.recordingUrl.startsWith('/') ? `${API_BASE}${session.recordingUrl}` : session.recordingUrl;
+                onWatchRecording(url);
+              }}
+              className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] text-white text-[10px] font-extrabold uppercase tracking-wider transition-colors shadow-md shadow-[var(--accent-glow)] text-center cursor-pointer border border-transparent"
+            >
+              <Play size={10} />
+              <span>Watch Recording</span>
+            </button>
+          ) : (
+            <div className="w-full text-center text-[9px] font-bold text-slate-500 bg-slate-500/5 py-2 rounded-lg border border-dashed border-slate-500/10">
+              No recordings for this session
+            </div>
           )}
         </div>
       </div>
@@ -149,9 +170,22 @@ function PastSessionCard({ session }) {
 
 // ─── Main LiveBanner Component ───────────────────────────────────────
 export default function LiveBanner() {
+  const { user } = useAuth();
   const [activeSession, setActiveSession] = useState(null);
   const [pastSessions, setPastSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState(null);
+  const [watermarkPos, setWatermarkPos] = useState({ top: "15%", left: "15%" });
+
+  useEffect(() => {
+    if (!selectedVideoUrl) return;
+    const interval = setInterval(() => {
+      const top = Math.floor(Math.random() * 65) + 15; // 15% to 80%
+      const left = Math.floor(Math.random() * 65) + 15; // 15% to 80%
+      setWatermarkPos({ top: `${top}%`, left: `${left}%` });
+    }, 10000); // Shift every 10 seconds
+    return () => clearInterval(interval);
+  }, [selectedVideoUrl]);
 
   useEffect(() => {
     fetchSessions();
@@ -252,12 +286,68 @@ export default function LiveBanner() {
               </div>
               <div className={`grid gap-4 ${activeSession ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"}`}>
                 {pastSessions.map((session) => (
-                  <PastSessionCard key={session.id} session={session} />
+                  <PastSessionCard
+                    key={session.id}
+                    session={session}
+                    onWatchRecording={(url) => setSelectedVideoUrl(url)}
+                  />
                 ))}
               </div>
             </div>
           )}
 
+        </div>
+      )}
+
+      {/* Custom Secure Video Modal Player */}
+      {selectedVideoUrl && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+          onClick={() => setSelectedVideoUrl(null)}
+        >
+          <div 
+            className="relative w-full max-w-4xl rounded-2xl border border-slate-800 bg-slate-900/95 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/50">
+              <span className="text-xs font-bold text-slate-300">Session Playback</span>
+              <button 
+                onClick={() => setSelectedVideoUrl(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Video Container */}
+            <div className="relative aspect-video bg-black flex items-center justify-center">
+              <video
+                src={selectedVideoUrl}
+                controls
+                autoPlay
+                crossOrigin="anonymous"
+                controlsList="nodownload"
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-full h-full object-contain"
+              />
+              
+              {/* Dynamic Watermark Overlay */}
+              {user && (
+                <div 
+                  className="absolute z-10 pointer-events-none select-none text-slate-100 font-mono text-[9px] sm:text-xs bg-slate-950/20 backdrop-blur-[1px] px-2.5 py-1.5 rounded-lg border border-white/5 opacity-[0.16] shadow-sm"
+                  style={{
+                    top: watermarkPos.top,
+                    left: watermarkPos.left,
+                    transition: "top 2s ease-in-out, left 2s ease-in-out"
+                  }}
+                >
+                  <div className="font-black uppercase tracking-wider">{user.username}</div>
+                  <div className="text-[7px] sm:text-[9px] font-bold opacity-80 mt-0.5">{user.email}</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </section>
