@@ -223,8 +223,8 @@ function DraggableVideo({ track, name, isLocal = false, defaultPosition = { x: 2
 }
 
 // ─── Live Broadcasting Panel ─────────────────────────────────────────
-function BroadcastPanel({ session, onEndSession, authToken }) {
-  const { user } = useAuth();
+function BroadcastPanel({ session, onEndSession, authToken, shouldRecord }) {
+  const { user, API_BASE } = useAuth();
   const room = useRoomContext();
   const [raisedHands, setRaisedHands] = useState([]);
   const [activeSpeaker, setActiveSpeaker] = useState(null);
@@ -245,6 +245,74 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
   const [connectionState, setConnectionState] = useState(room?.state || "disconnected");
   const [isBrowserOffline, setIsBrowserOffline] = useState(false);
   const [reactions, setReactions] = useState([]);
+
+  // Recording State & Logics
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const startSessionRecording = async () => {
+    if (!shouldRecord || isRecording || !session?.id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/livekit/session/${session.id}/record/start`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsRecording(true);
+      } else {
+        alert(data.message || "Failed to start recording.");
+      }
+    } catch (e) {
+      console.error("Failed to start session recording:", e);
+      alert("Network error. Could not reach server to start recording.");
+    }
+  };
+
+  const stopSessionRecording = async () => {
+    if (!isRecording || !session?.id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/livekit/session/${session.id}/record/stop`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsRecording(false);
+      }
+    } catch (e) {
+      console.error("Failed to stop session recording:", e);
+    }
+  };
+  useEffect(() => {
+    let interval;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingDuration(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  useEffect(() => {
+    if (connectionState === "connected") {
+      startSessionRecording();
+    } else if (connectionState === "disconnected" || connectionState === "reconnecting") {
+      setIsRecording(false);
+    }
+  }, [connectionState, shouldRecord, session]);
+
+  const formatTime = (secs) => {
+    const h = Math.floor(secs / 3600).toString().padStart(2, '0');
+    const m = Math.floor((secs % 3600) / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
 
   const handleReaction = useCallback((emoji) => {
     const reaction = {
@@ -719,7 +787,7 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
             )}
 
             {/* Connection status indicator */}
-            <div className="absolute top-4 left-4 z-40">
+            <div className="absolute top-4 left-4 z-40 flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-sm text-[10px] font-bold ${
                 isBrowserOffline || connectionState === "reconnecting"
                   ? "text-amber-400 animate-pulse"
@@ -744,6 +812,13 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
                   </>
                 )}
               </div>
+
+              {isRecording && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-extrabold uppercase tracking-wider shrink-0 shadow-lg">
+                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse shrink-0" />
+                  <span>REC {formatTime(recordingDuration)}</span>
+                </div>
+              )}
             </div>
 
             {/* Per-question results overlay after POLL_END */}
@@ -833,7 +908,7 @@ function BroadcastPanel({ session, onEndSession, authToken }) {
 
               <ReactionPicker onReact={handleReaction} />
 
-              <div className="w-px h-8 bg-slate-500/20 mx-2" />
+
 
               <button
                 onClick={handleShareLink}
@@ -917,6 +992,7 @@ export default function AdminLivePage() {
   const [batches, setBatches] = useState([]);
   const [selectedBatchIds, setSelectedBatchIds] = useState([]);
   const [showRecordPrompt, setShowRecordPrompt] = useState(false);
+  const [shouldRecord, setShouldRecord] = useState(false);
 
   useEffect(() => {
     const fetchBatches = async () => {
@@ -1447,13 +1523,30 @@ export default function AdminLivePage() {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleDeleteSession(past.id)}
-                    className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20 text-[10px] font-bold uppercase tracking-wider cursor-pointer shrink-0"
-                    title="Delete past broadcast"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {past.recordingUrl ? (
+                      <a
+                        href={past.recordingUrl.startsWith('/') ? `${API_BASE}${past.recordingUrl}` : past.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500 text-[10px] font-extrabold uppercase tracking-wider transition-all border border-indigo-500/10 hover:scale-[1.02] cursor-pointer text-center shrink-0"
+                      >
+                        Watch
+                      </a>
+                    ) : (
+                      <span className="text-[9px] font-bold text-slate-500 bg-slate-500/5 px-2 py-1.5 rounded border border-dashed border-slate-500/10 shrink-0">
+                        No Recording
+                      </span>
+                    )}
+
+                    <button
+                      onClick={() => handleDeleteSession(past.id)}
+                      className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-all border border-transparent hover:border-rose-500/20 text-[10px] font-bold uppercase tracking-wider cursor-pointer shrink-0"
+                      title="Delete past broadcast"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1486,6 +1579,7 @@ export default function AdminLivePage() {
               <div className="flex items-center justify-center gap-3 pt-2">
                 <button
                   onClick={() => {
+                    setShouldRecord(false);
                     setShowRecordPrompt(false);
                     startActualSession();
                   }}
@@ -1496,6 +1590,7 @@ export default function AdminLivePage() {
                 </button>
                 <button
                   onClick={() => {
+                    setShouldRecord(true);
                     setShowRecordPrompt(false);
                     startActualSession();
                   }}
@@ -1539,7 +1634,7 @@ export default function AdminLivePage() {
           audio={true}
           style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}
         >
-          <BroadcastPanel session={session} onEndSession={handleEndSession} authToken={authToken} />
+          <BroadcastPanel session={session} onEndSession={handleEndSession} authToken={authToken} shouldRecord={shouldRecord} />
         </LiveKitRoom>
       ) : (
         <div className="flex flex-col items-center justify-center p-12 rounded-2xl border text-center space-y-4"
