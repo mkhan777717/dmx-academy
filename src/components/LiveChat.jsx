@@ -24,6 +24,7 @@ import {
   Hand,
   Minimize2,
   ExternalLink,
+  Settings,
 } from "lucide-react";
 import LivePollCreator from "@/components/LivePollCreator";
 import { SessionLeaderboard } from "@/components/LiveLeaderboard";
@@ -237,6 +238,12 @@ export default function LiveChat({
   showPollCreatorExternal = false,
   isPopoutInstance = false,
   onClosePopout = () => { },
+  disableChat = false,
+  setDisableChat = () => { },
+  privateChat = false,
+  setPrivateChat = () => { },
+  disableHandraise = false,
+  setDisableHandraise = () => { },
 }) {
   const { chatMessages, send, isSending } = useChat();
   const roomContext = useRoomContext();
@@ -324,8 +331,27 @@ export default function LiveChat({
     }
   });
 
-  // Do not filter out messages from blocked users (preserve chat history visibility)
-  const filteredMessages = combinedMessages;
+  // If privateChat is active, students can only see their own messages and host/mentor messages
+  const filteredMessages = combinedMessages.filter((msg) => {
+    if (isHost) return true; // Host/Mentor sees everything
+    
+    const senderIdentity = msg.from?.identity;
+    const lowerIdentity = senderIdentity?.toLowerCase();
+    
+    // Check if the sender is a host/admin
+    const isSenderHost = 
+      lowerIdentity === hostUsername?.toLowerCase() || 
+      msg.senderRole === "ADMIN" || 
+      msg.senderRole === "MENTOR" || 
+      lowerIdentity?.includes("admin") || 
+      lowerIdentity?.includes("mentor");
+      
+    return (
+      senderIdentity === localIdentity || 
+      senderIdentity === user?.username || 
+      isSenderHost
+    );
+  });
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -631,6 +657,20 @@ export default function LiveChat({
               <BarChart2 size={13} />
               <span>Polls</span>
             </button>
+
+            {isHost && (
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`flex items-center gap-1.5 pb-0.5 border-b-2 text-xs font-extrabold uppercase tracking-wider transition-colors cursor-pointer ${activeTab === "settings"
+                    ? "border-zinc-500 text-[var(--text-primary)]"
+                    : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                  }`}
+                id="tab-settings-btn"
+              >
+                <Settings size={13} />
+                <span>Settings</span>
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -1025,6 +1065,66 @@ export default function LiveChat({
               )}
             </div>
           )}
+
+          {activeTab === "settings" && isHost && (
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col min-h-0 gap-4" style={{ backgroundColor: "var(--bg-card)", scrollbarWidth: "thin" }}>
+              <div className="flex flex-col gap-4">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider block font-sans" style={{ color: "var(--text-muted)" }}>Session Settings</span>
+                
+                {/* Disable Chat Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-xl border bg-slate-950/20" style={{ borderColor: "var(--border-primary)" }}>
+                  <div className="space-y-0.5 pr-2">
+                    <span className="text-xs font-bold block" style={{ color: "var(--text-primary)" }}>Disable Chat</span>
+                    <p className="text-[9px] leading-relaxed" style={{ color: "var(--text-muted)" }}>Students will not be able to type in chat.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={disableChat}
+                      onChange={(e) => setDisableChat(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-700/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-500"></div>
+                  </label>
+                </div>
+
+                {/* Private Chat Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-xl border bg-slate-950/20" style={{ borderColor: "var(--border-primary)" }}>
+                  <div className="space-y-0.5 pr-2">
+                    <span className="text-xs font-bold block" style={{ color: "var(--text-primary)" }}>Private Chat</span>
+                    <p className="text-[9px] leading-relaxed" style={{ color: "var(--text-muted)" }}>Students only see their own chats and host chats.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={privateChat}
+                      onChange={(e) => setPrivateChat(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-700/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-500"></div>
+                  </label>
+                </div>
+
+                {/* Disable Hand Raise Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-xl border bg-slate-950/20" style={{ borderColor: "var(--border-primary)" }}>
+                  <div className="space-y-0.5 pr-2">
+                    <span className="text-xs font-bold block" style={{ color: "var(--text-primary)" }}>Disable Hand Raise</span>
+                    <p className="text-[9px] leading-relaxed" style={{ color: "var(--text-muted)" }}>Students will not be able to raise hands.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={disableHandraise}
+                      onChange={(e) => setDisableHandraise(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-700/60 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Input Area (only visible in Chat tab) */}
@@ -1045,10 +1145,12 @@ export default function LiveChat({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                disabled={blockedUsers.includes(localIdentity)}
+                disabled={blockedUsers.includes(localIdentity) || (disableChat && !isHost)}
                 placeholder={
                   blockedUsers.includes(localIdentity)
                     ? "You are blocked. You cannot send messages in this session."
+                    : (disableChat && !isHost)
+                    ? "Chat has been disabled by the mentor."
                     : "Type a message..."
                 }
                 className="flex-1 bg-transparent text-xs outline-none disabled:text-slate-500 disabled:cursor-not-allowed"
@@ -1058,7 +1160,7 @@ export default function LiveChat({
               />
               <button
                 onClick={handleSend}
-                disabled={!inputValue.trim() || isSending || blockedUsers.includes(localIdentity)}
+                disabled={!inputValue.trim() || isSending || blockedUsers.includes(localIdentity) || (disableChat && !isHost)}
                 className="p-1.5 rounded-lg transition-all disabled:opacity-30 cursor-pointer hover:bg-zinc-500/10"
                 style={{ color: "var(--text-accent)" }}
                 id="chat-send-btn"
@@ -1069,6 +1171,8 @@ export default function LiveChat({
             <p className="text-[8px] mt-1.5 px-1" style={{ color: "var(--text-muted)" }}>
               {blockedUsers.includes(localIdentity) ? (
                 <span className="text-red-400 font-semibold">You are blocked. You cannot send messages in this session.</span>
+              ) : disableChat && !isHost ? (
+                <span className="text-amber-500 font-semibold">Chat is currently disabled.</span>
               ) : (
                 <>Press Enter to send • {500 - inputValue.length} chars left</>
               )}
