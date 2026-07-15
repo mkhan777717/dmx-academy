@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Menu, X, ArrowRight, ChevronDown, User, GraduationCap, ShieldAlert, LogOut, AlertTriangle } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
+import useThemeStore from "@/store/useThemeStore";
 
 const navItems = [];
 
@@ -35,327 +36,328 @@ export default function Navbar() {
   const fastDuration = 0.15;
   const stdDuration = 0.25;
   const largeDuration = 0.45;
+  // Read theme reactively from the Zustand store (updated by ThemeToggle)
+  const isDark = useThemeStore((state) => state.isDark);
 
   return (
     <>
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: largeDuration, ease: premiumEase }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 py-0 md:px-12"
-      style={{ backgroundColor: "var(--glass-bg)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: "1px solid var(--border-subtle)" }}
-    >
-      <div className="mx-auto max-w-[1400px]">
-        <nav
-          className="relative flex items-center justify-between h-16"
-        >
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group"
-            style={{ color: "var(--text-primary)" }}
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: largeDuration, ease: premiumEase }}
+        className="fixed top-0 left-0 right-0 z-50 px-6 py-0 md:px-12"
+        style={{ backgroundColor: "var(--glass-bg)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: "1px solid var(--border-subtle)" }}
+      >
+        <div className="mx-auto max-w-[1400px]">
+          <nav
+            className="relative flex items-center justify-between h-16"
           >
-            <div
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-on-accent)]"
-              style={{ background: "var(--accent-gradient)" }}
+            {/* Logo */}
+            <Link
+              href="/"
+              className="flex items-left"
+              style={{ color: "var(--text-primary)" }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-            </div>
-            <span className="text-[15px] font-bold tracking-[-0.02em]" style={{ color: "var(--text-primary)" }}>
-              Eduvantix
-            </span>
-          </Link>
-
-          <ul className="hidden md:flex items-center gap-1">
-            {navItems.map((item, index) => (
-              <li key={item.name} className="relative">
-                <a
-                  href={item.href}
-                  className="block px-3 py-2 text-sm font-medium transition-colors duration-200 underline-draw"
-                  style={{ color: "var(--text-secondary)" }}
-                  onMouseEnter={e => e.currentTarget.style.color = "var(--text-primary)"}
-                  onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary)"}
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          {/* Right: CTA */}
-          <div className="hidden md:flex items-center gap-3">
-
-            {/* Auth User Panel / Sign In Dropdown */}
-            {user ? (
-              <div
-                className="relative"
-                onMouseEnter={() => setIsSignInDropdownOpen(true)}
-                onMouseLeave={() => setIsSignInDropdownOpen(false)}
-              >
-                <button
-                  className="relative flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors outline-none cursor-pointer rounded-full border"
-                  style={{
-                    color: isSignInDropdownOpen ? "var(--text-accent)" : "var(--text-secondary)",
-                    backgroundColor: "var(--bg-card)",
-                    borderColor: "var(--border-primary)",
-                  }}
-                >
-                  <User size={14} className="text-[var(--text-accent)]" />
-                  <span>{user.username}</span>
-                  <motion.span
-                    animate={{ rotate: isSignInDropdownOpen ? 180 : 0 }}
-                    transition={{ duration: fastDuration, ease: premiumEase }}
-                    className="shrink-0"
-                  >
-                    <ChevronDown size={14} />
-                  </motion.span>
-                </button>
-
-                <AnimatePresence>
-                  {isSignInDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      transition={{ duration: fastDuration, ease: premiumEase }}
-                      className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border-primary)] p-2 shadow-2xl backdrop-blur-xl z-50 text-left"
-                      style={{
-                        backgroundColor: "var(--bg-card)",
-                        borderColor: "var(--border-primary)",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
-                      }}
-                    >
-                      <div className="px-3 py-2 text-[10px] font-bold border-b select-none mb-1 text-slate-400" style={{ borderColor: "var(--border-primary)" }}>
-                        Logged in as: <span className="text-[var(--text-primary)] block font-mono font-medium truncate">{user.email}</span>
-                      </div>
-
-                      {isUserAdmin && (
-                        <Link
-                          href="/admin"
-                          className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
-                          onClick={() => setIsSignInDropdownOpen(false)}
-                        >
-                          <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
-                            <ShieldAlert size={15} />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                              Admin Panel
-                            </div>
-                            <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                              Create contests & problems
-                            </div>
-                          </div>
-                        </Link>
-                      )}
-
-                      {isUserMentor && (
-                        <Link
-                          href="/mentor"
-                          className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
-                          onClick={() => setIsSignInDropdownOpen(false)}
-                        >
-                          <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500 shrink-0">
-                            <GraduationCap size={15} />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                              Mentor Portal
-                            </div>
-                            <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                              Review submissions
-                            </div>
-                          </div>
-                        </Link>
-                      )}
-
-                      {!isUserAdmin && !isUserMentor && (
-                        <Link
-                          href="/student/dashboard"
-                          className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
-                          onClick={() => setIsSignInDropdownOpen(false)}
-                        >
-                          <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-500 shrink-0">
-                            <User size={15} />
-                          </div>
-                          <div>
-                            <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                              Student Desk
-                            </div>
-                            <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                              Access study room
-                            </div>
-                          </div>
-                        </Link>
-                      )}
-
-                      <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
-
-                      <div className="px-3 py-2 flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Theme</span>
-                        <ThemeToggle />
-                      </div>
-
-                      <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
-
-                      <button
-                        onClick={() => {
-                          setIsSignInDropdownOpen(false);
-                          setShowLogoutConfirm(true);
-                        }}
-                        className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-rose-500/10 text-rose-500 transition-all font-bold text-xs cursor-pointer"
-                      >
-                        <LogOut size={15} />
-                        <span>Sign Out</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="w-full">
+                <img
+                  src={isDark ? "/logo-white-text.webp" : "/logo-black-text.webp"}
+                  alt="Eduvantix Logo"
+                  className="h-7 w-full object-contain"
+                  style={{ display: "block" }}
+                />
               </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <ThemeToggle />
-                <Link
-                  href="/login"
-                  className="inline-flex items-center space-x-2 rounded-full px-5 py-2.5 text-sm font-semibold text-[var(--text-on-accent)] shadow-md transition-all shrink-0 hover:scale-105"
-                  style={{ 
-                    background: "var(--accent-gradient)",
-                    boxShadow: "0px 6px 20px var(--accent-glow)" 
-                  }}
-                >
-                  <span>Sign In / Enroll</span>
-                  <ArrowRight size={14} />
-                </Link>
-              </div>
-            )}
-          </div>
+            </Link>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="block md:hidden rounded-lg p-1 focus:outline-none"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </nav>
-      </div>
-
-      {/* Mobile Drawer */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.25, ease: premiumEase }}
-            className="absolute left-0 right-0 top-16 z-40 overflow-hidden border-b p-6 shadow-xl md:hidden"
-            style={{
-              backgroundColor: "var(--bg-secondary)",
-              borderColor: "var(--border-primary)",
-              backdropFilter: "blur(16px)",
-            }}
-          >
-            <ul className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                <li key={item.name}>
+            <ul className="hidden md:flex items-center gap-1">
+              {navItems.map((item, index) => (
+                <li key={item.name} className="relative">
                   <a
                     href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className="block text-base font-semibold transition-colors"
+                    className="block px-3 py-2 text-sm font-medium transition-colors duration-200 underline-draw"
                     style={{ color: "var(--text-secondary)" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "var(--text-primary)"}
+                    onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary)"}
                   >
                     {item.name}
                   </a>
                 </li>
               ))}
-
-              {user ? (
-                <>
-                  <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
-                    Hello, {user.username}
-                  </li>
-                  {isUserAdmin && (
-                    <li>
-                      <Link
-                        href="/admin"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        <ShieldAlert size={14} className="text-emerald-500" />
-                        <span>Admin Control</span>
-                      </Link>
-                    </li>
-                  )}
-                  {isUserMentor && (
-                    <li>
-                      <Link
-                        href="/mentor"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        <GraduationCap size={14} className="text-violet-500" />
-                        <span>Mentor Board</span>
-                      </Link>
-                    </li>
-                  )}
-                  {!isUserAdmin && !isUserMentor && (
-                    <li>
-                      <Link
-                        href="/student/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                        style={{ color: "var(--text-secondary)" }}
-                      >
-                        <User size={14} className="text-zinc-500" />
-                        <span>Student Portal</span>
-                      </Link>
-                    </li>
-                  )}
-                  <li className="pt-2 flex justify-between items-center border-t" style={{ borderColor: "var(--border-primary)", marginTop: "8px", paddingTop: "8px" }}>
-                    <span className="text-sm font-bold pl-2" style={{ color: "var(--text-secondary)" }}>Theme</span>
-                    <ThemeToggle />
-                  </li>
-                  <li className="pt-2">
-                    <button
-                      onClick={() => {
-                        setIsOpen(false);
-                        setShowLogoutConfirm(true);
-                      }}
-                      className="w-full flex items-center justify-center gap-2.5 rounded-xl py-3 font-semibold text-rose-500 border border-[var(--border-primary)] border-rose-500/20 bg-rose-500/5 cursor-pointer"
-                    >
-                      <LogOut size={16} />
-                      <span>Sign Out</span>
-                    </button>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="pt-2 flex justify-between items-center border-t" style={{ borderColor: "var(--border-primary)", marginTop: "8px", paddingTop: "8px" }}>
-                    <span className="text-sm font-bold pl-2" style={{ color: "var(--text-secondary)" }}>Theme</span>
-                    <ThemeToggle />
-                  </li>
-                  <li className="pt-2">
-                    <Link
-                      href="/login"
-                      onClick={() => setIsOpen(false)}
-                      className="flex w-full items-center justify-center space-x-2 rounded-xl py-3 font-semibold text-[var(--text-on-accent)] shadow-lg hover:opacity-90 transition-all"
-                      style={{ background: "var(--accent-gradient)" }}
-                    >
-                      <User size={16} />
-                      <span>Sign In / Enroll</span>
-                      <ArrowRight size={16} />
-                    </Link>
-                  </li>
-                </>
-              )}
             </ul>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.header>
+
+            {/* Right: CTA */}
+            <div className="hidden md:flex items-center gap-3">
+
+              {/* Auth User Panel / Sign In Dropdown */}
+              {user ? (
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsSignInDropdownOpen(true)}
+                  onMouseLeave={() => setIsSignInDropdownOpen(false)}
+                >
+                  <button
+                    className="relative flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors outline-none cursor-pointer rounded-full border"
+                    style={{
+                      color: isSignInDropdownOpen ? "var(--text-accent)" : "var(--text-secondary)",
+                      backgroundColor: "var(--bg-card)",
+                      borderColor: "var(--border-primary)",
+                    }}
+                  >
+                    <User size={14} className="text-[var(--text-accent)]" />
+                    <span>{user.username}</span>
+                    <motion.span
+                      animate={{ rotate: isSignInDropdownOpen ? 180 : 0 }}
+                      transition={{ duration: fastDuration, ease: premiumEase }}
+                      className="shrink-0"
+                    >
+                      <ChevronDown size={14} />
+                    </motion.span>
+                  </button>
+
+                  <AnimatePresence>
+                    {isSignInDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                        transition={{ duration: fastDuration, ease: premiumEase }}
+                        className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border-primary)] p-2 shadow-2xl backdrop-blur-xl z-50 text-left"
+                        style={{
+                          backgroundColor: "var(--bg-card)",
+                          borderColor: "var(--border-primary)",
+                          boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
+                        }}
+                      >
+                        <div className="px-3 py-2 text-[10px] font-bold border-b select-none mb-1 text-slate-400" style={{ borderColor: "var(--border-primary)" }}>
+                          Logged in as: <span className="text-[var(--text-primary)] block font-mono font-medium truncate">{user.email}</span>
+                        </div>
+
+                        {isUserAdmin && (
+                          <Link
+                            href="/admin"
+                            className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
+                            onClick={() => setIsSignInDropdownOpen(false)}
+                          >
+                            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                              <ShieldAlert size={15} />
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                                Admin Panel
+                              </div>
+                              <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                                Create contests & problems
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+
+                        {isUserMentor && (
+                          <Link
+                            href="/mentor"
+                            className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
+                            onClick={() => setIsSignInDropdownOpen(false)}
+                          >
+                            <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500 shrink-0">
+                              <GraduationCap size={15} />
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                                Mentor Portal
+                              </div>
+                              <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                                Review submissions
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+
+                        {!isUserAdmin && !isUserMentor && (
+                          <Link
+                            href="/student/dashboard"
+                            className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-slate-500/5 transition-all"
+                            onClick={() => setIsSignInDropdownOpen(false)}
+                          >
+                            <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-500 shrink-0">
+                              <User size={15} />
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                                Student Desk
+                              </div>
+                              <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
+                                Access study room
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+
+                        <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
+
+                        <div className="px-3 py-2 flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Theme</span>
+                          <ThemeToggle />
+                        </div>
+
+                        <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
+
+                        <button
+                          onClick={() => {
+                            setIsSignInDropdownOpen(false);
+                            setShowLogoutConfirm(true);
+                          }}
+                          className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-rose-500/10 text-rose-500 transition-all font-bold text-xs cursor-pointer"
+                        >
+                          <LogOut size={15} />
+                          <span>Sign Out</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <ThemeToggle />
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center space-x-2 rounded-full px-5 py-2.5 text-sm font-semibold text-[var(--text-on-accent)] shadow-md transition-all shrink-0 hover:scale-105"
+                    style={{
+                      background: "var(--accent-gradient)",
+                      boxShadow: "0px 6px 20px var(--accent-glow)"
+                    }}
+                  >
+                    <span>Sign In / Enroll</span>
+                    <ArrowRight size={14} />
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="block md:hidden rounded-lg p-1 focus:outline-none"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </nav>
+        </div>
+
+        {/* Mobile Drawer */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: premiumEase }}
+              className="absolute left-0 right-0 top-16 z-40 overflow-hidden border-b p-6 shadow-xl md:hidden"
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                borderColor: "var(--border-primary)",
+                backdropFilter: "blur(16px)",
+              }}
+            >
+              <ul className="flex flex-col space-y-4">
+                {navItems.map((item) => (
+                  <li key={item.name}>
+                    <a
+                      href={item.href}
+                      onClick={() => setIsOpen(false)}
+                      className="block text-base font-semibold transition-colors"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
+                      {item.name}
+                    </a>
+                  </li>
+                ))}
+
+                {user ? (
+                  <>
+                    <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
+                      Hello, {user.username}
+                    </li>
+                    {isUserAdmin && (
+                      <li>
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          <ShieldAlert size={14} className="text-emerald-500" />
+                          <span>Admin Control</span>
+                        </Link>
+                      </li>
+                    )}
+                    {isUserMentor && (
+                      <li>
+                        <Link
+                          href="/mentor"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          <GraduationCap size={14} className="text-violet-500" />
+                          <span>Mentor Board</span>
+                        </Link>
+                      </li>
+                    )}
+                    {!isUserAdmin && !isUserMentor && (
+                      <li>
+                        <Link
+                          href="/student/dashboard"
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          <User size={14} className="text-zinc-500" />
+                          <span>Student Portal</span>
+                        </Link>
+                      </li>
+                    )}
+                    <li className="pt-2 flex justify-between items-center border-t" style={{ borderColor: "var(--border-primary)", marginTop: "8px", paddingTop: "8px" }}>
+                      <span className="text-sm font-bold pl-2" style={{ color: "var(--text-secondary)" }}>Theme</span>
+                      <ThemeToggle />
+                    </li>
+                    <li className="pt-2">
+                      <button
+                        onClick={() => {
+                          setIsOpen(false);
+                          setShowLogoutConfirm(true);
+                        }}
+                        className="w-full flex items-center justify-center gap-2.5 rounded-xl py-3 font-semibold text-rose-500 border border-[var(--border-primary)] border-rose-500/20 bg-rose-500/5 cursor-pointer"
+                      >
+                        <LogOut size={16} />
+                        <span>Sign Out</span>
+                      </button>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="pt-2 flex justify-between items-center border-t" style={{ borderColor: "var(--border-primary)", marginTop: "8px", paddingTop: "8px" }}>
+                      <span className="text-sm font-bold pl-2" style={{ color: "var(--text-secondary)" }}>Theme</span>
+                      <ThemeToggle />
+                    </li>
+                    <li className="pt-2">
+                      <Link
+                        href="/login"
+                        onClick={() => setIsOpen(false)}
+                        className="flex w-full items-center justify-center space-x-2 rounded-xl py-3 font-semibold text-[var(--text-on-accent)] shadow-lg hover:opacity-90 transition-all"
+                        style={{ background: "var(--accent-gradient)" }}
+                      >
+                        <User size={16} />
+                        <span>Sign In / Enroll</span>
+                        <ArrowRight size={16} />
+                      </Link>
+                    </li>
+                  </>
+                )}
+              </ul>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.header>
 
       {/* Logout Confirmation Modal */}
       <AnimatePresence>

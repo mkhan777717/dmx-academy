@@ -5,6 +5,11 @@ import { AuthProvider } from "@/context/AuthContext";
 export const metadata = {
   title: "Eduvantix | The Creative & Tech Learning Platform",
   description: "Master creative motion design, machine learning, and advanced frontend engineering with interactive, project-driven tracks.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 // Inline script to read localStorage before first paint → prevents theme flash
@@ -34,6 +39,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+        <link rel="icon" href="/favicon.ico" />
         {/* Theme initialiser – runs before React hydration to prevent flash */}
         <Script id="theme-initializer" strategy="beforeInteractive" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
