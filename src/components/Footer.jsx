@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const footerLinks = [
   {
@@ -51,20 +52,111 @@ const GithubIcon = () => (
 );
 
 export default function Footer() {
+  const footerRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const node = footerRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <footer
-      className="relative pt-20 pb-10"
+      ref={footerRef}
+      className={`relative pt-20 pb-10 footer-reveal ${isVisible ? "is-visible" : ""}`}
       style={{
         backgroundColor: "var(--bg-secondary)",
         borderTop: "1px solid var(--border-primary)",
       }}
     >
+      <style jsx>{`
+        .footer-reveal {
+          opacity: 0;
+          transform: translateY(48px);
+          transition:
+            opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+            transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .footer-reveal.is-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .wordmark {
+          transition: text-shadow 0.6s ease-out;
+        }
+
+        .footer-reveal.is-visible .wordmark {
+          animation: wordmark-glow-light 4s ease-in-out 0.6s infinite;
+        }
+
+        :global(.dark) .footer-reveal.is-visible .wordmark {
+          animation-name: wordmark-glow-dark;
+        }
+
+        @keyframes wordmark-glow-light {
+          0%, 100% {
+            text-shadow:
+              0 0 1px rgba(220, 38, 38, 0.3),
+              0 0 4px rgba(220, 38, 38, 0.25),
+              0 0 10px rgba(220, 38, 38, 0.15);
+          }
+          50% {
+            text-shadow:
+              0 0 2px rgba(220, 38, 38, 0.5),
+              0 0 6px rgba(220, 38, 38, 0.4),
+              0 0 16px rgba(220, 38, 38, 0.25);
+          }
+        }
+
+        @keyframes wordmark-glow-dark {
+          0%, 100% {
+            text-shadow:
+              0 0 1px rgba(16, 185, 129, 0.4),
+              0 0 4px rgba(16, 185, 129, 0.3),
+              0 0 10px rgba(16, 185, 129, 0.2);
+          }
+          50% {
+            text-shadow:
+              0 0 2px rgba(16, 185, 129, 0.6),
+              0 0 6px rgba(16, 185, 129, 0.5),
+              0 0 16px rgba(16, 185, 129, 0.3);
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .footer-reveal {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+          }
+          .footer-reveal.is-visible .wordmark {
+            animation: none;
+            text-shadow: 0 0 3px rgba(220, 38, 38, 0.3), 0 0 8px rgba(220, 38, 38, 0.2);
+          }
+          :global(.dark) .footer-reveal.is-visible .wordmark {
+            text-shadow: 0 0 3px rgba(16, 185, 129, 0.35), 0 0 8px rgba(16, 185, 129, 0.25);
+          }
+        }
+      `}</style>
+
       <div className="mx-auto max-w-[1400px] px-6 md:px-12">
 
         {/* Large wordmark */}
         <div className="mb-16 overflow-hidden">
           <div
-            className="text-[clamp(4rem,10vw,9rem)] font-black tracking-[-0.06em] leading-none select-none"
+            className="wordmark text-[clamp(4rem,10vw,9rem)] font-black tracking-[-0.06em] leading-none select-none"
             style={{ color: "var(--border-card)", letterSpacing: "-0.05em" }}
           >
             Eduvantix

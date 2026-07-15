@@ -213,123 +213,20 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              /* Sign In Dropdown */
-              <div
-                className="relative"
-                onMouseEnter={() => setIsSignInDropdownOpen(true)}
-                onMouseLeave={() => setIsSignInDropdownOpen(false)}
-              >
-                <button
-                  className="relative flex items-center gap-1.5 px-4 py-2 text-sm font-semibold transition-colors outline-none cursor-pointer rounded-full border"
-                  style={{
-                    color: isSignInDropdownOpen ? "var(--text-accent)" : "var(--text-secondary)",
-                    backgroundColor: "var(--bg-card)",
-                    borderColor: "var(--border-primary)",
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <Link
+                  href="/login"
+                  className="inline-flex items-center space-x-2 rounded-full px-5 py-2.5 text-sm font-semibold text-[var(--text-on-accent)] shadow-md transition-all shrink-0 hover:scale-105"
+                  style={{ 
+                    background: "var(--accent-gradient)",
+                    boxShadow: "0px 6px 20px var(--accent-glow)" 
                   }}
                 >
-                  <span>Sign In</span>
-                  <motion.span
-                    animate={{ rotate: isSignInDropdownOpen ? 180 : 0 }}
-                    transition={{ duration: fastDuration, ease: premiumEase }}
-                    className="shrink-0"
-                  >
-                    <ChevronDown size={14} />
-                  </motion.span>
-                </button>
-
-                <AnimatePresence>
-                  {isSignInDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
-                      transition={{ duration: fastDuration, ease: premiumEase }}
-                      className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border-primary)] p-2 shadow-2xl backdrop-blur-xl z-50 text-left"
-                      style={{
-                        backgroundColor: "var(--bg-card)",
-                        borderColor: "var(--border-primary)",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)"
-                      }}
-                    >
-                      <Link
-                        href="/login?redirect=/student/dashboard"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-500/5 transition-all"
-                        onClick={() => setIsSignInDropdownOpen(false)}
-                      >
-                        <div className="p-2 rounded-lg bg-zinc-500/10 text-zinc-500 shrink-0">
-                          <User size={15} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                            Student Portal
-                          </div>
-                          <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                            Access your study desk
-                          </div>
-                        </div>
-                      </Link>
-
-                      <Link
-                        href="/login?redirect=/mentor"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-500/5 transition-all"
-                        onClick={() => setIsSignInDropdownOpen(false)}
-                      >
-                        <div className="p-2 rounded-lg bg-violet-500/10 text-violet-500 shrink-0">
-                          <GraduationCap size={15} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                            Mentor Board
-                          </div>
-                          <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                            Review submissions
-                          </div>
-                        </div>
-                      </Link>
-
-                      <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
-
-                      <Link
-                        href="/login?redirect=/admin"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-500/5 transition-all"
-                        onClick={() => setIsSignInDropdownOpen(false)}
-                      >
-                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
-                          <ShieldAlert size={15} />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                            Admin Control
-                          </div>
-                          <div className="text-[9px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                            Manage competitions
-                          </div>
-                        </div>
-                      </Link>
-
-                      <div className="border-t my-1" style={{ borderColor: "var(--border-primary)" }} />
-
-                      <div className="px-3 py-2 flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Theme</span>
-                        <ThemeToggle />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <span>Sign In / Enroll</span>
+                  <ArrowRight size={14} />
+                </Link>
               </div>
-            )}
-
-            {!user && (
-              <motion.a
-                href="#pricing"
-                whileHover={{ scale: 1.05, boxShadow: "0px 6px 20px var(--accent-glow)" }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center space-x-2 rounded-full px-5 py-2.5 text-sm font-semibold text-[var(--text-on-accent)] shadow-md transition-all shrink-0"
-                style={{ background: "var(--accent-gradient)" }}
-              >
-                <span>Enroll Now</span>
-                <ArrowRight size={14} />
-              </motion.a>
             )}
           </div>
 
@@ -436,57 +333,23 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <li className="text-[10px] font-bold uppercase tracking-wider pl-1" style={{ color: "var(--text-muted)" }}>
-                    Sign In Portals
+                  <li className="pt-2 flex justify-between items-center border-t" style={{ borderColor: "var(--border-primary)", marginTop: "8px", paddingTop: "8px" }}>
+                    <span className="text-sm font-bold pl-2" style={{ color: "var(--text-secondary)" }}>Theme</span>
+                    <ThemeToggle />
                   </li>
-                  <li>
+                  <li className="pt-2">
                     <Link
-                      href="/login?redirect=/student/dashboard"
+                      href="/login"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                      style={{ color: "var(--text-secondary)" }}
+                      className="flex w-full items-center justify-center space-x-2 rounded-xl py-3 font-semibold text-[var(--text-on-accent)] shadow-lg hover:opacity-90 transition-all"
+                      style={{ background: "var(--accent-gradient)" }}
                     >
-                      <User size={14} className="text-zinc-500" />
-                      <span>Student Portal</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/login?redirect=/mentor"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      <GraduationCap size={14} className="text-violet-500" />
-                      <span>Mentor Board</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/login?redirect=/admin"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-2.5 text-sm font-bold pl-2 transition-colors hover:text-[var(--text-accent)]"
-                      style={{ color: "var(--text-accent)" }}
-                    >
-                      <ShieldAlert size={14} className="text-emerald-500" />
-                      <span>Admin Control</span>
+                      <User size={16} />
+                      <span>Sign In / Enroll</span>
+                      <ArrowRight size={16} />
                     </Link>
                   </li>
                 </>
-              )}
-
-              {!user && (
-                <li className="pt-2 border-t" style={{ borderColor: "var(--border-primary)" }}>
-                  <a
-                    href="#pricing"
-                    onClick={() => setIsOpen(false)}
-                    className="flex w-full items-center justify-center space-x-2 rounded-xl py-3 font-semibold text-[var(--text-on-accent)] shadow-lg"
-                    style={{ background: "var(--accent-gradient)" }}
-                  >
-                    <span>Enroll Now</span>
-                    <ArrowRight size={16} />
-                  </a>
-                </li>
               )}
             </ul>
           </motion.div>

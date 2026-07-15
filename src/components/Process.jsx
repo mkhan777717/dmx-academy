@@ -1,95 +1,206 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 
-/* ─── Step SVG Illustrations ─────────────────── */
-const PathIllustration = () => (
-  <svg viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-    {/* Forking path diagram */}
-    <line x1="40" y1="100" x2="100" y2="100" stroke="#4f46e5" strokeWidth="1" strokeOpacity="1.00"/>
-    <circle cx="40" cy="100" r="5" fill="#4f46e5" fillOpacity="1.00"/>
-    <line x1="100" y1="100" x2="160" y2="60" stroke="#4f46e5" strokeWidth="0.8" strokeOpacity="1.00"/>
-    <line x1="100" y1="100" x2="160" y2="100" stroke="#4f46e5" strokeWidth="0.8" strokeOpacity="0.75"/>
-    <line x1="100" y1="100" x2="160" y2="140" stroke="#4f46e5" strokeWidth="0.8" strokeOpacity="0.50"/>
-    <circle cx="100" cy="100" r="4" fill="#4f46e5" fillOpacity="1.00"/>
-    {[60,100,140].map((y,i) => (
-      <g key={y}>
-        <rect x="160" y={y-20} width="80" height="38" rx="6" fill="#4f46e5" fillOpacity={0.04 + i*0.03} stroke="#4f46e5" strokeWidth="0.4" strokeOpacity="1.00"/>
-        <text x="200" y={y+4} textAnchor="middle" fontSize="9" fill="#4f46e5" fillOpacity="1.00">
-          {["AI Track","Frontend","DevOps"][i]}
-        </text>
-      </g>
-    ))}
-    <text x="40" y="125" fontSize="9" fill="#4f46e5" fillOpacity="0.75">Start</text>
-  </svg>
-);
+/* ─── Interactive Illustrations ─────────────────── */
+const PathIllustration = () => {
+  const [active, setActive] = useState(null);
+  
+  return (
+    <div className="w-full h-full flex items-center justify-center relative p-4 md:p-8 font-mono text-xs overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.1)_0,transparent_100%)] pointer-events-none" />
+      <div className="flex items-center justify-between w-full h-full relative z-10 max-w-[240px]">
+        
+        {/* SVG Paths connecting nodes */}
+        <svg viewBox="0 0 240 200" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: -1 }}>
+          {[0, 1, 2].map((i) => (
+            <motion.path
+              key={i}
+              d={`M 40 100 C 100 100, 100 ${45 + i * 55}, 140 ${45 + i * 55}`}
+              fill="none"
+              stroke={active === i ? "#4f46e5" : "rgba(79,70,229,0.3)"}
+              strokeWidth={active === i ? 2 : 1}
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 1.5, delay: i * 0.2 }}
+              style={{ filter: active === i ? "drop-shadow(0 0 8px rgba(79,70,229,0.8))" : "none" }}
+            />
+          ))}
+        </svg>
 
-const SandboxIllustration = () => (
-  <svg viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-    {/* Browser window */}
-    <rect x="20" y="20" width="240" height="160" rx="8" stroke="#0891b2" strokeWidth="0.5" strokeOpacity="1.00"/>
-    {/* Browser bar */}
-    <rect x="20" y="20" width="240" height="28" rx="8" fill="#0891b2" fillOpacity="0.15"/>
-    <circle cx="38" cy="34" r="4" fill="#ef4444" fillOpacity="1.00"/>
-    <circle cx="52" cy="34" r="4" fill="#f59e0b" fillOpacity="1.00"/>
-    <circle cx="66" cy="34" r="4" fill="#22c55e" fillOpacity="1.00"/>
-    <rect x="82" y="28" width="140" height="12" rx="6" fill="#0891b2" fillOpacity="0.20" stroke="#0891b2" strokeWidth="0.3" strokeOpacity="0.75"/>
-    {/* Code + Preview split */}
-    <line x1="150" y1="48" x2="150" y2="180" stroke="#0891b2" strokeWidth="0.3" strokeOpacity="0.75"/>
-    {/* Code lines left */}
-    {[55,63,71,79,87,95].map((y,i)=>(
-      <rect key={y} x="28" y={y} width={[60,45,70,50,65,40][i]} height="3" rx="1.5" fill="#0891b2" fillOpacity={0.3-i*0.03}/>
-    ))}
-    {/* Canvas right */}
-    <circle cx="205" cy="110" r="28" fill="#0891b2" fillOpacity="0.18" stroke="#0891b2" strokeWidth="0.4" strokeOpacity="1.00"/>
-    <rect x="188" y="102" width="34" height="3" rx="1.5" fill="#0891b2" fillOpacity="1.00"/>
-    <rect x="192" y="109" width="26" height="3" rx="1.5" fill="#0891b2" fillOpacity="0.75"/>
-    <text x="205" y="145" textAnchor="middle" fontSize="8" fill="#0891b2" fillOpacity="1.00">Live Preview</text>
-  </svg>
-);
+        {/* Start Node */}
+        <div className="w-10 h-10 rounded-full border-2 border-indigo-500 flex items-center justify-center bg-indigo-500/10 shadow-[0_0_15px_rgba(79,70,229,0.5)] z-10 bg-[var(--bg-card)]">
+          <span className="text-indigo-400 font-bold text-[10px]">Start</span>
+        </div>
 
-const AIIllustration = () => (
-  <svg viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-    {/* Code block */}
-    <rect x="20" y="30" width="130" height="100" rx="6" fill="#059669" fillOpacity="0.10" stroke="#059669" strokeWidth="0.4" strokeOpacity="1.00"/>
-    {[40,52,64,76,88,100].map((y,i)=>(
-      <rect key={y} x="30" y={y} width={[80,60,90,50,70,65][i]} height="3" rx="1.5" fill="#059669" fillOpacity={0.25-i*0.02}/>
-    ))}
-    {/* AI feedback arrow */}
-    <path d="M155 80 L200 80" stroke="#059669" strokeWidth="0.8" strokeOpacity="1.00" markerEnd="url(#arrow)"/>
-    <defs>
-      <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-        <path d="M0 0 L6 3 L0 6 Z" fill="#059669" fillOpacity="1.00"/>
-      </marker>
-    </defs>
-    {/* AI response bubble */}
-    <rect x="205" y="50" width="60" height="60" rx="8" fill="#059669" fillOpacity="0.18" stroke="#059669" strokeWidth="0.4" strokeOpacity="1.00"/>
-    <text x="235" y="72" textAnchor="middle" fontSize="7" fill="#059669" fillOpacity="1.00">Suggest</text>
-    <text x="235" y="83" textAnchor="middle" fontSize="7" fill="#059669" fillOpacity="1.00">Refactor</text>
-    <text x="235" y="94" textAnchor="middle" fontSize="7" fill="#059669" fillOpacity="1.00">Review</text>
-    {/* Pulse rings */}
-    <circle cx="235" cy="80" r="40" stroke="#059669" strokeWidth="0.2" strokeOpacity="0.50" strokeDasharray="2 4"/>
-  </svg>
-);
+        {/* End Nodes */}
+        <div className="flex flex-col gap-4 h-full justify-center w-24">
+          {["AI Track", "Frontend", "DevOps"].map((label, i) => (
+            <div 
+              key={i}
+              onMouseEnter={() => setActive(i)}
+              onMouseLeave={() => setActive(null)}
+              className={`px-2 py-2 text-center rounded border cursor-pointer transition-all duration-300 relative z-10 ${active === i ? 'bg-indigo-500/20 border-indigo-400 scale-110 shadow-[0_0_20px_rgba(79,70,229,0.6)] text-indigo-300' : 'bg-[var(--bg-card)] border-indigo-500/30 text-indigo-500/70 hover:bg-indigo-500/10'}`}
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-const CertIllustration = () => (
-  <svg viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-    {/* Certificate */}
-    <rect x="40" y="30" width="200" height="140" rx="8" fill="#a21caf" fillOpacity="0.10" stroke="#a21caf" strokeWidth="0.4" strokeOpacity="1.00"/>
-    <rect x="55" y="45" width="170" height="1" fill="#a21caf" fillOpacity="0.75"/>
-    <rect x="55" y="160" width="170" height="1" fill="#a21caf" fillOpacity="0.75"/>
-    <circle cx="140" cy="100" r="28" fill="#a21caf" fillOpacity="0.15" stroke="#a21caf" strokeWidth="0.5" strokeOpacity="1.00"/>
-    <text x="140" y="95" textAnchor="middle" fontSize="18" fill="#a21caf" fillOpacity="1.00">✦</text>
-    <text x="140" y="110" textAnchor="middle" fontSize="8" fill="#a21caf" fillOpacity="1.00">Verified</text>
-    <rect x="90" y="130" width="100" height="4" rx="2" fill="#a21caf" fillOpacity="0.50"/>
-    <rect x="108" y="140" width="64" height="3" rx="1.5" fill="#a21caf" fillOpacity="0.30"/>
-    {/* Chain links */}
-    <path d="M60 55 Q50 55 50 65 L50 75 Q50 85 60 85" stroke="#a21caf" strokeWidth="0.4" strokeOpacity="1.00" fill="none"/>
-    <path d="M220 55 Q230 55 230 65 L230 75 Q230 85 220 85" stroke="#a21caf" strokeWidth="0.4" strokeOpacity="1.00" fill="none"/>
-    <text x="140" y="175" textAnchor="middle" fontSize="7" fill="#a21caf" fillOpacity="0.75" fontFamily="monospace">0x4f3...a8c2</text>
-  </svg>
-);
+const SandboxIllustration = () => {
+  const [code, setCode] = useState("");
+  const fullCode = "function App() {\n  return (\n    <div className='glow'>\n      <Cube />\n    </div>\n  );\n}";
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      setCode(fullCode.slice(0, i));
+      i++;
+      if (i > fullCode.length) {
+        setTimeout(() => { i = 0; }, 2000);
+      }
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="w-full h-full flex flex-col p-4 md:p-6 font-mono text-[10px] bg-[var(--bg-secondary)] overflow-hidden">
+      {/* Fake Window Header */}
+      <div className="h-6 w-full border-b border-cyan-500/20 flex items-center gap-1.5 px-2 mb-4 bg-black/20 rounded-t-lg">
+        <div className="w-2 h-2 rounded-full bg-red-500/80" />
+        <div className="w-2 h-2 rounded-full bg-yellow-500/80" />
+        <div className="w-2 h-2 rounded-full bg-green-500/80" />
+        <div className="ml-2 text-cyan-700/50 text-[9px]">App.jsx - Sandbox</div>
+      </div>
+      
+      <div className="flex-1 flex gap-4 h-full">
+        {/* Editor */}
+        <div className="flex-1 text-cyan-400/80 whitespace-pre overflow-hidden">
+          {code}
+          <span className="animate-pulse w-1.5 h-3 bg-cyan-400 inline-block ml-0.5 align-middle" />
+        </div>
+        
+        {/* Divider */}
+        <div className="w-[1px] h-full bg-cyan-500/20" />
+        
+        {/* Preview Container */}
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-black/10 rounded-br-lg">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.1)_0,transparent_100%)]" />
+          <motion.div 
+            animate={{ rotateX: [0, 360], rotateY: [0, 360] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border border-cyan-400 bg-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.6)]"
+            style={{ transformStyle: 'preserve-3d' }}
+          />
+          <div className="absolute bottom-2 text-cyan-500/50 text-[8px] tracking-widest font-sans">LIVE PREVIEW</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AIIllustration = () => {
+  return (
+    <div className="w-full h-full p-4 md:p-6 flex flex-col justify-center items-center font-mono text-[10px] relative overflow-hidden group bg-[var(--bg-secondary)]">
+      <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+      
+      {/* Code Background */}
+      <div className="w-full max-w-[220px] bg-black/40 border border-emerald-500/30 rounded-lg p-3 text-emerald-400 space-y-1.5 relative z-0 font-medium shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+        <div>const data = await fetch('/api');</div>
+        <div className="text-red-400 line-through bg-red-500/10 px-1 -mx-1">let result = data.json();</div>
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }} 
+          animate={{ opacity: 1, x: 0 }} 
+          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
+          className="text-emerald-300 font-bold bg-emerald-500/20 border-l-2 border-emerald-400 pl-2 -mx-1 py-0.5 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+        >
+          const result = await data.json();
+        </motion.div>
+        <div>return result;</div>
+      </div>
+
+      {/* AI Floating Widget */}
+      <motion.div 
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-4 md:right-8 top-8 md:top-12 w-40 bg-[var(--bg-card)] border border-emerald-500 shadow-[0_8px_30px_rgba(16,185,129,0.3)] rounded-lg p-2.5 z-10"
+      >
+        <div className="flex items-center gap-2 mb-1.5 border-b border-emerald-500/20 pb-1.5">
+          <div className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.8)]">
+            <span className="text-[8px] text-white font-bold">AI</span>
+          </div>
+          <span className="text-emerald-400 font-bold text-[9px] font-sans">Co-Pilot Suggestion</span>
+        </div>
+        <div className="text-emerald-500/80 leading-tight font-sans text-[10px]">
+          Forgot to await <code className="bg-emerald-500/20 px-0.5 rounded font-mono text-[9px]">.json()</code>. Fixed it for you!
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const CertIllustration = () => {
+  const cardRef = useRef(null);
+  const [[rotX, rotY], setRot] = useState([0, 0]);
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -15;
+    const rotateY = ((x - centerX) / centerX) * 15;
+    setRot([rotateX, rotateY]);
+  };
+
+  const handleMouseLeave = () => {
+    setRot([0, 0]);
+  };
+
+  return (
+    <div className="w-full h-full flex items-center justify-center p-6 [perspective:1000px] overflow-hidden bg-[var(--bg-secondary)] relative group">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(162,28,175,0.1)_0,transparent_100%)] pointer-events-none transition-opacity duration-500 group-hover:opacity-100 opacity-50" />
+      
+      <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        animate={{ rotateX: rotX, rotateY: rotY }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="w-full max-w-[220px] aspect-[1.6] rounded-xl border border-fuchsia-500/30 bg-[var(--bg-card)] shadow-[0_0_30px_rgba(162,28,175,0.3)] flex flex-col p-4 relative overflow-hidden cursor-pointer"
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <div className="absolute -top-10 -right-10 w-24 h-24 bg-fuchsia-500/20 blur-2xl rounded-full pointer-events-none" />
+        
+        <div className="flex justify-between items-start mb-auto z-10" style={{ transform: "translateZ(20px)" }}>
+          <div className="w-8 h-8 rounded-md bg-fuchsia-500/10 flex items-center justify-center border border-fuchsia-500/30 shadow-[0_0_10px_rgba(162,28,175,0.2)]">
+            <span className="text-[var(--text-primary)] text-[14px]">✦</span>
+          </div>
+          <div className="text-[8px] font-bold font-sans text-[var(--text-primary)] uppercase tracking-widest border border-fuchsia-500/30 bg-fuchsia-500/10 px-2 py-1 rounded-full shadow-[0_0_10px_rgba(162,28,175,0.2)]">
+            Verified
+          </div>
+        </div>
+
+        <div className="mt-4 z-10" style={{ transform: "translateZ(10px)" }}>
+          <div className="text-[10px] font-sans font-bold text-[var(--text-primary)] mb-1">On-Chain Certificate</div>
+          <div className="w-full h-1 bg-fuchsia-500/60 rounded-full mb-1.5 opacity-80" />
+          <div className="w-2/3 h-1 bg-fuchsia-500/60 rounded-full opacity-80" />
+        </div>
+        
+        <div className="mt-3 text-[7px] font-mono text-[var(--text-secondary)] z-10 font-bold" style={{ transform: "translateZ(5px)" }}>
+          TX: 0x4f3a9910...a8c2f1
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const steps = [
   {
