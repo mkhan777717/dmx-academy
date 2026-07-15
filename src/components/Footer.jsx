@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 const footerLinks = [
   {
@@ -51,20 +52,42 @@ const GithubIcon = () => (
 );
 
 export default function Footer() {
+  const footerRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const node = footerRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <footer
-      className="relative pt-20 pb-10"
+      ref={footerRef}
+      className={`relative pt-20 pb-10 footer-reveal ${isVisible ? "is-visible" : ""}`}
       style={{
         backgroundColor: "var(--bg-secondary)",
         borderTop: "1px solid var(--border-primary)",
       }}
     >
+
       <div className="mx-auto max-w-[1400px] px-6 md:px-12">
 
         {/* Large wordmark */}
         <div className="mb-16 overflow-hidden">
           <div
-            className="text-[clamp(4rem,10vw,9rem)] font-black tracking-[-0.06em] leading-none select-none"
+            className="wordmark text-[clamp(4rem,10vw,9rem)] font-black tracking-[-0.06em] leading-none select-none"
             style={{ color: "var(--border-card)", letterSpacing: "-0.05em" }}
           >
             Eduvantix

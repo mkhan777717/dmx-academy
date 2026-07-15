@@ -48,20 +48,9 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
 
+  // Role selection is now fully automated post-login
   useEffect(() => {
-    const roleParam = searchParams.get("role");
-    let targetRole = null;
-    if (roleParam) {
-      const parsed = roleParam.toUpperCase();
-      if (["STUDENT", "MENTOR", "ADMIN"].includes(parsed)) targetRole = parsed;
-    } else {
-      const path = redirectTo.toLowerCase();
-      if (path.includes("admin")) targetRole = "ADMIN";
-      else if (path.includes("mentor")) targetRole = "MENTOR";
-      else if (path.includes("student")) targetRole = "STUDENT";
-    }
-    if (targetRole) { setActiveTab(targetRole); setHasExplicitRole(true); }
-    else setHasExplicitRole(false);
+    setHasExplicitRole(false);
     const emailParam = searchParams.get("email");
     if (emailParam) setEmail(emailParam);
   }, [searchParams, redirectTo]);
@@ -105,32 +94,14 @@ function LoginForm() {
   }, [user, redirectTo, router, isMismatched]);
 
   const getRoleTheme = () => {
-    switch (activeTab) {
-      case "ADMIN": return {
-        accentColor: "#06b6d4", accentGradient: "linear-gradient(135deg, #06b6d4 0%, #7c3aed 100%)",
-        bgBadge: "rgba(6, 182, 212, 0.08)", borderAccent: "rgba(6, 182, 212, 0.2)",
-        icon: <ShieldAlert size={20} className="text-cyan-400" />,
-        title: isRegistering ? "Register Admin Account" : "Admin Control Sign In",
-        desc: isRegistering ? "Create your administrative console account" : "Access the Eduvantix systems scheduler and configuration room",
-        demoEmail: "admin@demo.com", label: "Administrator"
-      };
-      case "MENTOR": return {
-        accentColor: "#8b5cf6", accentGradient: "linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)",
-        bgBadge: "rgba(139, 92, 246, 0.08)", borderAccent: "rgba(139, 92, 246, 0.2)",
-        icon: <GraduationCap size={20} className="text-violet-400" />,
-        title: isRegistering ? "Register Instructor Account" : "Mentor Workspace Sign In",
-        desc: isRegistering ? "Join the Eduvantix instructional staff track" : "Access code review desk, office hours, and curriculum editor",
-        demoEmail: "mentor@demo.com", label: "Mentor"
-      };
-      default: return {
-        accentColor: "#6366f1", accentGradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-        bgBadge: "rgba(99, 102, 241, 0.08)", borderAccent: "rgba(99, 102, 241, 0.2)",
-        icon: <Sparkles size={20} className="text-zinc-400" />,
-        title: isRegistering ? "Create Scholar Account" : "Welcome Back, Coder",
-        desc: isRegistering ? "Join the Eduvantix developer learning network" : "Access your study desk, practice arena, and live sessions",
-        demoEmail: "student@demo.com", label: "Student"
-      };
-    }
+    return {
+      accentColor: "#10b981", accentGradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+      bgBadge: "rgba(16, 185, 129, 0.08)", borderAccent: "rgba(16, 185, 129, 0.2)",
+      icon: <Sparkles size={20} className="text-white" />,
+      title: isRegistering ? "Create an Account" : "Welcome Back",
+      desc: isRegistering ? "Join the Eduvantix network" : "Sign in to access your portal",
+      demoEmail: "user@eduvantix.com", label: "User"
+    };
   };
 
   const theme = getRoleTheme();
@@ -223,24 +194,7 @@ function LoginForm() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full space-y-5">
 
-      {/* Role tabs */}
-      {!hasExplicitRole && (
-        <div className="flex p-1 rounded-xl border" style={{ backgroundColor: "var(--bg-input)", borderColor: "var(--border-primary)" }}>
-          {["STUDENT", "MENTOR", "ADMIN"].map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => { setActiveTab(tab); setErrorMsg(""); }}
-              className="flex-1 py-2 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-all cursor-pointer"
-              style={{ backgroundColor: activeTab === tab ? "var(--bg-card)" : "transparent", color: activeTab === tab ? "var(--text-primary)" : "var(--text-muted)", boxShadow: activeTab === tab ? "0 1px 4px rgba(0,0,0,0.08)" : "none" }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Card */}
+      {/* Role tabs removed */}
       <div className="p-8 rounded-2xl border border-[var(--border-primary)] space-y-6" style={{ backgroundColor: "var(--bg-card)", borderColor: theme.borderAccent }}>
 
         {/* Header */}
@@ -490,6 +444,18 @@ export default function LoginPage() {
               <LoginForm />
             </GoogleOAuthProvider>
           </Suspense>
+        </div>
+
+        <div className="mt-8 pt-6 w-full max-w-sm text-center flex flex-col items-center gap-3" style={{ borderTop: "1px solid var(--border-primary)" }}>
+          <p className="text-[11px] font-medium tracking-wide uppercase" style={{ color: "var(--text-muted)" }}>Are you an educational institution?</p>
+          <a href="/institutes" className="flex items-center gap-2 justify-center w-full px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
+             style={{ border: "1px solid var(--border-primary)", color: "var(--text-primary)", backgroundColor: "var(--bg-card)" }}
+             onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--border-accent)"; }}
+             onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-primary)"; }}
+          >
+            <GraduationCap size={16} style={{ color: "var(--accent-primary)" }} />
+            Explore Eduvantix for Campus
+          </a>
         </div>
 
         <a href="/" className="mt-8 text-xs flex items-center gap-2 transition-colors"

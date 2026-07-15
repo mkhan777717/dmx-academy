@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const testimonials = [
   {
@@ -172,9 +173,28 @@ export default function Testimonials() {
       </div>
 
       {/* Carousel */}
-      <div ref={ref} className="w-full relative pb-8 mt-16 md:mt-24">
+      <div ref={ref} className="w-full relative pb-8 mt-16 md:mt-24 max-w-[1400px] mx-auto">
         
-        <div className="relative h-[480px] md:h-[400px] w-full flex items-center justify-center overflow-x-hidden md:overflow-visible px-4 max-w-[100vw]">
+        <div className="relative h-[480px] md:h-[400px] w-full flex items-center justify-center overflow-x-hidden md:overflow-visible px-4 max-w-[100vw] group">
+          
+          <button 
+            onClick={prev}
+            className="absolute left-4 md:-left-4 z-20 p-3 md:p-4 rounded-full bg-white/5 backdrop-blur-md border border-[var(--border-primary)] shadow-xl hover:bg-emerald-500 hover:border-emerald-400 hover:text-white transition-all hidden md:flex items-center justify-center cursor-pointer"
+            style={{ color: "var(--text-secondary)" }}
+            aria-label="Previous testimonial"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          
+          <button 
+            onClick={next}
+            className="absolute right-4 md:-right-4 z-20 p-3 md:p-4 rounded-full bg-white/5 backdrop-blur-md border border-[var(--border-primary)] shadow-xl hover:bg-emerald-500 hover:border-emerald-400 hover:text-white transition-all hidden md:flex items-center justify-center cursor-pointer"
+            style={{ color: "var(--text-secondary)" }}
+            aria-label="Next testimonial"
+          >
+            <ChevronRight size={24} />
+          </button>
+
           {testimonials.map((t, i) => {
             const diff = (i - currentIndex + testimonials.length) % testimonials.length;
             
