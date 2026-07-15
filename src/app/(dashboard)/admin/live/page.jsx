@@ -236,6 +236,11 @@ function BroadcastPanel({ session, onEndSession, authToken, shouldRecord }) {
   const [activeSpeaker, setActiveSpeaker] = useState(null);
   const [blockedUsers, setBlockedUsers] = useState([]);
   const [activeNotification, setActiveNotification] = useState(null);
+  
+  // Settings tab states
+  const [disableChat, setDisableChat] = useState(false);
+  const [privateChat, setPrivateChat] = useState(false);
+  const [disableHandraise, setDisableHandraise] = useState(false);
 
   // Active Tab for sidebar
   const [activeTab, setActiveTab] = useState("chat");
@@ -429,6 +434,9 @@ function BroadcastPanel({ session, onEndSession, authToken, shouldRecord }) {
         activeSpeaker,
         raisedHands,
         blockedUsers,
+        disableChat,
+        privateChat,
+        disableHandraise,
       };
       const encoder = new TextEncoder();
       const encodedPayload = encoder.encode(JSON.stringify(payload));
@@ -545,7 +553,12 @@ function BroadcastPanel({ session, onEndSession, authToken, shouldRecord }) {
       sendStateSync();
     }, 3000);
     return () => clearInterval(interval);
-  }, [room, activeSpeaker, raisedHands, blockedUsers]);
+  }, [room, activeSpeaker, raisedHands, blockedUsers, disableChat, privateChat, disableHandraise]);
+
+  // Sync settings immediately on change
+  useEffect(() => {
+    sendStateSync();
+  }, [disableChat, privateChat, disableHandraise]);
 
   // Handle incoming data (raise-hand-actions topic)
   useEffect(() => {
@@ -967,6 +980,12 @@ function BroadcastPanel({ session, onEndSession, authToken, shouldRecord }) {
             controlledActiveTab={activeTab}
             onTabChange={setActiveTab}
             showPollCreatorExternal={showPollCreatorSignal}
+            disableChat={disableChat}
+            setDisableChat={setDisableChat}
+            privateChat={privateChat}
+            setPrivateChat={setPrivateChat}
+            disableHandraise={disableHandraise}
+            setDisableHandraise={setDisableHandraise}
           />
         </div>
       </div>
@@ -1443,7 +1462,7 @@ export default function AdminLivePage() {
   // ─── Pre-Session Form (Setup) ──────────────────────────────────────
   if (!session || !livekitToken) {
     return (
-      <div className="h-full w-full overflow-y-auto pb-32 pt-6">
+      <div className="flex-1 overflow-y-auto w-full custom-scrollbar pb-10 pr-1">
         <div className="max-w-7xl mx-auto space-y-12 lg:space-y-0 lg:grid lg:grid-cols-[1.3fr_1fr] lg:gap-12 animate-fade-in px-4 sm:px-6 lg:px-8">
           
           {/* Left Column: Setup Form */}
@@ -2004,10 +2023,10 @@ export default function AdminLivePage() {
                     </div>
                   );
                 })()}
-              </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
     );
   }

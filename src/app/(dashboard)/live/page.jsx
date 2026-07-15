@@ -268,6 +268,12 @@ function VideoPlayer({
   setMyPollAnswer,
   activeTab,
   onShowPollsTab,
+  disableChat = false,
+  setDisableChat = () => { },
+  privateChat = false,
+  setPrivateChat = () => { },
+  disableHandraise = false,
+  setDisableHandraise = () => { },
 }) {
   const [isMuted, setIsMuted] = useState(false);
   const [isHostCameraHiddenLocal, setIsHostCameraHiddenLocal] = useState(false);
@@ -566,6 +572,9 @@ console.log(session)
           setActiveSpeaker(data.activeSpeaker);
           setRaisedHands(data.raisedHands || []);
           setBlockedUsers(data.blockedUsers || []);
+          setDisableChat(!!data.disableChat);
+          setPrivateChat(!!data.privateChat);
+          setDisableHandraise(!!data.disableHandraise);
 
           if (data.blockedUsers?.includes(user?.username)) {
             setIsHandRaised(false);
@@ -722,20 +731,23 @@ console.log(session)
         ) : (
           /* Raise Hand Button */
           <button
-            onClick={toggleRaiseHand}
-            disabled={blockedUsers?.includes(user?.username)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all mr-1 ${blockedUsers?.includes(user?.username)
-              ? "bg-red-500/10 text-red-500 border border-[var(--border-primary)] border-red-500/20 cursor-not-allowed"
-              : isHandRaised
+            onClick={disableHandraise ? undefined : toggleRaiseHand}
+            disabled={disableHandraise || blockedUsers?.includes(user?.username)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all mr-1 ${
+              disableHandraise
+                ? "opacity-40 cursor-not-allowed text-slate-500 bg-slate-800/10 border-slate-700/10"
+                : blockedUsers?.includes(user?.username)
+                ? "bg-red-500/10 text-red-500 border border-red-500/20 cursor-not-allowed"
+                : isHandRaised
                 ? "bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20 cursor-pointer"
                 : "cursor-pointer"
-              }`}
+            }`}
             style={
-              blockedUsers?.includes(user?.username)
+              disableHandraise || blockedUsers?.includes(user?.username)
                 ? {}
                 : isHandRaised
-                  ? {}
-                  : {
+                ? {}
+                : {
                     backgroundColor: "var(--bg-primary)",
                     border: "1px solid var(--border-primary)",
                     color: "var(--text-primary)"
@@ -743,13 +755,15 @@ console.log(session)
             }
             id="raise-hand-btn"
           >
-            <Hand size={14} className={isHandRaised && !blockedUsers?.includes(user?.username) ? "animate-bounce" : ""} />
+            <Hand size={14} className={isHandRaised && !blockedUsers?.includes(user?.username) && !disableHandraise ? "animate-bounce" : ""} />
             <span>
-              {blockedUsers?.includes(user?.username)
+              {disableHandraise
+                ? "Disabled"
+                : blockedUsers?.includes(user?.username)
                 ? "Blocked"
                 : isHandRaised
-                  ? "Hand Raised"
-                  : "Raise Hand"}
+                ? "Hand Raised"
+                : "Raise Hand"}
             </span>
           </button>
         )}
@@ -1009,10 +1023,7 @@ console.log(session)
           />
         )}
 
-        {/* Moving Watermark: constrained to the video player container */}
-        {user && (
-          <MovingWatermark username={user.username} email={user.email} />
-        )}
+
       </div>
 
       {/* Controls displayed below the shared screen in normal mode, or overlayed on hover in fullscreen */}
@@ -1166,6 +1177,11 @@ export default function LiveViewerPage() {
   const [raisedHands, setRaisedHands] = useState([]);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [blockedUsers, setBlockedUsers] = useState([]);
+  
+  // Settings sync states
+  const [disableChat, setDisableChat] = useState(false);
+  const [privateChat, setPrivateChat] = useState(false);
+  const [disableHandraise, setDisableHandraise] = useState(false);
 
   // Lifted poll states from VideoPlayer
   const [activePoll, setActivePoll] = useState(null);         // { id, question, options, timerSecs, startedAt }
@@ -1552,6 +1568,12 @@ export default function LiveViewerPage() {
                     setIsChatOpen(true);
                     setActiveTab("polls");
                   }}
+                  disableChat={disableChat}
+                  setDisableChat={setDisableChat}
+                  privateChat={privateChat}
+                  setPrivateChat={setPrivateChat}
+                  disableHandraise={disableHandraise}
+                  setDisableHandraise={setDisableHandraise}
                 />
               </div>
 
@@ -1576,6 +1598,12 @@ export default function LiveViewerPage() {
                   controlledActiveTab={activeTab}
                   onTabChange={setActiveTab}
                   authToken={authToken}
+                  disableChat={disableChat}
+                  setDisableChat={setDisableChat}
+                  privateChat={privateChat}
+                  setPrivateChat={setPrivateChat}
+                  disableHandraise={disableHandraise}
+                  setDisableHandraise={setDisableHandraise}
                 />
               </div>
             </div>
