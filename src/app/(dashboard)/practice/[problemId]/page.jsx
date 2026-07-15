@@ -197,6 +197,7 @@ export default function PracticeWorkspace() {
     setDebugRunning(true);
     setDebugResult(null);
     try {
+      const code = editorCodes[selectedLanguage] || "";
       const hasRealToken = token && !token.startsWith("demo-") && !token.startsWith("local-");
       const headers = {
         "Content-Type": "application/json",
