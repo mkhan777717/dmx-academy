@@ -45,10 +45,16 @@ export default function Navbar() {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: largeDuration, ease: premiumEase }}
-        className="fixed top-0 left-0 right-0 z-50 px-6 py-0 md:px-12"
-        style={{ backgroundColor: "var(--glass-bg)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: "1px solid var(--border-subtle)" }}
+        className="fixed top-4 left-0 right-0 z-50 mx-auto w-[95%] md:w-[90%] max-w-[1310px] rounded-full px-6 py-0 md:px-8 h-16 flex items-center shadow-lg"
+        style={{
+          backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.65)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.2)" : "0 8px 32px rgba(0,0,0,0.08)"
+        }}
       >
-        <div className="mx-auto max-w-[1400px]">
+        <div className="w-full">
           <nav
             className="relative flex items-center justify-between h-16"
           >

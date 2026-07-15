@@ -96,7 +96,7 @@ function TickerStrip({ tok }) {
     <div className="overflow-hidden border-y" style={{ borderColor: tok.tickerBorder }}>
       <div className="ticker-track py-2.5">
         {items.map((t, i) => (
-          <span key={i} className="mx-8 text-[10px] font-medium tracking-[0.18em] uppercase whitespace-nowrap" style={{ color: tok.tickerText }}>
+          <span key={i} className="mx-8 text-[14px] font-medium tracking-[0.18em] uppercase whitespace-nowrap" style={{ color: tok.tickerText }}>
             {t}
             <span className="mx-8" style={{ color: tok.tickerDot }}>·</span>
           </span>
@@ -177,7 +177,6 @@ export default function Hero() {
       }}
     >
 
-
       {/* Noise texture overlay */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
@@ -188,13 +187,8 @@ export default function Hero() {
         }}
       />
 
-      {/* Ticker */}
-      <div className="absolute top-[64px] left-0 right-0 z-10">
-        <TickerStrip tok={tok} />
-      </div>
-
       {/* Main content */}
-      <div className="relative z-10 mx-auto max-w-[1400px] px-6 md:px-12 min-h-[85vh] flex flex-col justify-center pointer-events-none">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-6 md:px-12 min-h-[100vh] flex flex-col justify-center pointer-events-none">
         <div className="pt-32 pb-12 pointer-events-auto">
 
           {/* Top label */}
@@ -254,7 +248,6 @@ export default function Hero() {
                 </div>
               ))}
             </div>
-
 
           </div>
 
@@ -349,46 +342,12 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Stats strip */}
-          {/* <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.55, ease: ease.out }}
-            className="grid grid-cols-2 sm:grid-cols-4 mt-16 overflow-hidden"
-            style={{
-              border:       `1px solid ${tok.statBorder}`,
-              borderRadius: 14,
-              transition:   "border-color 0.4s",
-            }}
-          >
-            {stats.map((s, i) => (
-              <div
-                key={s.label}
-                className="flex flex-col gap-1.5 px-6 py-5"
-                style={{
-                  background:  tok.statBg,
-                  borderRight: i < 3 ? `1px solid ${tok.statBorder}` : "none",
-                  transition:  "background 0.4s, border-color 0.4s",
-                }}
-              >
-                <span className="text-[1.6rem] font-black tracking-tight tabular-nums" style={{ color: tok.statNum, transition: "color 0.4s" }}>
-                  {mounted ? <Counter to={s.value} suffix={s.suffix} delay={900 + i * 110} isDecimal={s.isDecimal} /> : "—"}
-                </span>
-                <span className="text-[10px] font-medium tracking-[0.1em] uppercase" style={{ color: tok.statLabel, transition: "color 0.4s" }}>
-                  {s.label}
-                </span>
-              </div>
-            ))}
-          </motion.div> */}
-
+          {/* Ticker */}
+          <div className="mt-10 left-0 right-0 z-10">
+            <TickerStrip tok={tok} />
+          </div>
         </div>
       </div>
-
-      {/* Bottom fade */}
-      {/* <div
-        className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none z-10"
-        style={{ background: `linear-gradient(to bottom, transparent, ${tok.bgFade})` }}
-      /> */}
     </section>
   );
 }

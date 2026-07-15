@@ -14,7 +14,7 @@ export default function Home() {
     <div className="relative flex min-h-screen flex-col overflow-hidden" style={{ backgroundColor: "var(--bg-primary)" }}>
       {/* Global chrome */}
       <ScrollProgress />
-      {/* <CinematicCursor /> */}
+      <CinematicCursor />
 
       {/* Navigation */}
       <Navbar />
@@ -22,15 +22,14 @@ export default function Home() {
       {/* Page content */}
       <main className="flex-grow">
         <Hero />
-
-        {/* <Tracks /> */}
-        {/* <Process /> */}
-        {/* <Testimonials /> */}
-        {/* <Pricing /> */}
-        {/* <CTA /> */}
+        <Tracks />
+        <Process />
+        <Testimonials />
+        <Pricing />
+        <CTA />
       </main>
 
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 }
