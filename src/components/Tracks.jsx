@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import useTheme from "@/customHooks/useTheme";
 import TickerStrip from "./TickerStrip";
@@ -69,10 +69,71 @@ export default function Tracks() {
   const tok = getThemeTokens(dark);
 
   const featuresRef = useRef(null);
+  const carouselRef = useRef(null);
+  const mobileCarouselRef = useRef(null);
+
+  const [scrollDist, setScrollDist] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [activeFeature, setActiveFeature] = useState(0);
+
+  useLayoutEffect(() => {
+    const measureCarousel = () => {
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      setViewportHeight(window.innerHeight);
+
+      if (!isDesktop || !carouselRef.current) {
+        setScrollDist(0);
+        return;
+      }
+
+      const trackWidth = carouselRef.current.scrollWidth;
+      const viewportWidth = window.innerWidth;
+      setScrollDist(Math.max(0, trackWidth - viewportWidth));
+    };
+
+    measureCarousel();
+    const rafId = requestAnimationFrame(measureCarousel);
+
+    window.addEventListener("resize", measureCarousel);
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    mediaQuery.addEventListener("change", measureCarousel);
+
+    const observer = carouselRef.current
+      ? new ResizeObserver(measureCarousel)
+      : null;
+    if (carouselRef.current) observer?.observe(carouselRef.current);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", measureCarousel);
+      mediaQuery.removeEventListener("change", measureCarousel);
+      observer?.disconnect();
+    };
+  }, [dark]);
+
+  useEffect(() => {
+    const el = mobileCarouselRef.current;
+    if (!el) return;
+
+    const onScroll = () => {
+      const card = el.querySelector("[data-feature-card]");
+      if (!card) return;
+      const cardWidth = card.getBoundingClientRect().width;
+      const gap = 16;
+      const index = Math.round(el.scrollLeft / (cardWidth + gap));
+      const cardCount = el.querySelectorAll("[data-feature-card]").length;
+      setActiveFeature(Math.min(Math.max(index, 0), cardCount - 1));
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: featuresRef,
+    offset: ["start start", "end end"],
   });
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-78%"]);
+  const x = useTransform(scrollYProgress, (progress) => -progress * scrollDist);
 
   const [activeJourney, setActiveJourney] = useState(0);
 
@@ -681,8 +742,9 @@ export default function Tracks() {
   ];
 
   return (
+    <>
     <section
-      className="relative w-full overflow-hidden py-32"
+      className="relative w-full py-32"
       style={{
         background: dark ? "#000000" : "#f8fafc",
         color: dark ? "#ffffff" : "#020617",
@@ -937,77 +999,135 @@ export default function Tracks() {
       </div>
 
       <div className="editorial-line  mb-40" />
+    </section>
 
-      {/* 5. Premium Bento Grid (Features) */}
-      {/* Desktop Version: Scroll-Linked Horizontal Lock */}
-      <div ref={featuresRef} className="hidden md:block relative h-[450vh] w-full">
-        <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden">
-          <div className="max-w-[1400px] mx-auto px-12 w-full mb-10 relative z-10 text-left">
+      {/* 5. Platform Features — Scroll-Linked Horizontal Carousel */}
+
+      {/* Desktop: sticky scroll — section pins, cards slide left, then page scroll continues */}
+      <section
+        ref={featuresRef}
+        aria-label="Platform Features carousel"
+        className="hidden md:block relative w-full"
+        style={{
+          height: scrollDist > 0 && viewportHeight > 0
+            ? scrollDist + viewportHeight
+            : "100vh",
+        }}
+      >
+        <div
+          className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden z-20"
+          style={{
+            background: dark ? "#000000" : "#f8fafc",
+          }}
+        >
+          {/* Heading */}
+          <div className="px-12 w-full mb-8 relative z-10">
             <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-2 block">// ECOSYSTEM ADVANTAGES</span>
-            <h3 className="text-5xl md:text-7xl font-bold tracking-tighter">Platform Features.</h3>
+            <h3 className="text-6xl md:text-7xl font-bold tracking-tighter">Platform Features.</h3>
           </div>
-          
-          <motion.div style={{ x }} className="flex gap-8 pl-[10vw] pr-[20vw] w-max select-none">
-            {featuresList.map((feat, index) => (
-              <div 
-                key={index}
-                className="w-[460px] h-[380px] shrink-0 p-10 rounded-[2.5rem] border relative overflow-hidden flex flex-col justify-between group shadow-2xl"
-                style={{
-                  background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)",
-                  borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
-                }}
-              >
-                <div>
-                  <span className={`text-[10px] font-bold tracking-[0.2em] uppercase mb-3 block text-${feat.c}-500`}>// {feat.label}</span>
-                  <h4 className="text-2xl font-bold mb-3 tracking-tight">{feat.title}</h4>
-                  <p className="opacity-60 text-sm leading-relaxed max-w-xs">{feat.desc}</p>
-                </div>
-                {feat.visual}
-              </div>
-            ))}
-          </motion.div>
 
-          <div className="max-w-[1200px] mx-auto w-full px-12 mt-12 relative z-10">
-            <div className="w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                style={{ scaleX: scrollYProgress, transformOrigin: "left" }} 
-                className="h-full bg-emerald-500" 
-              />
+          {/* Horizontal sliding track */}
+          <div className="w-full overflow-hidden">
+            <motion.div
+              ref={carouselRef}
+              style={{ x }}
+              className="flex gap-6 pl-12 pr-32 w-max"
+            >
+              {featuresList.map((feat, index) => (
+                <div
+                  key={index}
+                  className="w-[440px] h-[370px] shrink-0 p-10 rounded-[2.5rem] border relative overflow-hidden flex flex-col justify-between group shadow-2xl"
+                  style={{
+                    background: dark ? "rgba(255,255,255,0.025)" : "rgba(255,255,255,1)",
+                    borderColor: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"
+                  }}
+                >
+                  <div>
+                    <span className={`text-[10px] font-bold tracking-[0.2em] uppercase mb-3 block text-${feat.c}-500`}>// {feat.label}</span>
+                    <h4 className="text-[1.35rem] font-bold mb-3 tracking-tight leading-snug">{feat.title}</h4>
+                    <p className="text-sm leading-relaxed max-w-[260px]" style={{ opacity: 0.55 }}>{feat.desc}</p>
+                  </div>
+                  {feat.visual}
+                </div>
+              ))}
+            </motion.div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="px-12 mt-8 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-0.5 rounded-full overflow-hidden" style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }}>
+                <motion.div
+                  style={{ scaleX: scrollYProgress, transformOrigin: "left" }}
+                  className="h-full bg-emerald-500 rounded-full"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Mobile Version: Horizontal Swipeable list */}
-      <div className="block md:hidden max-w-[1400px] mx-auto px-6 mb-40 relative z-10">
-        <div className="mb-10 text-left">
+      {/* Mobile: horizontally swipeable cards */}
+      <section
+        className="block md:hidden mb-32 relative z-10 py-8"
+        style={{
+          background: dark ? "#000000" : "#f8fafc",
+          color: dark ? "#ffffff" : "#020617",
+        }}
+      >
+        <div className="px-5 sm:px-6 mb-8">
           <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-2 block">// ECOSYSTEM ADVANTAGES</span>
-          <h3 className="text-4xl font-bold tracking-tighter">Platform Features.</h3>
+          <h3 className="text-3xl sm:text-4xl font-bold tracking-tighter">Platform Features.</h3>
         </div>
-        <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-6">
+        <div
+          ref={mobileCarouselRef}
+          className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 px-5 sm:px-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {featuresList.map((feat, index) => (
-            <div 
+            <div
               key={index}
-              className="w-[300px] h-[340px] shrink-0 p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between snap-center shadow-xl group"
+              data-feature-card
+              className="w-[85vw] sm:w-[78vw] max-w-[340px] min-h-[360px] shrink-0 snap-center rounded-[2rem] border relative overflow-hidden flex flex-col shadow-xl"
               style={{
-                background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)",
-                borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
+                background: dark ? "rgba(255,255,255,0.025)" : "rgba(255,255,255,1)",
+                borderColor: dark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)"
               }}
             >
-              <div>
+              <div className="p-5 sm:p-6 pb-3">
                 <span className={`text-[9px] font-bold tracking-[0.2em] uppercase mb-2 block text-${feat.c}-500`}>// {feat.label}</span>
-                <h4 className="text-xl font-bold mb-2 tracking-tight">{feat.title}</h4>
-                <p className="opacity-60 text-xs leading-relaxed">{feat.desc}</p>
+                <h4 className="text-base sm:text-lg font-bold mb-2 tracking-tight leading-tight">{feat.title}</h4>
+                <p className="text-xs sm:text-sm leading-relaxed" style={{ opacity: 0.55 }}>{feat.desc}</p>
               </div>
-              <div className="h-[120px] relative w-full overflow-hidden mt-4">
+              <div className="relative flex-1 min-h-[150px] sm:min-h-[160px] w-full overflow-hidden">
                 {feat.visual}
               </div>
             </div>
           ))}
         </div>
-      </div>
+        <div className="flex justify-center gap-2 mt-4 px-5">
+          {featuresList.map((_, i) => (
+            <div
+              key={i}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{
+                width: activeFeature === i ? "1.25rem" : "0.375rem",
+                background: activeFeature === i
+                  ? "#10b981"
+                  : dark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)"
+              }}
+            />
+          ))}
+        </div>
+      </section>
 
-
+    <section
+      className="relative w-full pb-32"
+      style={{
+        background: dark ? "#000000" : "#f8fafc",
+        color: dark ? "#ffffff" : "#020617",
+        transition: "background 0.4s ease"
+      }}
+    >
       <div className="editorial-line  mb-40" />
 
       {/* 6. Companies Students Can Reach */}
@@ -1020,5 +1140,6 @@ export default function Tracks() {
         <InfiniteCompanyTicker companies={companies} dark={dark} />
       </div>
     </section>
+    </>
   );
 }
