@@ -175,6 +175,9 @@ export default function DashboardLayout({ children }) {
 
   if (isLoginRoute) return <>{children}</>;
 
+  const isPracticeWorkspace = pathname.startsWith("/practice/");
+  if (isPracticeWorkspace) return <>{children}</>;
+
   const isPublicRoute = !dashboardUser && (pathname.startsWith('/practice') || pathname.startsWith('/contest') || pathname.startsWith('/courses') || pathname.startsWith('/live-classes'));
 
   if (isPublicRoute) {
@@ -209,12 +212,10 @@ export default function DashboardLayout({ children }) {
       (isBatchMgr || isInstAdmin || isMentor) && { label: "AI Viva", href: "/mentor/viva/questions", icon: Brain },
       (isBatchMgr || isInstAdmin || isMentor) && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText },
       isSuperAdmin && { label: "AI Settings", href: "/admin/viva/ai-settings", icon: Settings },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "All Contests", href: "/admin/contests", icon: Trophy },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Create Contest", href: "/admin/contests/new", icon: PlusCircle },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "All Problems", href: "/admin/problems", icon: Code },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Contests", href: "/admin/contests", icon: Trophy },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Problems", href: "/admin/problems", icon: Code },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Go Live", href: "/admin/live", icon: Radio },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Arcade Questions", href: "/admin/arcade", icon: Gamepad2 },
-      { label: "Public Lobby", href: "/contest", icon: List },
       { label: "Course Catalog", href: "/courses", icon: BookOpen }
     ].filter(Boolean);
   }
