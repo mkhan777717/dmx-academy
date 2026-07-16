@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import useTheme from "@/customHooks/useTheme";
 import TickerStrip from "./TickerStrip";
 import { getThemeTokens } from "@/utils/themeTokens";
@@ -68,7 +68,229 @@ export default function Tracks() {
   const ease = [0.16, 1, 0.3, 1];
   const tok = getThemeTokens(dark);
 
+  const featuresRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: featuresRef,
+  });
+  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-78%"]);
+
   const [activeJourney, setActiveJourney] = useState(0);
+
+  const featuresList = [
+    {
+      label: "ENVIRONMENT",
+      title: "Interactive Coding Environment",
+      desc: "Write code directly inside a fully integrated, VS Code-like browser editor with real-time live preview rendering.",
+      c: "emerald",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[240px] md:w-[280px] h-[140px] md:h-[160px] rounded-xl border border-white/10 bg-neutral-950 p-2 shadow-2xl overflow-hidden font-mono text-[8px] md:text-[9px] flex flex-col justify-between translate-y-4 group-hover:translate-y-1 transition-transform duration-500 pointer-events-none">
+          <div className="flex items-center justify-between border-b border-white/5 pb-1 mb-1.5">
+            <div className="flex items-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+              <span className="text-white/40 ml-1">App.jsx</span>
+            </div>
+            <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded text-[7px]">PREVIEW</span>
+          </div>
+          <div className="flex-1 flex gap-2">
+            <div className="flex-1 text-left text-white/60 space-y-0.5 leading-tight">
+              <div><span className="text-purple-400">const</span> App = () =&gt; &#123;</div>
+              <div className="pl-2"><span className="text-purple-400">return</span> (</div>
+              <div className="pl-4 text-blue-400">&lt;<span className="text-red-400">div</span>&gt;</div>
+              <div className="pl-6 text-white/90 flex items-center">
+                <span>&lt;<span className="text-red-400">h1</span>&gt;Live Preview&lt;/<span className="text-red-400">h1</span>&gt;</span>
+                <motion.span animate={{ opacity: [0, 1, 0] }} transition={{ duration: 0.8, repeat: Infinity }} className="w-0.5 h-2.5 bg-white ml-0.5" />
+              </div>
+              <div className="pl-4 text-blue-400">&lt;/<span className="text-red-400">div</span>&gt;</div>
+              <div className="pl-2">)</div>
+              <div>&#125;</div>
+            </div>
+            <div className="w-[80px] md:w-[90px] rounded-lg bg-neutral-900 border border-white/5 p-1.5 flex flex-col justify-between">
+              <div className="w-full h-1 bg-white/5 rounded-full" />
+              <div className="flex-1 flex items-center justify-center">
+                <motion.span animate={{ scale: [0.95, 1.05, 0.95] }} transition={{ duration: 3, repeat: Infinity }} className="text-[8px] font-bold text-white text-center leading-none">Live Preview</motion.span>
+              </div>
+              <div className="w-full h-1 bg-emerald-500/20 rounded-full overflow-hidden">
+                <motion.div animate={{ width: ["10%", "95%", "10%"] }} transition={{ duration: 5, repeat: Infinity }} className="h-full bg-emerald-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: "PROJECTS",
+      title: "Project-Based Learning",
+      desc: "Build realistic clones of Spotify, Netflix, Airbnb, and more to compile a competitive developer portfolio.",
+      c: "red",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[240px] md:w-[280px] h-[100px] md:h-[120px] flex items-center justify-center gap-2 md:gap-4 translate-y-4 group-hover:translate-y-1 transition-transform duration-500">
+          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="w-12 h-12 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shadow-lg">
+            <span className="font-bold text-[9px] text-emerald-400">Spotify</span>
+          </motion.div>
+          <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} className="w-16 h-16 rounded-lg bg-red-500/20 border border-red-500/40 flex items-center justify-center shadow-2xl z-10">
+            <span className="font-black text-[10px] text-red-400">NETFLIX</span>
+          </motion.div>
+          <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="w-12 h-12 rounded-lg bg-pink-500/20 border border-pink-500/40 flex items-center justify-center shadow-lg">
+            <span className="font-bold text-[9px] text-pink-400">Airbnb</span>
+          </motion.div>
+        </div>
+      )
+    },
+    {
+      label: "PROGRESS",
+      title: "Progress Tracking",
+      desc: "Detailed skill radar charts and milestone dashboards map your full-stack developer growth.",
+      c: "amber",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[220px] md:w-[260px] h-[120px] p-3 rounded-xl border border-white/5 bg-black/40 flex flex-col justify-between translate-y-4 group-hover:translate-y-1 transition-transform duration-500">
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <div className="flex justify-between text-[8px] text-white/50">
+                <span>Frontend Architecture</span>
+                <span className="font-bold text-white">82%</span>
+              </div>
+              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div animate={{ width: ["0%", "82%"] }} transition={{ duration: 1.5, ease: "easeOut" }} className="h-full bg-amber-500 rounded-full" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex justify-between text-[8px] text-white/50">
+                <span>Backend Integration</span>
+                <span className="font-bold text-white">64%</span>
+              </div>
+              <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div animate={{ width: ["0%", "64%"] }} transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }} className="h-full bg-amber-500 rounded-full" />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between text-[8px] font-mono text-white/30 border-t border-white/5 pt-1.5">
+            <span>2/3 PROJECTS COMPLETED</span>
+            <span className="text-emerald-400">ON TRACK</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: "COMMUNITY",
+      title: "Mentorship & Community",
+      desc: "Collaborate on peer code reviews and get detailed roadmap help directly from active engineering mentors.",
+      c: "purple",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[240px] md:w-[260px] p-3 rounded-xl border border-purple-500/20 bg-black/40 flex gap-2 items-start translate-y-4 group-hover:translate-y-1 transition-transform duration-500 text-left">
+          <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center font-bold text-[10px] text-white shrink-0">M</div>
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex justify-between items-center mb-0.5">
+              <span className="text-[8px] font-bold text-white">Mentor Review</span>
+              <span className="text-[7px] text-white/30">Just now</span>
+            </div>
+            <p className="text-[9px] text-white/70 leading-snug">"Great folder design! Just optimize lines 12-15 as a custom react hook."</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: "CREDENTIALS",
+      title: "Verified Certification",
+      desc: "Receive secure, shareable, cryptographically signed course completion certificates.",
+      c: "cyan",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[220px] md:w-[250px] h-[100px] md:h-[120px] rounded-xl border border-cyan-500/20 bg-neutral-950/60 p-3 flex flex-col justify-between translate-y-4 group-hover:translate-y-1 transition-transform duration-500 overflow-hidden relative">
+          <motion.div animate={{ x: ["-100%", "200%"] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} className="absolute inset-y-0 w-8 bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent skew-x-12" />
+          <div className="flex justify-between items-start">
+            <span className="text-[8px] font-mono text-cyan-400">DMX_VERIFIED</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-cyan-500"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div className="text-left leading-none">
+            <h5 className="text-[9px] font-bold text-white tracking-tight uppercase">FULL-STACK CERTIFICATE</h5>
+            <span className="text-[7.5px] text-white/40 font-mono block mt-1">hash // 7d8c_92a1_f10e</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: "ASSISTANCE",
+      title: "AI-Powered Assistance",
+      desc: "Personalized learning paths, interactive debug guides, and smart context hints as you build.",
+      c: "blue",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[240px] md:w-[260px] p-3 rounded-xl border border-blue-500/20 bg-black/40 flex flex-col gap-2 translate-y-4 group-hover:translate-y-1 transition-transform duration-500">
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <span className="text-[8px] font-mono text-blue-400">DEBUG DIAGNOSTIC READY</span>
+          </div>
+          <p className="text-[9px] text-white/80 font-mono leading-tight text-left">Line 24: Missing closing tag &lt;/div&gt;</p>
+          <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+            <motion.div animate={{ x: ["-100%", "100%"] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-1/2 h-full bg-blue-500" />
+          </div>
+        </div>
+      )
+    },
+    {
+      label: "ADVANCEMENT",
+      title: "Career Resources",
+      desc: "Export project achievements instantly. Access interview simulators, resume builders, and job boards.",
+      c: "yellow",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[220px] md:w-[260px] flex flex-col gap-1.5 translate-y-4 group-hover:translate-y-1 transition-transform duration-500">
+          <div className="p-2 bg-white/5 rounded-lg border border-white/5 flex justify-between items-center shadow-lg">
+            <div className="flex items-center gap-1.5 text-left">
+              <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[8px] font-bold text-white">G</div>
+              <div>
+                <h5 className="text-[8px] font-bold text-white leading-none">Google Referral</h5>
+                <span className="text-[7px] text-white/50">SWE Internship</span>
+              </div>
+            </div>
+            <span className="text-[7px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">READY</span>
+          </div>
+          <div className="p-2 bg-white/5 rounded-lg border border-white/5 flex justify-between items-center shadow-lg opacity-40">
+            <div className="flex items-center gap-1.5 text-left">
+              <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[8px] font-bold text-white">M</div>
+              <div>
+                <h5 className="text-[8px] font-bold text-white leading-none">Meta Referral</h5>
+                <span className="text-[7px] text-white/50">Frontend Associate</span>
+              </div>
+            </div>
+            <span className="text-[7px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded-full">IN REVIEW</span>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: "CURRICULUM",
+      title: "Flexible Learning Paths",
+      desc: "Switch roadmaps seamlessly at any point. Customize self-paced tracks for frontend, backend, or full-stack paths.",
+      c: "indigo",
+      visual: (
+        <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[240px] md:w-[260px] h-[100px] rounded-xl border border-white/5 bg-neutral-900/40 p-3 flex flex-col justify-between translate-y-4 group-hover:translate-y-1 transition-transform duration-500 pointer-events-none">
+          <div className="flex justify-between items-center text-[8px] font-mono text-white/50">
+            <span>STATION MAP</span>
+            <span className="text-indigo-400">ACTIVE</span>
+          </div>
+          <div className="relative flex-1 flex items-center justify-around">
+            <div className="absolute left-[10%] right-[10%] h-0.5 bg-white/10" />
+            <motion.div className="absolute left-[10%] right-[10%] h-0.5 bg-indigo-500" initial={{ width: "0%" }} whileInView={{ width: "80%" }} viewport={{ once: true }} transition={{ duration: 2 }} />
+            <div className="relative flex flex-col items-center z-10">
+              <div className="w-4 h-4 rounded-full bg-indigo-500 border-2 border-neutral-900 flex items-center justify-center"><div className="w-1 h-1 rounded-full bg-white" /></div>
+              <span className="text-[7px] text-white mt-1 font-bold">FRONTEND</span>
+            </div>
+            <div className="relative flex flex-col items-center z-10">
+              <div className="w-4 h-4 rounded-full bg-indigo-500 border-2 border-neutral-900 flex items-center justify-center"><div className="w-1 h-1 rounded-full bg-white animate-pulse" /></div>
+              <span className="text-[7px] text-white mt-1 font-bold">DATABASE</span>
+            </div>
+            <div className="relative flex flex-col items-center z-10">
+              <div className="w-4 h-4 rounded-full bg-neutral-800 border-2 border-neutral-900" />
+              <span className="text-[7px] text-white/40 mt-1 font-bold">DEPLOY</span>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  ];
 
   const studentJourneys = [
     {
@@ -717,133 +939,73 @@ export default function Tracks() {
       <div className="editorial-line  mb-40" />
 
       {/* 5. Premium Bento Grid (Features) */}
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12 mb-40 relative z-10">
-        <div className="text-center mb-16">
-          <h3 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4">Platform Features.</h3>
+      {/* Desktop Version: Scroll-Linked Horizontal Lock */}
+      <div ref={featuresRef} className="hidden md:block relative h-[450vh] w-full">
+        <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden">
+          <div className="max-w-[1400px] mx-auto px-12 w-full mb-10 relative z-10 text-left">
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-2 block">// ECOSYSTEM ADVANTAGES</span>
+            <h3 className="text-5xl md:text-7xl font-bold tracking-tighter">Platform Features.</h3>
+          </div>
+          
+          <motion.div style={{ x }} className="flex gap-8 pl-[10vw] pr-[20vw] w-max select-none">
+            {featuresList.map((feat, index) => (
+              <div 
+                key={index}
+                className="w-[460px] h-[380px] shrink-0 p-10 rounded-[2.5rem] border relative overflow-hidden flex flex-col justify-between group shadow-2xl"
+                style={{
+                  background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)",
+                  borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
+                }}
+              >
+                <div>
+                  <span className={`text-[10px] font-bold tracking-[0.2em] uppercase mb-3 block text-${feat.c}-500`}>// {feat.label}</span>
+                  <h4 className="text-2xl font-bold mb-3 tracking-tight">{feat.title}</h4>
+                  <p className="opacity-60 text-sm leading-relaxed max-w-xs">{feat.desc}</p>
+                </div>
+                {feat.visual}
+              </div>
+            ))}
+          </motion.div>
+
+          <div className="max-w-[1200px] mx-auto w-full px-12 mt-12 relative z-10">
+            <div className="w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
+              <motion.div 
+                style={{ scaleX: scrollYProgress, transformOrigin: "left" }} 
+                className="h-full bg-emerald-500" 
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]">
-
-          {/* Large AI Mentor block */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease }}
-            className="md:col-span-2 md:row-span-2 rounded-[2.5rem] border p-12 relative overflow-hidden flex flex-col justify-between"
-            style={{
-              background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)",
-              borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
-            }}
-          >
-            <div className="relative z-10 max-w-md">
-              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-4 block">AI Learning Experience</span>
-              <h4 className="text-4xl md:text-6xl font-bold mb-6 tracking-tighter">Meet your<br />AI Mentor.</h4>
-              <ul className="space-y-4 opacity-60 text-lg">
-                <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Explains code blocks visually</li>
-                <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Reviews and grades projects</li>
-                <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Conducts live mock interviews</li>
-                <li className="flex items-center gap-3"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Personalizes your roadmap</li>
-              </ul>
-            </div>
-            {/* Visual illustration of AI avatar */}
-            <div className="absolute right-0 bottom-0 w-[400px] h-[400px] pointer-events-none">
-              <div className="absolute inset-0 bg-emerald-500/20 blur-[80px] rounded-full translate-x-1/4 translate-y-1/4 animate-pulse" style={{ animationDuration: '4s' }} />
-              <div className="absolute inset-20 bg-cyan-500/20 blur-[60px] rounded-full translate-x-1/3 translate-y-1/3" />
-            </div>
-          </motion.div>
-
-          {/* Coding Playground Preview */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1, ease }}
-            className="rounded-[2.5rem] border p-8 flex flex-col justify-between relative overflow-hidden"
-            style={{
-              background: dark ? "#0a0a0a" : "#1e1e1e",
-              color: "#ffffff",
-              borderColor: dark ? "rgba(255,255,255,0.08)" : "transparent"
-            }}
-          >
-            <div>
-              <h4 className="text-2xl font-bold mb-2 tracking-tight">Coding Playground</h4>
-              <p className="opacity-60 text-sm">Large VS Code UI built directly into your browser.</p>
-            </div>
-            <div className="font-mono text-[11px] opacity-70 mt-8 bg-black/50 p-4 rounded-xl border border-white/10">
-              <span className="text-emerald-400">~/project</span> $ npm run dev<br />
-              <span className="text-blue-400">&gt; compiling...</span><br />
-              <span className="text-green-400">✓ ready in 234ms</span><br />
-              <span className="animate-pulse">_</span>
-            </div>
-          </motion.div>
-
-          {/* Career Dashboard */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2, ease }}
-            className="rounded-[2.5rem] border p-8 flex flex-col justify-between relative overflow-hidden"
-            style={{
-              background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)",
-              borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
-            }}
-          >
-            <h4 className="text-2xl font-bold mb-6 tracking-tight">Career Dashboard</h4>
-            <div className="space-y-4 mt-auto">
-              <div className="flex justify-between items-center p-3 rounded-xl" style={{ background: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }}>
-                <span className="opacity-60 text-sm font-medium">Progress</span>
-                <span className="font-bold text-emerald-500">86%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl" style={{ background: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }}>
-                <span className="opacity-60 text-sm font-medium">Interview Score</span>
-                <span className="font-bold">91%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl" style={{ background: dark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)" }}>
-                <span className="opacity-60 text-sm font-medium">Global Rank</span>
-                <span className="font-bold text-blue-500">Top 5%</span>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Bottom small blocks */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.3, ease }}
-            className="rounded-[2.5rem] border p-8 flex items-end relative overflow-hidden group"
-            style={{ background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)", borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <h4 className="text-2xl font-bold tracking-tight z-10">Resume Builder</h4>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.4, ease }}
-            className="rounded-[2.5rem] border p-8 flex items-end relative overflow-hidden group"
-            style={{ background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)", borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <h4 className="text-2xl font-bold tracking-tight z-10">Hackathons</h4>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.5, ease }}
-            className="rounded-[2.5rem] border p-8 flex items-end relative overflow-hidden group"
-            style={{ background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)", borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)" }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <h4 className="text-2xl font-bold tracking-tight z-10">Certificates</h4>
-          </motion.div>
+      {/* Mobile Version: Horizontal Swipeable list */}
+      <div className="block md:hidden max-w-[1400px] mx-auto px-6 mb-40 relative z-10">
+        <div className="mb-10 text-left">
+          <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-2 block">// ECOSYSTEM ADVANTAGES</span>
+          <h3 className="text-4xl font-bold tracking-tighter">Platform Features.</h3>
         </div>
+        <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-6">
+          {featuresList.map((feat, index) => (
+            <div 
+              key={index}
+              className="w-[300px] h-[340px] shrink-0 p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between snap-center shadow-xl group"
+              style={{
+                background: dark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,1)",
+                borderColor: dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"
+              }}
+            >
+              <div>
+                <span className={`text-[9px] font-bold tracking-[0.2em] uppercase mb-2 block text-${feat.c}-500`}>// {feat.label}</span>
+                <h4 className="text-xl font-bold mb-2 tracking-tight">{feat.title}</h4>
+                <p className="opacity-60 text-xs leading-relaxed">{feat.desc}</p>
+              </div>
+              <div className="h-[120px] relative w-full overflow-hidden mt-4">
+                {feat.visual}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       </div>
 
       <div className="editorial-line  mb-40" />
