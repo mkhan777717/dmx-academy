@@ -249,12 +249,6 @@ export default function DashboardLayout({ children }) {
           </Link>
         </div>
 
-        {!isSidebarCollapsed && (
-          <div className="px-4 pt-5 pb-2">
-            <span className="text-[9px] font-bold tracking-[0.18em] uppercase" style={{ color: "var(--text-muted)" }}>Navigation</span>
-          </div>
-        )}
-
         <nav className={`flex-1 px-2 py-2 space-y-0.5 ${isSidebarCollapsed ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'}`}>
           {sidebarLinks.map((link) => {
             const LinkIcon = link.icon;
