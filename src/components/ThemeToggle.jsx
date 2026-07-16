@@ -1,25 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import useThemeStore from "@/store/useThemeStore";
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme, initTheme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    initTheme();
     setMounted(true);
-    const stored = localStorage.getItem("academy_theme");
-    setIsDark(stored === "theme-dark");
   }, []);
-
-  const toggle = () => {
-    const next = isDark ? "theme-light" : "theme-dark";
-    document.documentElement.classList.remove("theme-light", "theme-dark");
-    document.documentElement.classList.add(next);
-    localStorage.setItem("academy_theme", next);
-    setIsDark(!isDark);
-  };
 
   if (!mounted) {
     return (
@@ -32,7 +24,7 @@ export default function ThemeToggle() {
 
   return (
     <button
-      onClick={toggle}
+      onClick={toggleTheme}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       id="theme-toggle-btn"
       suppressHydrationWarning
