@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import useTheme from "@/customHooks/useTheme";
 import TickerStrip from "./TickerStrip";
@@ -73,18 +73,30 @@ export default function Tracks() {
   const mobileCarouselRef = useRef(null);
 
   const [scrollDist, setScrollDist] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const [activeFeature, setActiveFeature] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const measureCarousel = () => {
-      if (!carouselRef.current) return;
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      setViewportHeight(window.innerHeight);
+
+      if (!isDesktop || !carouselRef.current) {
+        setScrollDist(0);
+        return;
+      }
+
       const trackWidth = carouselRef.current.scrollWidth;
       const viewportWidth = window.innerWidth;
       setScrollDist(Math.max(0, trackWidth - viewportWidth));
     };
 
     measureCarousel();
+    const rafId = requestAnimationFrame(measureCarousel);
+
     window.addEventListener("resize", measureCarousel);
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    mediaQuery.addEventListener("change", measureCarousel);
 
     const observer = carouselRef.current
       ? new ResizeObserver(measureCarousel)
@@ -92,10 +104,12 @@ export default function Tracks() {
     if (carouselRef.current) observer?.observe(carouselRef.current);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("resize", measureCarousel);
+      mediaQuery.removeEventListener("change", measureCarousel);
       observer?.disconnect();
     };
-  }, []);
+  }, [dark]);
 
   useEffect(() => {
     const el = mobileCarouselRef.current;
@@ -119,7 +133,7 @@ export default function Tracks() {
     target: featuresRef,
     offset: ["start start", "end end"],
   });
-  const x = useTransform(scrollYProgress, [0, 1], [0, -scrollDist]);
+  const x = useTransform(scrollYProgress, (progress) => -progress * scrollDist);
 
   const [activeJourney, setActiveJourney] = useState(0);
 
@@ -728,8 +742,9 @@ export default function Tracks() {
   ];
 
   return (
+    <>
     <section
-      className="relative w-full overflow-hidden py-32"
+      className="relative w-full py-32"
       style={{
         background: dark ? "#000000" : "#f8fafc",
         color: dark ? "#ffffff" : "#020617",
@@ -984,16 +999,27 @@ export default function Tracks() {
       </div>
 
       <div className="editorial-line  mb-40" />
+    </section>
 
       {/* 5. Platform Features — Scroll-Linked Horizontal Carousel */}
 
-      {/* Desktop: sticky scroll section — pins until last card, then scrolls on */}
-      <div
+      {/* Desktop: sticky scroll — section pins, cards slide left, then page scroll continues */}
+      <section
         ref={featuresRef}
+        aria-label="Platform Features carousel"
         className="hidden md:block relative w-full"
-        style={{ height: scrollDist > 0 ? `calc(${scrollDist}px + 100vh)` : "100vh" }}
+        style={{
+          height: scrollDist > 0 && viewportHeight > 0
+            ? scrollDist + viewportHeight
+            : "100vh",
+        }}
       >
-        <div className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden">
+        <div
+          className="sticky top-0 h-screen w-full flex flex-col justify-center overflow-hidden z-20"
+          style={{
+            background: dark ? "#000000" : "#f8fafc",
+          }}
+        >
           {/* Heading */}
           <div className="px-12 w-full mb-8 relative z-10">
             <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-2 block">// ECOSYSTEM ADVANTAGES</span>
@@ -1040,10 +1066,16 @@ export default function Tracks() {
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Mobile: horizontally swipeable cards */}
-      <div className="block md:hidden mb-32 relative z-10">
+      <section
+        className="block md:hidden mb-32 relative z-10 py-8"
+        style={{
+          background: dark ? "#000000" : "#f8fafc",
+          color: dark ? "#ffffff" : "#020617",
+        }}
+      >
         <div className="px-5 sm:px-6 mb-8">
           <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-emerald-500 mb-2 block">// ECOSYSTEM ADVANTAGES</span>
           <h3 className="text-3xl sm:text-4xl font-bold tracking-tighter">Platform Features.</h3>
@@ -1087,8 +1119,16 @@ export default function Tracks() {
             />
           ))}
         </div>
-      </div>
+      </section>
 
+    <section
+      className="relative w-full pb-32"
+      style={{
+        background: dark ? "#000000" : "#f8fafc",
+        color: dark ? "#ffffff" : "#020617",
+        transition: "background 0.4s ease"
+      }}
+    >
       <div className="editorial-line  mb-40" />
 
       {/* 6. Companies Students Can Reach */}
@@ -1101,5 +1141,6 @@ export default function Tracks() {
         <InfiniteCompanyTicker companies={companies} dark={dark} />
       </div>
     </section>
+    </>
   );
 }
