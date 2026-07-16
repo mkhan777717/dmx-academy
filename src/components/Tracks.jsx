@@ -1062,7 +1062,6 @@ export default function Tracks() {
                   className="h-full bg-emerald-500 rounded-full"
                 />
               </div>
-              <span className="text-[10px] font-mono shrink-0" style={{ opacity: 0.4 }}>SCROLL TO EXPLORE</span>
             </div>
           </div>
         </div>
