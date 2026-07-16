@@ -584,16 +584,9 @@ function QuestionCard({ q, type, onEdit, onDelete, canManage }) {
         {/* Content specific to type */}
         <div className="space-y-2">
           {type === "quiz" && (
-            <>
-              <p className="text-sm font-medium text-[var(--text-primary)] leading-relaxed">
-                {q.question}
-              </p>
-              {q.code && (
-                <pre className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] font-mono text-[11px] overflow-x-auto text-[var(--text-primary)] max-h-40">
-                  <code>{q.code}</code>
-                </pre>
-              )}
-            </>
+            <p className="text-sm font-medium text-[var(--text-primary)] leading-relaxed">
+              {q.question}
+            </p>
           )}
 
           {type === "match" && (
@@ -605,53 +598,15 @@ function QuestionCard({ q, type, onEdit, onDelete, canManage }) {
           )}
 
           {type === "debug" && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-[var(--text-primary)]">
-                {q.title}
-              </p>
-              {q.code && (
-                <pre className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] font-mono text-[11px] overflow-x-auto text-[var(--text-primary)] max-h-40">
-                  <code>{q.code}</code>
-                </pre>
-              )}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--text-secondary)]">
-                <span className="font-semibold text-[var(--text-primary)] text-[10px] uppercase tracking-wider">Buggy Lines:</span>
-                {(q.buggy_lines || [{ line_number: q.buggy_line_number }]).map((b, bi) => (
-                  <span key={bi} className="inline-block bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-lg border border-rose-500/20 text-[10px] font-mono font-bold">
-                    Line {b.line_number} {b.line_content ? `("${b.line_content}")` : ""}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
+              {q.title}
+            </p>
           )}
 
           {type === "fillin" && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-[var(--text-primary)]">
-                {q.title}
-              </p>
-              {q.code && (
-                <pre className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] font-mono text-[11px] overflow-x-auto text-[var(--text-primary)] max-h-40">
-                  <code>{q.code}</code>
-                </pre>
-              )}
-              <div className="space-y-2">
-                <span className="font-semibold text-[var(--text-primary)] text-[10px] uppercase tracking-wider block">Blanks Configured</span>
-                <div className="flex flex-wrap gap-2">
-                  {(q.blanks || [{ placeholder: "____", answer: q.correct_option }]).map((b, bi) => (
-                    <div key={bi} className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-2.5 text-xs flex flex-col gap-1 min-w-[120px]">
-                      <span className="text-[10px] font-black text-violet-400 uppercase tracking-wider">Blank {bi + 1} ({b.placeholder})</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {q.hint && (
-                <div className="p-3 rounded-xl bg-[var(--bg-secondary)]/50 border border-[var(--border-primary)] text-[11px] text-[var(--text-muted)] leading-relaxed">
-                  <span className="font-semibold text-amber-500 uppercase tracking-wider text-[9px] mr-1">Hint:</span>
-                  {q.hint}
-                </div>
-              )}
-            </div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
+              {q.title}
+            </p>
           )}
         </div>
       </div>
