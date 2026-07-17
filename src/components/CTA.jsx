@@ -176,7 +176,7 @@ export default function CTA() {
                 suppressHydrationWarning
                 type="email"
                 required
-                placeholder="you@company.com"
+                placeholder="you@eduvantix.com"
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all"
                 style={{
                   backgroundColor: "var(--bg-input)",

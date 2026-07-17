@@ -249,12 +249,12 @@ function LoginForm() {
             <AnimatePresence mode="popLayout">
               {isRegistering && (
                 <motion.div key="username" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                  <InputField label="Username" type="text" value={username} onChange={setUsername} icon={<User size={14} />} placeholder="your_handle" />
+                  <InputField label="Username" type="text" value={username} onChange={setUsername} icon={<User size={14} />} placeholder="enter name" />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <InputField label="Email Address" type="email" value={email} onChange={setEmail} icon={<Mail size={14} />} placeholder="name@company.com" required />
+            <InputField label="Email Address" type="email" value={email} onChange={setEmail} icon={<Mail size={14} />} placeholder="name@eduvantix.com" required />
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
