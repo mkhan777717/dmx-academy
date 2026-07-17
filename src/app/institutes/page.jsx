@@ -538,13 +538,9 @@ export default function InstitutesPage() {
 
   useLenis();
 
-  const [heroElement, setHeroElement] = useState(null);
   const heroRef = useRef(null);
-  useEffect(() => {
-    heroRef.current = heroElement;
-  }, [heroElement]);
   const { scrollYProgress: heroProgress } = useScroll({ 
-    target: heroElement ? heroRef : undefined, 
+    target: heroRef, 
     offset: ["start start", "end start"] 
   });
   const heroY = useTransform(heroProgress, [0, 1], [0, 200]);
