@@ -53,7 +53,7 @@ export default function AdminLogin() {
   };
 
   const handleQuickFill = () => {
-    setEmail("admin@synapse.com");
+    setEmail("admin@eduvantix.com");
     setPassword("admin123");
     setError("");
   };
@@ -62,20 +62,20 @@ export default function AdminLogin() {
     <div className="relative flex min-h-screen flex-col items-center justify-center p-4 overflow-hidden" style={{ backgroundColor: "var(--bg-primary)" }}>
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-100/20 via-transparent to-transparent pointer-events-none z-0" />
-      <div 
+      <div
         className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none opacity-20"
         style={{ background: "var(--accent-gradient)" }}
       />
 
       <div className="relative z-10 w-full max-w-md">
         {/* Brand header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center mb-8 space-y-2"
         >
-          <div 
+          <div
             className="inline-flex p-3 rounded-2xl border border-[var(--border-primary)] mb-2 shadow-sm"
             style={{
               backgroundColor: "var(--bg-badge)",
@@ -111,7 +111,7 @@ export default function AdminLogin() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -5 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center space-x-2 p-3 rounded-2xl border border-[var(--border-primary)] text-xs bg-rose-500/10 border-rose-500/20 text-rose-500"
@@ -130,7 +130,7 @@ export default function AdminLogin() {
                 <input
                   id="admin-email"
                   type="email"
-                  placeholder="name@synapse.com"
+                  placeholder="name@eduvantix.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-2xl py-3 pl-11 pr-4 text-xs outline-none border border-[var(--border-primary)] transition-all"
@@ -208,7 +208,7 @@ export default function AdminLogin() {
 
         {/* Footer info */}
         <div className="text-center mt-6">
-          <button 
+          <button
             onClick={() => router.push("/")}
             className="text-xs transition-colors hover:underline"
             style={{ color: "var(--text-secondary)" }}

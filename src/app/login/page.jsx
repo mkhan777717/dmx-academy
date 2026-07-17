@@ -106,7 +106,7 @@ function LoginForm() {
       ),
       title: isRegistering ? "Create an Account" : "Welcome Back",
       desc: isRegistering ? "Join the Eduvantix network" : "Sign in to access your portal",
-      demoEmail: "user@eduvantix.com", label: "User"
+      demoEmail: "user@eduvantix.com"
     };
   };
 
@@ -206,9 +206,6 @@ function LoginForm() {
         {/* Header */}
         <div className="space-y-1">
           <div className="flex items-center gap-3 mb-3">
-            <div className="h-13 w-14 rounded-xl flex items-center justify-center">
-              {isForgot ? <RefreshCw size={18} className="text-white" /> : React.cloneElement(theme.icon, { size: 18, className: "text-white" })}
-            </div>
             <div>
               <h1 className="text-base font-black" style={{ color: "var(--text-primary)" }}>{isForgot ? "Reset Password" : theme.title}</h1>
               <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>{isForgot ? "Enter your email to receive a reset link" : theme.desc}</p>
@@ -249,12 +246,12 @@ function LoginForm() {
             <AnimatePresence mode="popLayout">
               {isRegistering && (
                 <motion.div key="username" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                  <InputField label="Username" type="text" value={username} onChange={setUsername} icon={<User size={14} />} placeholder="your_handle" />
+                  <InputField label="Name" type="text" value={username} onChange={setUsername} icon={<User size={14} />} placeholder="enter name" />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <InputField label="Email Address" type="email" value={email} onChange={setEmail} icon={<Mail size={14} />} placeholder="name@company.com" required />
+            <InputField label="Email Address" type="email" value={email} onChange={setEmail} icon={<Mail size={14} />} placeholder="name@eduvantix.com" required />
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
@@ -294,7 +291,7 @@ function LoginForm() {
               )}
             </AnimatePresence>
 
-            <SubmitButton loading={loading} gradient={theme.accentGradient} label={isRegistering ? `Register as ${theme.label}` : `Sign In as ${theme.label}`} />
+            <SubmitButton loading={loading} gradient={theme.accentGradient} label={isRegistering ? `Register as Student` : `Sign In`} />
 
             {!isForgot && (
               <div className="relative flex items-center justify-center my-4">
@@ -445,15 +442,37 @@ export default function LoginPage() {
           </Suspense>
         </div>
 
-        <div className="mt-8 pt-6 w-full max-w-sm text-center flex flex-col items-center gap-3" style={{ borderTop: "1px solid var(--border-primary)" }}>
-          <p className="text-[11px] font-medium tracking-wide uppercase" style={{ color: "var(--text-muted)" }}>Are you an educational institution?</p>
-          <a href="/institutes" className="flex items-center gap-2 justify-center w-full px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
-            style={{ border: "1px solid var(--border-primary)", color: "var(--text-primary)", backgroundColor: "var(--bg-card)" }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--border-accent)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-primary)"; }}
+        <div className="mt-10 pt-8 w-full max-w-sm text-center flex flex-col items-center gap-4" style={{ borderTop: "1px solid var(--border-primary)" }}>
+          <p className="text-[12px] font-semibold tracking-widest uppercase mb-1" style={{ color: "var(--text-muted)", letterSpacing: "0.15em" }}>
+            Are you an educational institution?
+          </p>
+          <a
+            href="/institutes"
+            className="relative inline-flex items-center justify-center w-full px-6 py-3 text-base font-extrabold rounded-[1.15rem] shadow-lg group transition-all duration-300"
+            style={{
+              background: "linear-gradient(92deg, #26e6d3 0%, #175cff 102%)",
+              color: "#fff",
+              border: "none",
+              boxShadow: "0 8px 32px 0 rgba(38,230,211,0.24), 0 2px 8px 0 rgba(23,92,255,0.12)"
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "linear-gradient(98deg, #25d3c9 0%, #5123e3 100%)";
+              e.currentTarget.style.boxShadow = "0 12px 36px 0 rgba(80,84,207,0.25), 0 2px 8px 0 rgba(38,230,211,0.10)";
+              e.currentTarget.style.transform = "translateY(-2px) scale(1.014)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "linear-gradient(92deg, #26e6d3 0%, #175cff 102%)";
+              e.currentTarget.style.boxShadow = "0 8px 32px 0 rgba(38,230,211,0.24), 0 2px 8px 0 rgba(23,92,255,0.12)";
+              e.currentTarget.style.transform = "none";
+            }}
           >
-            <GraduationCap size={16} style={{ color: "var(--accent-primary)" }} />
-            Explore Eduvantix for Campus
+            <span className="inline-flex items-center gap-2 relative z-10">
+              Explore Eduvantix for Institutions
+            </span>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 rounded-[1.15rem] bg-gradient-to-r from-cyan-300 to-blue-500 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none"
+            />
           </a>
         </div>
       </div>

@@ -102,7 +102,7 @@ export function ReactStatePropsLab() {
           <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
             Rendered Output (Virtual DOM Diffing View)
           </label>
-          
+
           <div
             className="rounded-xl border border-[var(--border-primary)] p-5 relative overflow-hidden transition-all duration-500 flex flex-col justify-between h-40 shadow-inner"
             style={{
@@ -202,8 +202,8 @@ export function ExpressRestController() {
         if (method === "GET") {
           status = 200;
           data = [
-            { id: "u1", username: "alice_dev", email: "alice@synapse.com" },
-            { id: "u2", username: "bob_engineer", email: "bob@synapse.com" }
+            { id: "u1", username: "alice_dev", email: "alice@eduvantix.com" },
+            { id: "u2", username: "bob_engineer", email: "bob@eduvantix.com" }
           ];
           newLogs.push(`[${timestamp}] Controller: Querying all User models from MongoDB cluster...`);
           newLogs.push(`[${timestamp}] Controller: Database returned 2 documents.`);
@@ -273,11 +273,11 @@ export function ExpressRestController() {
 
       {/* Core Interface Console */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-slate-200" style={{ backgroundColor: "var(--border-primary)" }}>
-        
+
         {/* Left 5 cols: Request Panel */}
         <div className="lg:col-span-5 p-4 space-y-4 flex flex-col" style={{ backgroundColor: "var(--bg-card)" }}>
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>HTTP Client Configuration</span>
-          
+
           <div className="flex gap-2">
             <select
               value={method}
@@ -326,11 +326,11 @@ export function ExpressRestController() {
 
         {/* Right 7 cols: Response Panel & Server Logs */}
         <div className="lg:col-span-7 flex flex-col h-full min-h-[300px]" style={{ backgroundColor: "var(--bg-card)" }}>
-          
+
           {/* Top Half: HTTP Response */}
           <div className="p-4 border-b flex-1 flex flex-col" style={{ borderColor: "var(--border-primary)" }}>
             <span className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>HTTP Client Response</span>
-            
+
             <div className="flex-grow rounded-lg border border-[var(--border-primary)] p-3 font-mono text-[11px] overflow-auto flex flex-col justify-between" style={{ backgroundColor: "var(--bg-code)", borderColor: "var(--border-primary)" }}>
               {loading ? (
                 <div className="flex items-center justify-center h-28 gap-2" style={{ color: "var(--text-muted)" }}>
@@ -372,7 +372,7 @@ export function ExpressRestController() {
               <Server size={10} />
               <span>EXPRESS MIDDLEWARE TERMINAL LOGGER</span>
             </div>
-            
+
             <div className="flex-grow overflow-y-auto space-y-1.5 scrollbar-thin">
               {serverLogs.map((log, index) => (
                 <div key={index} className="flex gap-1.5">
@@ -438,7 +438,7 @@ export function NextRouterMap() {
           </label>
 
           <div className="space-y-1.5 pl-1.5 border-l-2" style={{ borderColor: "var(--border-primary)" }}>
-            
+
             {/* Route 1 */}
             <button
               onClick={() => setActiveRoute("/")}
