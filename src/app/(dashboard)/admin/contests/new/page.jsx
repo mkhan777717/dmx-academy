@@ -303,7 +303,7 @@ export default function CreateContest() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Synapse Code Clash #05"
+                  placeholder="e.g. Eduvantix Code Clash #05"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full rounded-2xl py-3 px-4 text-xs outline-none border border-[var(--border-primary)] transition-all"
@@ -324,7 +324,7 @@ export default function CreateContest() {
                 </label>
                 <input
                   type="text"
-                  placeholder="synapse-code-clash-05"
+                  placeholder="eduvantix-code-clash-05"
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   className="w-full rounded-2xl py-3 px-4 text-xs outline-none border border-[var(--border-primary)] transition-all"
@@ -535,97 +535,97 @@ export default function CreateContest() {
                 </button>
               </div>
             </div>
-              {/* Tab selection pills */}
-              {user?.role !== "ADMIN" && (
-                <div className="flex border-b border-[var(--border-primary)] pb-2 text-[10px]">
-                  <button
-                    type="button"
-                    onClick={() => setContestProbTab("institute")}
-                    className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer mr-2 ${contestProbTab === "institute"
-                      ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
-                      : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
-                      }`}
-                  >
-                    Your Institute
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setContestProbTab("global")}
-                    className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer ${contestProbTab === "global"
-                      ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
-                      : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
-                      }`}
-                  >
-                    Global Problems
-                  </button>
+            {/* Tab selection pills */}
+            {user?.role !== "ADMIN" && (
+              <div className="flex border-b border-[var(--border-primary)] pb-2 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setContestProbTab("institute")}
+                  className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer mr-2 ${contestProbTab === "institute"
+                    ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
+                    }`}
+                >
+                  Your Institute
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setContestProbTab("global")}
+                  className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer ${contestProbTab === "global"
+                    ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
+                    }`}
+                >
+                  Global Problems
+                </button>
+              </div>
+            )}
+
+            <div className="max-h-72 overflow-y-auto pr-1 space-y-2">
+              {filteredProblemsForContest.length === 0 ? (
+                <div className="text-center py-8 text-xs italic text-[var(--text-muted)] border border-[var(--border-primary)] rounded-2xl border-dashed" style={{ borderColor: "var(--border-primary)" }}>
+                  No problems found in this scope.
                 </div>
-              )}
-
-              <div className="max-h-72 overflow-y-auto pr-1 space-y-2">
-                {filteredProblemsForContest.length === 0 ? (
-                  <div className="text-center py-8 text-xs italic text-[var(--text-muted)] border border-[var(--border-primary)] rounded-2xl border-dashed" style={{ borderColor: "var(--border-primary)" }}>
-                    No problems found in this scope.
-                  </div>
-                ) :
-                  filteredProblemsForContest.map((problem) => {
-                    const isSelected = selectedProblemIds.includes(problem.id);
-                    return (
-                      <div
-                        key={problem.id}
-                        onClick={() => toggleProblemSelection(problem.id)}
-                        className="p-3.5 rounded-2xl border border-[var(--border-primary)] flex items-center justify-between cursor-pointer transition-all hover:scale-101"
-                        style={{
-                          backgroundColor: isSelected ? "var(--bg-badge)" : "var(--bg-primary)",
-                          borderColor: isSelected ? "var(--border-accent)" : "var(--border-primary)"
-                        }}
-                      >
-                        <div className="space-y-1">
-                          <p className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{problem.title}</p>
-                          <div className="flex items-center space-x-2 text-[10px]" style={{ color: "var(--text-secondary)" }}>
-                            <span className={`font-semibold ${problem.difficulty === "Easy" ? "text-emerald-500" :
-                              problem.difficulty === "Medium" ? "text-amber-500" : "text-rose-500"
-                              }`}>{problem.difficulty}</span>
-                            <span>•</span>
-                            <span>{problem.category}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            readOnly
-                            className="rounded border border-[var(--border-primary)] shadow-sm accent-indigo-500 w-4 h-4"
-                          />
+              ) :
+                filteredProblemsForContest.map((problem) => {
+                  const isSelected = selectedProblemIds.includes(problem.id);
+                  return (
+                    <div
+                      key={problem.id}
+                      onClick={() => toggleProblemSelection(problem.id)}
+                      className="p-3.5 rounded-2xl border border-[var(--border-primary)] flex items-center justify-between cursor-pointer transition-all hover:scale-101"
+                      style={{
+                        backgroundColor: isSelected ? "var(--bg-badge)" : "var(--bg-primary)",
+                        borderColor: isSelected ? "var(--border-accent)" : "var(--border-primary)"
+                      }}
+                    >
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>{problem.title}</p>
+                        <div className="flex items-center space-x-2 text-[10px]" style={{ color: "var(--text-secondary)" }}>
+                          <span className={`font-semibold ${problem.difficulty === "Easy" ? "text-emerald-500" :
+                            problem.difficulty === "Medium" ? "text-amber-500" : "text-rose-500"
+                            }`}>{problem.difficulty}</span>
+                          <span>•</span>
+                          <span>{problem.category}</span>
                         </div>
                       </div>
-                    );
-                  })
-                }
-              </div>
-            </div>
 
-            {/* Submit Action */}
-            <div className="flex justify-end pt-2">
-              <button
-                type="submit"
-                disabled={submitting || success}
-                className="px-8 py-3.5 rounded-2xl font-bold text-xs text-[var(--text-on-accent)] shadow-md transition-all flex items-center space-x-2 hover:scale-102 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ background: "var(--accent-gradient)", cursor: submitting ? "not-allowed" : "pointer" }}
-              >
-                {submitting ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>Creating Contest...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save size={14} />
-                    <span>Create Contest &amp; Publish</span>
-                  </>
-                )}
-              </button>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          readOnly
+                          className="rounded border border-[var(--border-primary)] shadow-sm accent-indigo-500 w-4 h-4"
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              }
             </div>
+          </div>
+
+          {/* Submit Action */}
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={submitting || success}
+              className="px-8 py-3.5 rounded-2xl font-bold text-xs text-[var(--text-on-accent)] shadow-md transition-all flex items-center space-x-2 hover:scale-102 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
+              style={{ background: "var(--accent-gradient)", cursor: submitting ? "not-allowed" : "pointer" }}
+            >
+              {submitting ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span>Creating Contest...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  <span>Create Contest &amp; Publish</span>
+                </>
+              )}
+            </button>
+          </div>
 
         </form>
 

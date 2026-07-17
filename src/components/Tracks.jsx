@@ -291,10 +291,7 @@ export default function Tracks() {
       c: "yellow",
       visual: (
         <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10 w-[220px] md:w-[260px] flex flex-col gap-1.5 translate-y-4 group-hover:translate-y-1 transition-transform duration-500">
-          <div className="p-2 rounded-lg border flex justify-between items-center shadow-lg
-                        bg-black dark:bg-white/5 border-neutral-700/60
-                        dark:border-white/5
-          ">
+          <div className="p-2 rounded-lg border flex justify-between items-center shadow-lg bg-black dark:bg-white/5 border-neutral-700/60 dark:border-white/5">
             <div className="flex items-center gap-1.5 text-left">
               <div className="w-6 h-6 rounded bg-black dark:bg-white/10 flex items-center justify-center text-[8px] font-bold text-white">G</div>
               <div>
@@ -304,10 +301,7 @@ export default function Tracks() {
             </div>
             <span className="text-[7px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">READY</span>
           </div>
-          <div className="p-2 rounded-lg border flex justify-between items-center shadow-lg opacity-40
-                        bg-black dark:bg-white/5 border-neutral-700/60
-                        dark:border-white/5
-          ">
+          <div className="p-2 rounded-lg border flex justify-between items-center shadow-lg opacity-40 bg-black dark:bg-white/5 border-neutral-700/60 dark:border-white/5">
             <div className="flex items-center gap-1.5 text-left">
               <div className="w-6 h-6 rounded bg-black dark:bg-white/10 flex items-center justify-center text-[8px] font-bold text-white">M</div>
               <div>
@@ -918,12 +912,12 @@ export default function Tracks() {
                     </div>
 
                     <div className="mb-8">
-                      <div className="text-[10px] font-black tracking-widest uppercase opacity-40 mb-2 font-mono">// TECH STACK</div>
+                      <div className="text-[10px] font-black tracking-widest uppercase opacity-40 mb-2 font-mono">TECH STACK</div>
                       <div className="font-bold tracking-wide text-xl uppercase">{prod.stack}</div>
                     </div>
 
                     <div className="mb-auto">
-                      <div className="text-[10px] font-black tracking-widest uppercase opacity-40 mb-3 font-mono">// BIOGRAPHY</div>
+                      <div className="text-[10px] font-black tracking-widest uppercase opacity-40 mb-3 font-mono">BIOGRAPHY</div>
                       <p className="opacity-70 text-sm leading-relaxed">
                         A phantom of the codebase, the {prod.title} architecture scales in the cloud. Render latency blind, deploy across global regions, then let flawless performance take hold as competitors scramble to learn where you might ship next.
                       </p>

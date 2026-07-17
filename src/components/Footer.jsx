@@ -25,7 +25,7 @@ const footerLinks = [
   {
     title: "Company",
     links: [
-      { name: "About Eduvantix", href: "#" },
+      { name: "About Eduvantix", href: "/about" },
       { name: "Academy Blog", href: "#" },
       { name: "Student Work", href: "#" },
       { name: "Careers", href: "#" },
@@ -158,15 +158,16 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="pt-10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-            © {new Date().getFullYear()} Eduvantix Inc. All rights reserved.
+            © {new Date().getFullYear()} Eduvantix Inc. All rights reserved. A product of{" "}
+            <a href="https://datamindx.in" target="_blank" rel="noopener noreferrer" className="hover:text-[var(--text-secondary)] transition-colors underline">
+              DatamindX
+            </a>.
           </p>
 
           <div className="flex items-center gap-4 text-[11px]" style={{ color: "var(--text-muted)" }}>
-            <a href="#" className="hover:text-[var(--text-secondary)] transition-colors">Privacy Policy</a>
+            <Link href="/privacy-policy" className="hover:text-[var(--text-secondary)] transition-colors">Privacy Policy</Link>
             <span style={{ color: "var(--border-primary)" }}>·</span>
-            <a href="#" className="hover:text-[var(--text-secondary)] transition-colors">Terms of Service</a>
-            <span style={{ color: "var(--border-primary)" }}>·</span>
-            <span>Built with Next.js & Framer Motion</span>
+            <Link href="/terms-of-service" className="hover:text-[var(--text-secondary)] transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>
