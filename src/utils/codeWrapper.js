@@ -111,7 +111,15 @@ if input_data:
         target = int(lines[1].strip())
     globals()["nums"] = nums
     globals()["target"] = target
-    solver = globals().get("two_sum") or globals().get("solution")
+    solver = None
+    if "Solution" in globals() and isinstance(globals()["Solution"], type):
+        inst = globals()["Solution"]()
+        for name in ["two_sum", "twoSum", "solve", "solution"]:
+            if hasattr(inst, name):
+                solver = getattr(inst, name)
+                break
+    if not solver:
+        solver = globals().get("two_sum") or globals().get("twoSum") or globals().get("solve") or globals().get("solution")
     try:
         res = solver(nums, target)
     except TypeError:
@@ -208,7 +216,15 @@ if input_data:
         lines = input_data.split('\\n')
         nums = list(map(int, lines[0].strip().split()))
         target = int(lines[1].strip())
-    solver = globals().get("solution") or globals().get("searchInsert") or globals().get("solve")
+    solver = None
+    if "Solution" in globals() and isinstance(globals()["Solution"], type):
+        inst = globals()["Solution"]()
+        for name in ["searchInsert", "search_insert", "solve", "solution"]:
+            if hasattr(inst, name):
+                solver = getattr(inst, name)
+                break
+    if not solver:
+        solver = globals().get("solution") or globals().get("searchInsert") or globals().get("solve")
     res = solver(nums, target)
     if res is not None:
         print(res)`;
