@@ -184,6 +184,16 @@ export default function DashboardLayout({ children }) {
   const isPracticeWorkspace = pathname.startsWith("/practice/");
   if (isPracticeWorkspace) return <>{children}</>;
 
+  // Hide sidebar + header for contest workspace — the contest page handles its own
+  // fullscreen mode and anti-cheat layout internally.
+  const isContestWorkspace = /^\/contest\/[^/]+/.test(pathname);
+  if (isContestWorkspace) return <>{children}</>;
+
+  // Hide sidebar + header for course catalog & course detail pages — they are
+  // full-page immersive layouts that manage their own navigation.
+  const isCoursePage = pathname.startsWith("/courses");
+  if (isCoursePage) return <>{children}</>;
+
   const isPublicRoute = !dashboardUser && (pathname.startsWith('/practice') || pathname.startsWith('/contest') || pathname.startsWith('/courses') || pathname.startsWith('/live-classes'));
 
   if (isPublicRoute) {
@@ -461,7 +471,7 @@ export default function DashboardLayout({ children }) {
         )}
 
         <main className={`flex-1 overflow-y-auto ${isLiveStudioMode ? 'bg-[var(--bg-primary)]' : ''}`}>
-          <div className={isLiveStudioMode ? "h-full p-2 md:p-4" : "max-w-7xl mx-auto p-6 md:p-8"}>
+          <div className={isLiveStudioMode || pathname.startsWith('/courses') ? "h-full" : "max-w-7xl mx-auto p-6 md:p-8"}>
             {children}
           </div>
         </main>
