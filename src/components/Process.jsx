@@ -8,14 +8,9 @@ const PathIllustration = () => {
   const [active, setActive] = useState(null);
 
   return (
-    <div className="w-full h-full flex items-center justify-center relative p-4 md:p-8 font-mono text-xs overflow-hidden 
-      bg-white dark:bg-[var(--bg-card)]
-      ">
+    <div className="w-full h-full flex items-center justify-center relative p-4 md:p-8 font-mono text-xs overflow-hidden bg-white dark:bg-[var(--bg-card)]">
       {/* bg color for light mode, transparent in dark */}
-      <div className="absolute inset-0
-        bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.17)_0,transparent_100%)]
-        dark:bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.10)_0,transparent_100%)]
-        pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.17)_0,transparent_100%)] dark:bg-[radial-gradient(circle_at_center,rgba(79,70,229,0.10)_0,transparent_100%)] pointer-events-none" />
 
       <div className="flex items-center justify-between w-full h-full relative z-10 max-w-[240px]">
 

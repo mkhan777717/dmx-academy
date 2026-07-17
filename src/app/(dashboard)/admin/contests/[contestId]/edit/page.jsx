@@ -319,7 +319,7 @@ export default function EditContest() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Synapse Code Clash #05"
+                  placeholder="e.g. Eduvantix Code Clash #05"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full rounded-2xl py-3 px-4 text-xs outline-none border border-[var(--border-primary)] transition-all"
@@ -340,7 +340,7 @@ export default function EditContest() {
                 </label>
                 <input
                   type="text"
-                  placeholder="synapse-code-clash-05"
+                  placeholder="eduvantix-code-clash-05"
                   value={slug}
                   disabled
                   className="w-full rounded-2xl py-3 px-4 text-xs border border-[var(--border-primary)] bg-slate-500/5 cursor-not-allowed"
@@ -525,22 +525,20 @@ export default function EditContest() {
                 <button
                   type="button"
                   onClick={() => setContestProbTab("institute")}
-                  className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer mr-2 ${
-                    contestProbTab === "institute"
-                      ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
-                      : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
-                  }`}
+                  className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer mr-2 ${contestProbTab === "institute"
+                    ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
+                    }`}
                 >
                   Your Institute
                 </button>
                 <button
                   type="button"
                   onClick={() => setContestProbTab("global")}
-                  className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer ${
-                    contestProbTab === "global"
-                      ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
-                      : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
-                  }`}
+                  className={`px-4 py-1.5 font-bold uppercase tracking-wider transition-all rounded-lg cursor-pointer ${contestProbTab === "global"
+                    ? "bg-[var(--accent-primary)] text-[var(--text-on-accent)]"
+                    : "text-[var(--text-muted)] hover:bg-[var(--bg-primary)]"
+                    }`}
                 >
                   Global Problems
                 </button>
