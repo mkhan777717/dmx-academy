@@ -207,7 +207,6 @@ export default function DashboardLayout({ children }) {
       { label: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
       { label: "Practice Arena", href: "/practice", icon: Code },
       { label: "Contest Arena", href: "/contest", icon: Trophy },
-      { label: "Course Catalog", href: "/courses", icon: BookOpen },
       { label: "AI Viva", href: "/student/viva", icon: Brain },
       { label: "Live Sessions", href: "/live-classes", icon: Radio },
       { label: "Learn with Games", href: "/student/games", icon: Gamepad2 },
@@ -232,7 +231,7 @@ export default function DashboardLayout({ children }) {
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Problems", href: "/admin/problems", icon: Code },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Go Live", href: "/admin/live", icon: Radio },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Arcade Questions", href: "/admin/arcade", icon: Gamepad2 },
-      { label: "Course Catalog", href: "/courses", icon: BookOpen }
+      isSuperAdmin && { label: "Course Catalog", href: "/courses", icon: BookOpen }
     ].filter(Boolean);
   }
 

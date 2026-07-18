@@ -25,6 +25,7 @@ import {
 import { 
   PromptPlayground, TokenVisualizer, ClassifierSandbox 
 } from "@/components/courses/Widgets";
+import Navbar from "@/components/Navbar";
 
 export default function DynamicCoursePage() {
   const params = useParams();
@@ -622,7 +623,10 @@ export default function DynamicCoursePage() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden font-sans" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
-      
+      {/* Adjusted: Navbar type 2 is now absolute and zIndex high */}
+      <div style={{ position: 'absolute', zIndex: 100 }}>
+        <Navbar type={2}/>
+      </div>
       {/* 1. SIDEBAR NAVIGATION */}
       <aside 
         className={`fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r shadow-xl transition-transform duration-300 md:static md:translate-x-0 ${
@@ -632,7 +636,11 @@ export default function DynamicCoursePage() {
       >
         {/* Sidebar Header */}
         <div className="flex h-16 items-center justify-between px-5" style={{ borderBottom: "1px solid var(--border-primary)" }}>
-          <a href="/" className="flex items-center gap-3 text-lg font-bold font-display" style={{ color: "var(--text-primary)" }}>
+          <a
+            href="/"
+            className="flex items-center gap-3 text-lg font-bold font-display cursor-pointer"
+            style={{ color: "var(--text-primary)" }}
+          >
             <div className={`flex items-center overflow-hidden transition-all w-32`}>
               <img
                 src={isDark ? "/logo-white-text.webp" : "/logo-black-text.webp"}
@@ -642,6 +650,7 @@ export default function DynamicCoursePage() {
               />
             </div>
           </a>
+    
           <button 
             onClick={() => setIsSidebarOpen(false)}
             className="rounded-lg p-1 transition-colors hover:bg-[var(--bg-secondary)] md:hidden"
@@ -649,20 +658,6 @@ export default function DynamicCoursePage() {
           >
             <X size={20} />
           </button>
-        </div>
-
-        {/* Back to Catalog */}
-        <div className="px-3 pt-2 pb-1" style={{ borderBottom: "1px solid var(--border-primary)" }}>
-          <a
-            href="/courses"
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all w-full"
-            style={{ color: "var(--text-secondary)" }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = "var(--bg-hover)"; e.currentTarget.style.color = "var(--text-primary)"; }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.color = "var(--text-secondary)"; }}
-          >
-            <ArrowLeft size={13} />
-            <span>Back to Catalog</span>
-          </a>
         </div>
 
         {/* Global Progress Indicators */}
@@ -910,7 +905,7 @@ export default function DynamicCoursePage() {
             style={{ backgroundColor: "var(--bg-hover)", border: "1px solid var(--border-primary)", color: "var(--text-secondary)" }}
           >
             <ArrowLeft size={12} />
-            <span>Return to Course Catalog</span>
+            <span>Return to Free Courses</span>
           </a>
         </div>
       </aside>
