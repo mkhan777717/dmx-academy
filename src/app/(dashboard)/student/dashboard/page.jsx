@@ -389,9 +389,8 @@ export default function StudentDashboard() {
               Solve Now
             </button>
           </div>
-        </div> */}
-      </div>
-      */}
+        </div>
+      </div>*/}
 
 
       {/* ── Bottom Section: Contests & Submissions ─ */}
