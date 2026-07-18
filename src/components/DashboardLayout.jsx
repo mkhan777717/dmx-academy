@@ -355,7 +355,7 @@ export default function DashboardLayout({ children }) {
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {!isLiveStudioMode && (
-          <header className="flex justify-end px-6 h-14 border-b flex-shrink-0" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
+          <header className="flex justify-end px-6 h-14 border-b flex-shrink-0" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}  >
           <div className="flex items-center gap-3">
 
             {dashboardUser && (
