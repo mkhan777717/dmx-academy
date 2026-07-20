@@ -118,26 +118,26 @@ export default function QuizBlitz({ onProgressChange, savedProgress, onBack }) {
 
   useEffect(() => {
     const fetchPool = async () => {
-      if (!token || !user) return;
       try {
         const headers = buildAuthHeaders(token, user);
         const res = await fetch(`${API_BASE}/api/arcade/questions?type=quiz`, { headers });
         const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          const normalized = json.data.map((q, idx) => ({
+        const rawList = Array.isArray(json.data) ? json.data : (Array.isArray(json.questions) ? json.questions : []);
+        if (json.success && rawList.length > 0) {
+          const normalized = rawList.map((q, idx) => ({
             ...q,
-            option_a: q.optionA,
-            option_b: q.optionB,
-            option_c: q.optionC,
-            option_d: q.optionD,
-            correct_option: q.correctOption,
-            time_limit: q.timeLimit,
+            option_a: q.optionA || q.option_a,
+            option_b: q.optionB || q.option_b,
+            option_c: q.optionC || q.option_c,
+            option_d: q.optionD || q.option_d,
+            correct_option: q.correctOption || q.correct_option,
+            time_limit: q.timeLimit || q.time_limit || 20,
             level: q.level || Math.floor(idx / 5) + 1
           }));
           setQuestionsPool(normalized);
         }
       } catch (err) {
-        console.error(err);
+        console.error("QuizBlitz fetch error:", err);
       } finally {
         setLoading(false);
       }
