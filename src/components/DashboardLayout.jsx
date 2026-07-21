@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Trophy, LogOut,
   Menu, X, ChevronLeft, ChevronRight, BookOpen, ArrowLeftRight,
   Code, Brain, Radio, AlertTriangle, FileText, Gamepad2, FileCheck, Activity, Settings, Paintbrush,
-  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2, Check, MessageSquare
+  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2, Check, MessageSquare, Crown
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
@@ -366,17 +366,17 @@ export default function DashboardLayout({ children }) {
         icon: LayoutDashboard
       },
       isSuperAdmin && { label: "Institutes & Admins", href: "/admin/institutes", icon: ShieldAlert },
-      isInstAdmin && { label: "Manage Batches", href: "/admin/batches", icon: Layers },
-      isInstAdmin && { label: "Manage People", href: "/admin/people", icon: Users },
-      isBatchMgr && canShowFeature("allowedManageBatches") && { label: "My Batches", href: "/admin/batch-manager", icon: Layers },
+      isInstAdmin && { label: "Manage Batches", href: "/admin/batches", icon: Layers, featureFlag: "allowedManageBatches" },
+      isInstAdmin && { label: "Manage People", href: "/admin/people", icon: Users, featureFlag: "allowedManagePeople" },
+      isBatchMgr && canShowFeature("allowedManageBatches") && { label: "My Batches", href: "/admin/batch-manager", icon: Layers, featureFlag: "allowedManageBatches" },
       { label: "Discuss Forum", href: "/discuss", icon: MessageSquare },
-      (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedAiViva") && { label: "AI Viva", href: "/mentor/viva/questions", icon: Brain },
-      (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedStudyMaterial") && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText },
+      (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedAiViva") && { label: "AI Viva", href: "/mentor/viva/questions", icon: Brain, featureFlag: "allowedAiViva" },
+      (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedStudyMaterial") && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText, featureFlag: "allowedStudyMaterial" },
       isSuperAdmin && { label: "AI Settings", href: "/admin/viva/ai-settings", icon: Settings },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedContest") && { label: "Contests", href: "/admin/contests", icon: Trophy },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedProblems") && { label: "Problems", href: "/admin/problems", icon: Code },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedGoLive") && { label: "Go Live", href: "/admin/live", icon: Radio },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedArcade") && { label: "Arcade Questions", href: "/admin/arcade", icon: Gamepad2 },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedContest") && { label: "Contests", href: "/admin/contests", icon: Trophy, featureFlag: "allowedContest" },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedProblems") && { label: "Problems", href: "/admin/problems", icon: Code, featureFlag: "allowedProblems" },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedGoLive") && { label: "Go Live", href: "/admin/live", icon: Radio, featureFlag: "allowedGoLive" },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedArcade") && { label: "Arcade Questions", href: "/admin/arcade", icon: Gamepad2, featureFlag: "allowedArcade" },
     ].filter(Boolean);
   }
 
@@ -487,6 +487,7 @@ export default function DashboardLayout({ children }) {
           {sidebarLinks.map((link) => {
             const LinkIcon = link.icon;
             const isActive = pathname === link.href || (link.href !== "/student/dashboard" && link.href !== "/admin/dashboard" && link.href !== "/mentor/dashboard" && pathname.startsWith(link.href));
+            const isBlocked = link.featureFlag && !hasAccess(link.featureFlag);
 
             return (
               <a
@@ -511,11 +512,17 @@ export default function DashboardLayout({ children }) {
               >
                 {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full" style={{ background: "var(--accent-primary)" }} />}
                 <LinkIcon size={15} className="flex-shrink-0" style={{ color: isActive ? "var(--accent-primary)" : "var(--text-muted)" }} />
-                {!isSidebarCollapsed && <span>{link.label}</span>}
+                                {!isSidebarCollapsed && <span>{link.label}</span>}
+                {isBlocked && !isSidebarCollapsed && (
+                  <Crown size={14} className="ml-auto text-amber-500 fill-amber-500/20 shrink-0" />
+                )}
 
                 {isSidebarCollapsed && (
-                  <div className="absolute left-14 bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-primary)] text-[10px] py-1.5 px-2.5 rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-lg">
+                  <div className="absolute left-14 bg-[var(--bg-primary)] text-[var(--text-primary)] border border-[var(--border-primary)] text-[10px] py-1.5 px-2.5 rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-lg flex items-center gap-1.5">
                     {link.label}
+                    {isBlocked && (
+                      <Crown size={10} className="text-amber-500 fill-amber-500/20" />
+                    )}
                   </div>
                 )}
               </a>
@@ -563,13 +570,17 @@ export default function DashboardLayout({ children }) {
               {sidebarLinks.map((link) => {
                 const LinkIcon = link.icon;
                 const isActive = pathname === link.href;
+                const isBlocked = link.featureFlag && !hasAccess(link.featureFlag);
                 return (
                   <a key={link.href} href="#" onClick={(e) => { e.preventDefault(); setIsMobileMenuOpen(false); if (activeSession && link.href !== "/admin/live") handleSafeNavigation(link.href); else router.push(link.href); }}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all"
                     style={{ color: isActive ? "var(--text-primary)" : "var(--text-secondary)", backgroundColor: isActive ? "var(--bg-hover)" : "transparent", fontWeight: isActive ? 600 : 400 }}
                   >
                     <LinkIcon size={14} style={{ color: isActive ? "var(--accent-primary)" : "var(--text-muted)" }} />
-                    {link.label}
+                    <span>{link.label}</span>
+                    {isBlocked && (
+                      <Crown size={12} className="ml-auto text-amber-500 fill-amber-500/20 shrink-0" />
+                    )}
                   </a>
                 );
               })}
