@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Trophy, LogOut,
   Menu, X, ChevronLeft, ChevronRight, BookOpen, ArrowLeftRight,
   Code, Brain, Radio, AlertTriangle, FileText, Gamepad2, FileCheck, Activity, Settings, Paintbrush,
-  ShieldAlert, Layers, Users, PlusCircle, List
+  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,46 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout, user, token, API_BASE, activeSession, setActiveSession } = useAuth();
+
+  const inst = user?.institute;
+  const isInstituteAffiliated = !!user?.instituteId;
+
+  const hasAccess = (flag) => {
+    if (!isInstituteAffiliated || !inst) return true;
+    return inst[flag] !== false;
+  };
+
+  const getRequiredFeatureFlag = () => {
+    if (pathname.startsWith("/mentor/viva/questions")) return "allowedAiViva";
+    if (pathname.startsWith("/student/viva")) return "allowedAiViva";
+    
+    if (pathname.startsWith("/mentor/viva/materials")) return "allowedStudyMaterial";
+    if (pathname.startsWith("/student/materials")) return "allowedStudyMaterial";
+
+    if (pathname.startsWith("/admin/contests")) return "allowedContest";
+    if (pathname.startsWith("/contest")) return "allowedContest";
+
+    if (pathname.startsWith("/admin/problems")) return "allowedProblems";
+
+    if (pathname.startsWith("/admin/live")) return "allowedGoLive";
+    if (pathname.startsWith("/live-classes")) return "allowedGoLive";
+
+    if (pathname.startsWith("/admin/batches")) return "allowedManageBatches";
+    if (pathname.startsWith("/admin/batch-manager")) return "allowedManageBatches";
+
+    if (pathname.startsWith("/admin/people")) return "allowedManagePeople";
+
+    if (pathname.startsWith("/admin/arcade")) return "allowedArcade";
+    if (pathname.startsWith("/student/games")) return "allowedArcade";
+
+    return null;
+  };
+
+  const requiredFeature = getRequiredFeatureFlag();
+  const isFeatureBlocked = requiredFeature && user?.role !== "ADMIN" && !hasAccess(requiredFeature);
+
+  const [premiumRequestLoading, setPremiumRequestLoading] = useState(false);
+  const [premiumRequestSuccess, setPremiumRequestSuccess] = useState(false);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -38,12 +78,82 @@ export default function DashboardLayout({ children }) {
   const isStudent = effectiveRole === "USER";
   const { isDark, initTheme } = useThemeStore();
 
+  const [premiumRequests, setPremiumRequests] = useState([]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  const getFeatureCleanLabel = (flag) => {
+    switch (flag) {
+      case "allowedAiViva": return "AI Viva";
+      case "allowedStudyMaterial": return "Study Material";
+      case "allowedContest": return "Contests";
+      case "allowedProblems": return "Problems";
+      case "allowedGoLive": return "Go Live";
+      case "allowedManageBatches": return "Manage Batches";
+      case "allowedManagePeople": return "Manage People";
+      case "allowedArcade": return "Arcade Questions";
+      default: return flag;
+    }
+  };
+
+  const fetchPremiumRequests = async () => {
+    if (!isSuperAdmin) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/institute-admins`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const uniqueRequests = [];
+        (data.users || []).forEach(u => {
+          if (u.institute?.wantsPremium) {
+            const features = u.institute.wantsPremium.split(",").filter(Boolean);
+            features.forEach(feat => {
+              uniqueRequests.push({
+                id: `${u.instituteId}-${feat}`,
+                instituteName: u.institute.name,
+                featureLabel: getFeatureCleanLabel(feat)
+              });
+            });
+          }
+        });
+        setPremiumRequests(uniqueRequests);
+      }
+    } catch (err) {
+      console.error("Failed to fetch premium requests", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchPremiumRequests();
+      const interval = setInterval(fetchPremiumRequests, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [isSuperAdmin]);
+
   useEffect(() => {
     initTheme();
   }, [initTheme]);
   const isStudentSession = typeof window !== "undefined" && localStorage.getItem("synapse_student_session") === "true";
   const isAdminSession = typeof window !== "undefined" && localStorage.getItem("synapse_admin_session") === "true";
   const isMentorSession = typeof window !== "undefined" && localStorage.getItem("synapse_mentor_session") === "true";
+
+  const [localRequestedFeatures, setLocalRequestedFeatures] = useState([]);
+
+  useEffect(() => {
+    if (user?.institute?.wantsPremium) {
+      setLocalRequestedFeatures(user.institute.wantsPremium.split(",").filter(Boolean));
+    } else {
+      setLocalRequestedFeatures([]);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (isFeatureBlocked && user?.role !== "INSTITUTE_ADMIN" && user?.role !== "ADMIN") {
+      const dashboardUrl = isStudentSession ? "/student/dashboard" : isMentor ? "/mentor/dashboard" : "/admin/dashboard";
+      router.replace(dashboardUrl);
+    }
+  }, [isFeatureBlocked, user, router, isStudentSession, isMentor]);
 
   useEffect(() => {
     if (!user || !isStudentSession) return;
@@ -202,16 +312,23 @@ export default function DashboardLayout({ children }) {
 
   let sidebarLinks = [];
 
+  const canShowFeature = (flag) => {
+    // Super Admin and Institute Admin always see the links in sidebar
+    if (isSuperAdmin || isInstAdmin) return true;
+    // BMs and Mentors only see it if it's allowed
+    return hasAccess(flag);
+  };
+
   if (isStudentSession) {
-    const isInstituteStudent = !!dashboardUser?.instituteId;
+    const isInstituteStudent = !!user?.instituteId;
     sidebarLinks = [
       { label: "Dashboard", href: "/student/dashboard", icon: LayoutDashboard },
       { label: "Practice Arena", href: "/practice", icon: Code },
-      { label: "Contest Arena", href: "/contest", icon: Trophy },
-      { label: "AI Viva", href: "/student/viva", icon: Brain },
-      { label: "Live Sessions", href: "/live-classes", icon: Radio },
-      { label: "Learn with Games", href: "/student/games", icon: Gamepad2 },
-      isInstituteStudent && { label: "Study Materials", href: "/student/materials", icon: FileText },
+      hasAccess("allowedContest") && { label: "Contest Arena", href: "/contest", icon: Trophy },
+      hasAccess("allowedAiViva") && { label: "AI Viva", href: "/student/viva", icon: Brain },
+      hasAccess("allowedGoLive") && { label: "Live Sessions", href: "/live-classes", icon: Radio },
+      hasAccess("allowedArcade") && { label: "Learn with Games", href: "/student/games", icon: Gamepad2 },
+      isInstituteStudent && hasAccess("allowedStudyMaterial") && { label: "Study Materials", href: "/student/materials", icon: FileText },
       { label: "Resume Builder", href: "/student/resume", icon: FileCheck },
     ].filter(Boolean);
   } else {
@@ -224,19 +341,98 @@ export default function DashboardLayout({ children }) {
       isSuperAdmin && { label: "Institutes & Admins", href: "/admin/institutes", icon: ShieldAlert },
       isInstAdmin && { label: "Manage Batches", href: "/admin/batches", icon: Layers },
       isInstAdmin && { label: "Manage People", href: "/admin/people", icon: Users },
-      isBatchMgr && { label: "My Batches", href: "/admin/batch-manager", icon: Layers },
-      (isBatchMgr || isInstAdmin || isMentor) && { label: "AI Viva", href: "/mentor/viva/questions", icon: Brain },
-      (isBatchMgr || isInstAdmin || isMentor) && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText },
+      isBatchMgr && canShowFeature("allowedManageBatches") && { label: "My Batches", href: "/admin/batch-manager", icon: Layers },
+      (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedAiViva") && { label: "AI Viva", href: "/mentor/viva/questions", icon: Brain },
+      (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedStudyMaterial") && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText },
       isSuperAdmin && { label: "AI Settings", href: "/admin/viva/ai-settings", icon: Settings },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Contests", href: "/admin/contests", icon: Trophy },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Problems", href: "/admin/problems", icon: Code },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Go Live", href: "/admin/live", icon: Radio },
-      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && { label: "Arcade Questions", href: "/admin/arcade", icon: Gamepad2 },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedContest") && { label: "Contests", href: "/admin/contests", icon: Trophy },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedProblems") && { label: "Problems", href: "/admin/problems", icon: Code },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedGoLive") && { label: "Go Live", href: "/admin/live", icon: Radio },
+      (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedArcade") && { label: "Arcade Questions", href: "/admin/arcade", icon: Gamepad2 },
     ].filter(Boolean);
   }
 
-  const pageTitle = pathname.split("/").filter(Boolean).slice(1).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" / ") || "Dashboard";
+  const BlockedScreen = () => {
+    const isAlreadyRequested = requiredFeature && localRequestedFeatures.includes(requiredFeature);
 
+    const handleRequestUpgrade = async () => {
+      setPremiumRequestLoading(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/institutes/subscribe-request`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ featureName: requiredFeature })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setLocalRequestedFeatures(prev => [...prev, requiredFeature]);
+        } else {
+          alert(data.message || "Failed to submit request.");
+        }
+      } catch (err) {
+        alert("Failed to connect to server.");
+      } finally {
+        setPremiumRequestLoading(false);
+      }
+    };
+
+    if (isAlreadyRequested) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-lg mx-auto space-y-6 animate-in fade-in duration-500">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500 shrink-0">
+            <CheckCircle2 size={30} />
+          </div>
+          <div className="p-4 rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-bold w-full max-w-xs animate-in zoom-in duration-300">
+            Our team will get in touch with you shortly.
+          </div>
+          <div className="space-y-1.5 text-xs text-[var(--text-muted)] font-medium pt-4">
+            <p>If you have urgent queries, write to us directly at:</p>
+            <a href="mailto:hello@datamindx.in" className="text-amber-500 hover:underline font-bold">
+              hello@datamindx.in
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-lg mx-auto space-y-6 animate-in fade-in duration-500">
+        <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 shrink-0">
+          <ShieldAlert size={36} />
+        </div>
+        <div className="space-y-3">
+          <h2 className="text-xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
+            Feature Restricted
+          </h2>
+          <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            Your institute does not have access to this premium feature. To enable it and elevate your learning environment, contact your Super Administrator to upgrade to premium.
+          </p>
+        </div>
+
+        <div className="pt-2">
+          <button
+            onClick={handleRequestUpgrade}
+            disabled={premiumRequestLoading}
+            className="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {premiumRequestLoading ? "Submitting Request..." : "Subscribe to Premium"}
+          </button>
+        </div>
+
+        <div className="space-y-1.5 text-xs text-[var(--text-muted)] font-medium pt-4">
+          <p>Or write to us directly at:</p>
+          <a href="mailto:hello@datamindx.in" className="text-amber-500 hover:underline font-bold">
+            hello@datamindx.in
+          </a>
+        </div>
+      </div>
+    );
+  };
+
+  const pageTitle = pathname.split("/").filter(Boolean).slice(1).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" / ") || "Dashboard";
   const isLiveStudioMode = (activeSession && pathname === "/admin/live") || pathname === "/live";
 
   return (
@@ -359,6 +555,63 @@ export default function DashboardLayout({ children }) {
           <header className="flex justify-end px-6 h-14 border-b flex-shrink-0" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}  >
           <div className="flex items-center gap-3">
 
+            {isSuperAdmin && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  className="p-2 rounded-xl transition-all relative cursor-pointer"
+                  style={{ color: "var(--text-secondary)" }}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = "var(--bg-hover)"}
+                  onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <Bell size={16} />
+                  {premiumRequests.length > 0 && (
+                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  )}
+                </button>
+
+                {isNotificationOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsNotificationOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-72 rounded-xl border border-[var(--border-primary)] shadow-xl z-50 overflow-hidden"
+                      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+                      <div className="p-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border-primary)" }}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-primary)" }}>Upgrade Requests</span>
+                        {premiumRequests.length > 0 && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500">
+                            {premiumRequests.length} pending
+                          </span>
+                        )}
+                      </div>
+                      <div className="max-h-60 overflow-y-auto divide-y" style={{ divideColor: "var(--border-primary)" }}>
+                        {premiumRequests.length === 0 ? (
+                          <div className="p-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+                            No pending upgrade requests.
+                          </div>
+                        ) : (
+                          premiumRequests.map((req, i) => (
+                            <div key={req.id || i} className="p-3 flex items-start gap-2.5 hover:bg-[var(--bg-hover)] transition-colors">
+                              <div className="w-6 h-6 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-500 shrink-0 mt-0.5">
+                                <ShieldAlert size={12} />
+                              </div>
+                              <div className="text-left space-y-0.5">
+                                <div className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
+                                  {req.instituteName}
+                                </div>
+                                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                                  Requested {req.featureLabel} access.
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             {dashboardUser && (
               <div className="relative">
                 <button
@@ -457,7 +710,7 @@ export default function DashboardLayout({ children }) {
 
         <main className={`flex-1 overflow-y-auto ${isLiveStudioMode ? 'bg-[var(--bg-primary)]' : ''}`}>
           <div className={isLiveStudioMode || pathname.startsWith('/courses') ? "h-full" : "max-w-7xl mx-auto p-6 md:p-8"}>
-            {children}
+            {isFeatureBlocked ? <BlockedScreen /> : children}
           </div>
         </main>
       </div>
