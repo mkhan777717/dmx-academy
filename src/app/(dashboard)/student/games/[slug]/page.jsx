@@ -6,16 +6,18 @@ import { ArrowLeft, AlertCircle, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gamesRegistry } from "@/lib/games/registry";
 
-export default function GamePageWrapper() {
-  const params = useParams();
+export default function GamePageWrapper({ params: paramsProp }) {
+  const rawParams = useParams();
   const router = useRouter();
-  const slug = params.slug;
+  
+  // Safely resolve slug from useParams hook or params prop
+  const slug = rawParams?.slug || paramsProp?.slug;
 
   const [savedProgress, setSavedProgress] = useState(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  // Find game definition from registry
-  const game = gamesRegistry.find(g => g.slug === slug);
+  // Find game definition from registry safely
+  const game = slug ? gamesRegistry.find(g => g.slug === slug) : null;
 
   // Load progress on mount
   useEffect(() => {

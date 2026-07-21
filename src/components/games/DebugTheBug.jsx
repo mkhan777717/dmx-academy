@@ -48,13 +48,13 @@ export default function DebugTheBug({ onProgressChange, savedProgress, onBack })
 
   useEffect(() => {
     const fetchPool = async () => {
-      if (!token || !user) return;
       try {
         const headers = buildAuthHeaders(token, user);
         const res = await fetch(`${API_BASE}/api/arcade/questions?type=debug`, { headers });
         const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          const normalized = json.data.map((q, idx) => ({
+        const rawList = Array.isArray(json.data) ? json.data : (Array.isArray(json.questions) ? json.questions : []);
+        if (json.success && rawList.length > 0) {
+          const normalized = rawList.map((q, idx) => ({
             ...q,
             language: q.track || "JavaScript",
             buggy_lines: q.buggyLines || [{ line_number: "", line_content: "" }],
@@ -63,7 +63,7 @@ export default function DebugTheBug({ onProgressChange, savedProgress, onBack })
           setDebugPool(normalized);
         }
       } catch (err) {
-        console.error(err);
+        console.error("DebugTheBug fetch error:", err);
       } finally {
         setLoading(false);
       }
