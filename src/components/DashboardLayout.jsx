@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Trophy, LogOut,
   Menu, X, ChevronLeft, ChevronRight, BookOpen, ArrowLeftRight,
   Code, Brain, Radio, AlertTriangle, FileText, Gamepad2, FileCheck, Activity, Settings, Paintbrush,
-  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2, Check
+  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2, Check, MessageSquare
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
@@ -352,6 +352,7 @@ export default function DashboardLayout({ children }) {
       { label: "Practice Arena", href: "/practice", icon: Code },
       hasAccess("allowedContest") && { label: "Contest Arena", href: "/contest", icon: Trophy },
       hasAccess("allowedAiViva") && { label: "AI Viva", href: "/student/viva", icon: Brain },
+      { label: "Discuss Forum", href: "/discuss", icon: MessageSquare },
       hasAccess("allowedGoLive") && { label: "Live Sessions", href: "/live-classes", icon: Radio },
       hasAccess("allowedArcade") && { label: "Learn with Games", href: "/student/games", icon: Gamepad2 },
       isInstituteStudent && hasAccess("allowedStudyMaterial") && { label: "Study Materials", href: "/student/materials", icon: FileText },
@@ -368,6 +369,7 @@ export default function DashboardLayout({ children }) {
       isInstAdmin && { label: "Manage Batches", href: "/admin/batches", icon: Layers },
       isInstAdmin && { label: "Manage People", href: "/admin/people", icon: Users },
       isBatchMgr && canShowFeature("allowedManageBatches") && { label: "My Batches", href: "/admin/batch-manager", icon: Layers },
+      { label: "Discuss Forum", href: "/discuss", icon: MessageSquare },
       (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedAiViva") && { label: "AI Viva", href: "/mentor/viva/questions", icon: Brain },
       (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedStudyMaterial") && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText },
       isSuperAdmin && { label: "AI Settings", href: "/admin/viva/ai-settings", icon: Settings },
