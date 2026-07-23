@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Trophy, LogOut,
   Menu, X, ChevronLeft, ChevronRight, BookOpen, ArrowLeftRight,
   Code, Brain, Radio, AlertTriangle, FileText, Gamepad2, FileCheck, Activity, Settings, Paintbrush,
-  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2, Check, MessageSquare, Crown, HeartHandshake, ClipboardList
+  ShieldAlert, Layers, Users, PlusCircle, List, Bell, CheckCircle2, Check, MessageSquare, Crown, HeartHandshake, ClipboardList, Briefcase
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/context/AuthContext";
@@ -363,6 +363,7 @@ export default function DashboardLayout({ children }) {
       { label: "Learn with Games", href: "/student/games", icon: Gamepad2 },
       { label: "Study Materials", href: "/student/materials", icon: FileText },
       { label: "Resume Builder", href: "/student/resume", icon: FileCheck },
+      { label: "Job Assistance", href: "/student/job-assistance", icon: Briefcase },
       { label: "Share Feedback", href: "/feedback", icon: HeartHandshake },
     ].filter(Boolean);
   } else {
@@ -382,6 +383,7 @@ export default function DashboardLayout({ children }) {
       (isBatchMgr || isInstAdmin || isMentor) && canShowFeature("allowedStudyMaterial") && { label: "Study Materials", href: "/mentor/viva/materials", icon: FileText, featureFlag: "allowedStudyMaterial" },
       isSuperAdmin && { label: "AI Viva", href: "/admin/viva/ai-settings", icon: Brain },
       isSuperAdmin && { label: "User Feedbacks", href: "/admin/feedback", icon: ClipboardList },
+      isSuperAdmin && { label: "Job Assistance", href: "/admin/job-assistance", icon: Briefcase },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedContest") && { label: "Contests", href: "/admin/contests", icon: Trophy, featureFlag: "allowedContest" },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedProblems") && { label: "Problems", href: "/admin/problems", icon: Code, featureFlag: "allowedProblems" },
       (isSuperAdmin || isInstAdmin || isBatchMgr || isMentor) && canShowFeature("allowedGoLive") && { label: "Go Live", href: "/admin/live", icon: Radio, featureFlag: "allowedGoLive" },
