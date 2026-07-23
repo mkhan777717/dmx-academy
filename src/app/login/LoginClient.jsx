@@ -4,9 +4,10 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, User, ShieldAlert, ArrowRight, RefreshCw, AlertCircle, GraduationCap, Sparkles, Eye, EyeOff, Ban } from "lucide-react";
+import { Mail, Lock, User, ShieldAlert, ArrowRight, RefreshCw, AlertCircle, GraduationCap, Sparkles, Eye, EyeOff, Ban, Award, CheckCircle2 } from "lucide-react";
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import useThemeStore from "@/store/useThemeStore";
+import { getApiBase } from "@/utils/api";
 
 /**
  * Checks if the given path points to /free-course/<courseId>, for special redirect after login/signup.
@@ -112,6 +113,9 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [referralStatus, setReferralStatus] = useState(null);
+  const [referralMessage, setReferralMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -120,6 +124,34 @@ function LoginForm() {
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const verifyReferralCode = async (code) => {
+    if (!code) {
+      setReferralStatus(null);
+      setReferralMessage("");
+      return;
+    }
+    setReferralStatus("checking");
+    try {
+      const res = await fetch(`${getApiBase()}/api/auth/referral/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referralCode: code })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReferralStatus("valid");
+        setReferralMessage("Referral accepted");
+      } else {
+        setReferralStatus("invalid");
+        setReferralMessage(data.message || "Invalid code");
+      }
+    } catch (e) {
+      console.error("Referral verification error:", e);
+      setReferralStatus("invalid");
+      setReferralMessage("Verification failed");
+    }
+  };
 
   // Autofill email if provided in query
   useEffect(() => {
@@ -293,7 +325,7 @@ function LoginForm() {
     try {
       let result;
       if (isRegistering)
-        result = await register(username, email, password, submitRole);
+        result = await register(username, email, password, submitRole, referralCode);
       else result = await login(email, password);
       if (result.success) {
         // Always prefer freeCoursePath if available
@@ -423,8 +455,26 @@ function LoginForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <AnimatePresence mode="popLayout">
               {isRegistering && (
-                <motion.div key="username" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                  <InputField label="Name" type="text" value={username} onChange={setUsername} icon={<User size={14} />} placeholder="enter name" />
+                <motion.div key="username" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-4 overflow-hidden">
+                  <InputField label="Username" type="text" value={username} onChange={setUsername} icon={<User size={14} />} placeholder="enter username" />
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Referral Code (Optional)</label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }}><Award size={14} /></span>
+                      <input type="text" placeholder="ENTER CODE" value={referralCode} 
+                        onChange={e => { setReferralCode(e.target.value.toUpperCase()); setReferralStatus(null); }} 
+                        onBlur={(e) => verifyReferralCode(e.target.value)}
+                        className="w-full rounded-xl py-2.5 pl-9 pr-10 text-sm outline-none border transition-all"
+                        style={{ backgroundColor: "var(--bg-input)", borderColor: referralStatus === 'invalid' ? '#f43f5e' : referralStatus === 'valid' ? '#10b981' : "var(--border-primary)", color: "var(--text-primary)" }}
+                        onFocus={e => { if(!referralStatus) e.target.style.borderColor = "var(--accent-primary)"}} 
+                      />
+                      {referralStatus === 'checking' && <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500"><RefreshCw className="animate-spin" size={14} /></span>}
+                      {referralStatus === 'valid' && <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-emerald-500"><CheckCircle2 size={14} /></span>}
+                    </div>
+                    {referralStatus === 'invalid' && <p className="text-[10px] text-rose-500 font-medium">{referralMessage}</p>}
+                    {referralStatus === 'valid' && <p className="text-[10px] text-emerald-500 font-medium">✅ {referralMessage}</p>}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -465,7 +515,12 @@ function LoginForm() {
                 </motion.div>
               )}
             </AnimatePresence>
-            <SubmitButton loading={loading} gradient={theme.accentGradient} label={isRegistering ? `Register as Student` : `Sign In`} />
+            <SubmitButton 
+              loading={loading} 
+              disabled={(isRegistering && referralStatus === 'invalid') || (isRegistering && confirmPassword && confirmPassword !== password)}
+              gradient={theme.accentGradient} 
+              label={isRegistering ? `Register as Student` : `Sign In`} 
+            />
             {!isForgot && (
               <div className="relative flex items-center justify-center my-4">
                 <div className="absolute inset-0 flex items-center">
@@ -518,13 +573,12 @@ function InputField({ label, type, value, onChange, icon, placeholder, required 
 }
 
 /* ─── Submit button ─────────────────── */
-function SubmitButton({ loading, gradient, label }) {
+function SubmitButton({ loading, gradient, label, disabled }) {
+  const isDisabled = loading || disabled;
   return (
-    <button type="submit" disabled={loading}
-      className="w-full py-3 rounded-xl font-bold text-sm text-white shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+    <button type="submit" disabled={isDisabled}
+      className={`w-full py-3 rounded-xl font-bold text-sm text-white shadow-sm transition-all flex items-center justify-center gap-2 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'}`}
       style={{ background: gradient }}
-      onMouseEnter={e => !loading && (e.currentTarget.style.opacity = "0.9")}
-      onMouseLeave={e => e.currentTarget.style.opacity = "1"}
     >
       {loading ? <><RefreshCw size={14} className="animate-spin" /><span>Processing…</span></> : <><span>{label}</span><ArrowRight size={14} /></>}
     </button>

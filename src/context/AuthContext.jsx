@@ -93,9 +93,7 @@ export function AuthProvider({ children }) {
     clearLegacySessions();
     localStorage.removeItem("eduvantix_auth_token");
     localStorage.removeItem("eduvantix_auth_user");
-    if (typeof window !== "undefined") {
-      document.cookie = "eduvantix_auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    }
+    // Note: eduvantix_local_accounts is intentionally kept so users can log back in
   };
 
   // Sync WebSocket for single-session tracking
@@ -245,9 +243,6 @@ export function AuthProvider({ children }) {
         setIsInstituteBlocked(false);
         localStorage.setItem("eduvantix_auth_token", data.token);
         localStorage.setItem("eduvantix_auth_user", JSON.stringify(data.user));
-        if (typeof window !== "undefined") {
-          document.cookie = `eduvantix_auth_token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
-        }
         return { success: true, user: data.user };
       }
 
@@ -278,18 +273,20 @@ export function AuthProvider({ children }) {
 
     return {
       success: false,
-      message: "Invalid credentials.\n\nIf you registered while the database was offline, your account exists locally — try logging in again with the same email and password you used.\n\nOr use a demo account:\n• admin@demo.com / demo123\n• student@demo.com / demo123",
+      message: process.env.NODE_ENV === "development"
+        ? "Invalid credentials.\n\nIf you registered while the database was offline, your account exists locally — try logging in again with the same email and password you used.\n\nOr use a demo account:\n• admin@demo.com / demo123\n• student@demo.com / demo123"
+        : "Invalid email or password. Please try again."
     };
   };
 
   // ---------------------------------------------------------------------------
-  const register = async (username, email, password, role = "USER") => {
+  const register = async (username, email, password, role = "USER", referralCode = "") => {
     // 1. Try real backend
     try {
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password, role }),
+        body: JSON.stringify({ username, email, password, role, referralCode }),
         signal: AbortSignal.timeout(30000),
       });
 

@@ -6,6 +6,7 @@ import Testimonials from "@/components/Testimonials";
 import Pricing from "@/components/Pricing";
 import InstituteCallout from "@/components/InstituteCallout";
 import CTA from "@/components/CTA";
+import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import ParticleCursor from "@/components/ParticleCursor";
 import ScrollProgress from "@/components/ScrollProgress";
@@ -246,6 +247,7 @@ export default function Home() {
         <Pricing />
         <InstituteCallout />
         <CTA />
+        <FAQ />
       </main>
 
       <Footer />
