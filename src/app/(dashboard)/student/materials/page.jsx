@@ -129,7 +129,7 @@ export default function StudentMaterialsPage() {
             <div className="p-12 rounded-2xl border border-[var(--border-primary)] border-dashed text-center space-y-4 shadow-sm" style={{ borderColor: "var(--border-primary)", backgroundColor: "var(--bg-primary)" }}>
               <div className="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border"
                    style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
-                <Folder size={24} className="text-violet-500" />
+                <Folder size={24} className="text-[var(--accent-primary)]" />
               </div>
               <p className="font-semibold" style={{ color: "var(--text-primary)" }}>No subjects or notes found</p>
               <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Notes uploaded by batch managers will appear here.</p>
@@ -145,17 +145,17 @@ export default function StudentMaterialsPage() {
                     className="group p-6 rounded-2xl border border-[var(--border-primary)] text-left flex items-start gap-4 transition-colors hover:bg-[var(--bg-secondary)] shadow-sm cursor-pointer"
                     style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-primary)" }}
                   >
-                    <div className="p-4 rounded-xl bg-violet-500/10 text-violet-500 shrink-0">
+                    <div className="p-4 rounded-xl bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] shrink-0">
                       <Folder size={24} className="fill-current" />
                     </div>
                     <div className="space-y-1 min-w-0">
-                      <h3 className="text-base font-semibold truncate group-hover:text-violet-500 transition-colors" style={{ color: "var(--text-primary)" }}>
+                      <h3 className="text-base font-semibold truncate group-hover:text-[var(--accent-primary)] transition-colors" style={{ color: "var(--text-primary)" }}>
                         {subject}
                       </h3>
                       <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
                         Polaris School Of Technology
                       </p>
-                      <p className="text-[11px] font-medium text-violet-500 pt-1">
+                      <p className="text-[11px] font-medium text-[var(--accent-primary)] pt-1">
                         {count} note{count !== 1 ? "s" : ""} available
                       </p>
                     </div>

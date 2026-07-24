@@ -592,19 +592,19 @@ export default function AIAllInOneVivaPage({ children }) {
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Question Text *</label>
-                  <textarea rows={3} value={form.questionText} onChange={e => setForm({...form, questionText: e.target.value})} className="w-full bg-[#161B2B] border border-[var(--border-primary)] rounded-xl p-3 text-sm focus:border-zinc-500 outline-none resize-none" placeholder="Enter question..." />
+                  <textarea rows={3} value={form.questionText} onChange={e => setForm({...form, questionText: e.target.value})} className="w-full bg-[#161B2B] text-slate-200 border border-[var(--border-primary)] rounded-xl p-3 text-sm focus:border-zinc-500 outline-none resize-none" placeholder="Enter question..." />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Subject Folder *</label>
-                    <select value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} className="w-full bg-[#161B2B] border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none">
+                    <select value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} className="w-full bg-[#161B2B] text-slate-200 border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none">
                       <option value="">Select Folder</option>
                       {subjectNames.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Topic (Optional)</label>
-                    <input type="text" value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} className="w-full bg-[#161B2B] border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none" placeholder="e.g. Callbacks" />
+                    <input type="text" value={form.topic} onChange={e => setForm({...form, topic: e.target.value})} className="w-full bg-[#161B2B] text-slate-200 border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none" placeholder="e.g. Callbacks" />
                   </div>
                 </div>
                 <div>
@@ -619,11 +619,11 @@ export default function AIAllInOneVivaPage({ children }) {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Expected Answer Keywords (comma separated) *</label>
-                  <input type="text" value={form.keywords} onChange={e => setForm({...form, keywords: e.target.value})} className="w-full bg-[#161B2B] border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none" placeholder="e.g. scope, lexical, variables" />
+                  <input type="text" value={form.keywords} onChange={e => setForm({...form, keywords: e.target.value})} className="w-full bg-[#161B2B] text-slate-200 border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none" placeholder="e.g. scope, lexical, variables" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-[var(--text-muted)] mb-1">Detailed Rubric Expected Answer (Optional)</label>
-                  <textarea rows={2} value={form.expectedAnswer} onChange={e => setForm({...form, expectedAnswer: e.target.value})} className="w-full bg-[#161B2B] border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none resize-none" placeholder="Provide complete context..." />
+                  <textarea rows={2} value={form.expectedAnswer} onChange={e => setForm({...form, expectedAnswer: e.target.value})} className="w-full bg-[#161B2B] text-slate-200 border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none resize-none" placeholder="Provide complete context..." />
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
@@ -642,7 +642,7 @@ export default function AIAllInOneVivaPage({ children }) {
             <div className="bg-[#111625] border border-[var(--border-primary)] w-full max-w-sm rounded-2xl p-6 space-y-4">
               <h3 className="text-lg font-bold text-slate-200">Add Subject Folder</h3>
               {subjectModalError && <div className="p-2 bg-rose-500/10 border border-[var(--border-primary)] border-rose-500/20 text-rose-400 text-xs rounded-lg">{subjectModalError}</div>}
-              <input type="text" value={newFolderSubjectName} onChange={e => setNewFolderSubjectName(e.target.value)} className="w-full bg-[#161B2B] border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none" placeholder="Subject Name..." />
+              <input type="text" value={newFolderSubjectName} onChange={e => setNewFolderSubjectName(e.target.value)} className="w-full bg-[#161B2B] text-slate-200 border border-[var(--border-primary)] rounded-xl p-3 text-sm outline-none" placeholder="Subject Name..." />
               <div className="flex gap-3">
                 <button onClick={() => setSubjectModalOpen(false)} className="flex-1 py-2 border border-[var(--border-primary)] rounded-xl text-xs text-[var(--text-muted)] font-bold hover:bg-[var(--bg-hover)]">Cancel</button>
                 <button onClick={handleCreateSubjectFolder} className="flex-1 py-2 bg-[var(--accent-primary)] hover:bg-zinc-700 font-bold text-xs text-[var(--text-primary)] rounded-xl">Create</button>
@@ -1035,7 +1035,7 @@ export default function AIAllInOneVivaPage({ children }) {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setSelectedSubject("")}
-              className="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-primary)] hover:bg-slate-805 hover:text-[var(--text-primary)] transition-all text-[var(--text-secondary)] cursor-pointer animate-fade-in"
+              className="p-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-primary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all text-[var(--text-secondary)] cursor-pointer animate-fade-in"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -1061,7 +1061,7 @@ export default function AIAllInOneVivaPage({ children }) {
                   setFormError("");
                   setModalOpen(true);
                 }}
-                className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-zinc-500 to-slate-600 hover:from-zinc-600  font-semibold text-xs text-[var(--text-primary)] shadow-lg transition-all cursor-pointer"
+                className="inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-[var(--accent-primary)] hover:bg-[var(--accent-secondary)] font-semibold text-xs text-[var(--text-on-accent)] shadow-lg transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Question</span>
@@ -1086,10 +1086,10 @@ export default function AIAllInOneVivaPage({ children }) {
               {visibleQuestions.map((q) => (
                 <div
                   key={q.id}
-                  className="group flex items-start justify-between gap-4 p-5 rounded-xl border border-[var(--border-primary)] border-slate-850 bg-[#0E1322]/80 hover:border-slate-750 transition-all hover:bg-[var(--bg-card)]/30"
+                  className="group flex items-start justify-between gap-4 p-5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] transition-all shadow-sm"
                 >
                   <div className="flex-1 min-w-0 space-y-2">
-                    <p className="text-sm font-semibold text-slate-200 leading-snug">{q.questionText}</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)] leading-snug">{q.questionText}</p>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] bg-[var(--bg-hover)] px-2 py-0.5 rounded text-[var(--text-muted)] uppercase font-medium">{q.topic || "General"}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-bold ${DIFF_COLOR[q.difficulty].bg} ${DIFF_COLOR[q.difficulty].text}`}>{q.difficulty}</span>
@@ -1116,17 +1116,17 @@ export default function AIAllInOneVivaPage({ children }) {
               <button
                 disabled={questionPage === 1}
                 onClick={() => setQuestionPage(p => p - 1)}
-                className="px-3 py-1.5 text-xs rounded border border-[var(--border-primary)] border-slate-850 bg-[var(--bg-card)] disabled:opacity-40 text-[var(--text-secondary)] cursor-pointer"
+                className="px-3 py-1.5 text-xs rounded border border-[var(--border-primary)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] disabled:opacity-40 text-[var(--text-secondary)] cursor-pointer transition-colors"
               >
                 Previous
               </button>
-              <span className="text-xs text-slate-500 font-semibold">
+              <span className="text-xs text-[var(--text-secondary)] font-semibold">
                 Page {questionPage} of {Math.ceil(selectedQuestions.length / QUESTIONS_PER_PAGE)}
               </span>
               <button
                 disabled={questionPage >= Math.ceil(selectedQuestions.length / QUESTIONS_PER_PAGE)}
                 onClick={() => setQuestionPage(p => p + 1)}
-                className="px-3 py-1.5 text-xs rounded border border-[var(--border-primary)] border-slate-850 bg-[var(--bg-card)] disabled:opacity-40 text-[var(--text-secondary)] cursor-pointer"
+                className="px-3 py-1.5 text-xs rounded border border-[var(--border-primary)] bg-[var(--bg-card)] hover:bg-[var(--bg-hover)] disabled:opacity-40 text-[var(--text-secondary)] cursor-pointer transition-colors"
               >
                 Next
               </button>
@@ -1315,14 +1315,14 @@ export default function AIAllInOneVivaPage({ children }) {
                         className="group p-6 rounded-2xl border border-[var(--border-primary)] text-left flex items-start gap-4 transition-colors hover:bg-[var(--bg-secondary)] shadow-sm cursor-pointer"
                         style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-primary)" }}
                       >
-                        <div className="p-4 rounded-xl bg-violet-500/10 text-violet-500 shrink-0">
+                        <div className="p-4 rounded-xl bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] shrink-0">
                           <Folder size={24} className="fill-current" />
                         </div>
                         <div className="space-y-1 min-w-0">
-                          <h3 className="text-base font-semibold truncate group-hover:text-violet-500 transition-colors" style={{ color: "var(--text-primary)" }}>
+                          <h3 className="text-base font-semibold truncate group-hover:text-[var(--accent-primary)] transition-colors" style={{ color: "var(--text-primary)" }}>
                             {subject}
                           </h3>
-                          <p className="text-[11px] font-medium text-violet-500 pt-1">
+                          <p className="text-[11px] font-medium text-[var(--accent-primary)] pt-1">
                             {count} question{count !== 1 ? "s" : ""}
                           </p>
                         </div>
