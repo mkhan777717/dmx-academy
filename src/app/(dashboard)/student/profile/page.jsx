@@ -188,7 +188,10 @@ export default function StudentProfile() {
     fullName: "",
     email: "",
     password: "",
-    avatarUrl: ""
+    avatarUrl: "",
+    githubUrl: "",
+    twitterUrl: "",
+    linkedinUrl: ""
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -212,7 +215,10 @@ export default function StudentProfile() {
         fullName: user.fullName || "",
         email: user.email || "",
         password: "",
-        avatarUrl: user.avatarUrl || DEFAULT_AVATAR
+        avatarUrl: user.avatarUrl || DEFAULT_AVATAR,
+        githubUrl: user.githubUrl || "",
+        twitterUrl: user.twitterUrl || "",
+        linkedinUrl: user.linkedinUrl || ""
       });
     }
   }, [user, isEditing]);
@@ -233,7 +239,10 @@ export default function StudentProfile() {
         username: editForm.username,
         fullName: editForm.fullName,
         email: editForm.email,
-        avatarUrl: editForm.avatarUrl
+        avatarUrl: editForm.avatarUrl,
+        githubUrl: editForm.githubUrl,
+        twitterUrl: editForm.twitterUrl,
+        linkedinUrl: editForm.linkedinUrl
       };
       
       if (editForm.password.trim()) {
@@ -736,6 +745,39 @@ export default function StudentProfile() {
                       value={editForm.fullName} 
                       onChange={e => setEditForm({...editForm, fullName: e.target.value})}
                       placeholder="e.g. John Doe"
+                      className="w-full px-4 py-3 text-sm rounded-xl border outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all bg-[var(--bg-card)]"
+                      style={{ borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1" style={{ color: "var(--text-secondary)" }}>GitHub Profile <span className="opacity-60 normal-case">(optional)</span></label>
+                    <input 
+                      type="url" 
+                      value={editForm.githubUrl} 
+                      onChange={e => setEditForm({...editForm, githubUrl: e.target.value})}
+                      placeholder="https://github.com/username"
+                      className="w-full px-4 py-3 text-sm rounded-xl border outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all bg-[var(--bg-card)]"
+                      style={{ borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1" style={{ color: "var(--text-secondary)" }}>LinkedIn Profile <span className="opacity-60 normal-case">(optional)</span></label>
+                    <input 
+                      type="url" 
+                      value={editForm.linkedinUrl} 
+                      onChange={e => setEditForm({...editForm, linkedinUrl: e.target.value})}
+                      placeholder="https://linkedin.com/in/username"
+                      className="w-full px-4 py-3 text-sm rounded-xl border outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all bg-[var(--bg-card)]"
+                      style={{ borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5 ml-1" style={{ color: "var(--text-secondary)" }}>Twitter/X Profile <span className="opacity-60 normal-case">(optional)</span></label>
+                    <input 
+                      type="url" 
+                      value={editForm.twitterUrl} 
+                      onChange={e => setEditForm({...editForm, twitterUrl: e.target.value})}
+                      placeholder="https://twitter.com/username"
                       className="w-full px-4 py-3 text-sm rounded-xl border outline-none focus:ring-2 focus:ring-[var(--accent-primary)] transition-all bg-[var(--bg-card)]"
                       style={{ borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
                     />
